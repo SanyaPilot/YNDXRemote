@@ -27,5 +27,7 @@
     <string name="doAsTTS">Воспроизвести текст?</string>
     <string name="send">Отправить</string>
     <string name="sent">Отправлено!</string>
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+
+    <string name="playback">Воспроизведение</string>
+    <string name="commands">Команды</string>
 </resources>

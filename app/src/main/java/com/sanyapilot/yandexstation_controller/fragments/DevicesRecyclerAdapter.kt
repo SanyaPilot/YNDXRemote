@@ -1,4 +1,4 @@
-package com.sanyapilot.yandexstation_controller.fragments.devices
+package com.sanyapilot.yandexstation_controller.fragments
 
 import android.content.Intent
 import android.view.LayoutInflater
@@ -12,8 +12,6 @@ import com.google.android.material.card.MaterialCardView
 import com.sanyapilot.yandexstation_controller.DeviceActivity
 import com.sanyapilot.yandexstation_controller.R
 import com.sanyapilot.yandexstation_controller.api.GenericDevice
-import com.sanyapilot.yandexstation_controller.api.QuasarClient
-import kotlin.concurrent.thread
 
 class DevicesRecyclerAdapter(private val dataSet: List<Any>, private val titlePos: List<Int>) :
     RecyclerView.Adapter<RecyclerView.ViewHolder>() {

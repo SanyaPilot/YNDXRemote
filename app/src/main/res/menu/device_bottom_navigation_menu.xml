@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/playbackPage"
+        android:enabled="true"
+        android:icon="@drawable/ic_baseline_cast_24"
+        android:title="@string/playback" />
+    <item
+        android:id="@+id/TTSPage"
+        android:enabled="true"
+        android:icon="@drawable/ic_baseline_message_24"
+        android:title="@string/commands" />
+</menu>

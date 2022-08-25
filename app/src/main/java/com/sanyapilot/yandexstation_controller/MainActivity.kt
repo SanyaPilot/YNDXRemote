@@ -15,8 +15,7 @@ import com.google.android.material.snackbar.Snackbar
 import com.sanyapilot.yandexstation_controller.api.Errors
 import com.sanyapilot.yandexstation_controller.api.QuasarClient
 import com.sanyapilot.yandexstation_controller.api.Session
-import com.sanyapilot.yandexstation_controller.api.Speaker
-import com.sanyapilot.yandexstation_controller.fragments.devices.DevicesFragment
+import com.sanyapilot.yandexstation_controller.fragments.DevicesFragment
 import com.sanyapilot.yandexstation_controller.fragments.UserFragment
 import kotlin.concurrent.thread
 
