@@ -1,0 +1,31 @@
+<resources>
+    <string name="app_name">Yandex.Station Controller</string>
+
+    <!-- User account strings -->
+    <string name="register_screen_name">Вход в аккаунт</string>
+    <string name="login">Логин</string>
+    <string name="password">Пароль</string>
+    <string name="loginAction">Войти</string>
+    <string name="loginInvalidUser">Неверный логин!</string>
+    <string name="loginInvalidPasswd">Неверный пароль!</string>
+    <string name="loginNotSupported">Вход с паролем не удался! Отключите 2FA, или включите вход по Яндекс.Ключу</string>
+    <string name="loginXTokenFailed">Не удалось войти в аккаунт! Попробуйте авторизоваться заново</string>
+    <string name="errorNoInternet">Нет подключения к сети!</string>
+    <string name="aboutAccount">Об аккаунте</string>
+    <string name="logOut">Выйти</string>
+
+    <string name="devices">Устройства</string>
+    <string name="account">Аккаунт</string>
+
+    <string name="deviceList">Список устройств</string>
+
+    <string name="deviceActivityHeader">Управление станцией</string>
+    <string name="enterText">Введите текст</string>
+    <string name="enterTextSnackbar">Нельзя отправить пустой текст!</string>
+    <string name="containsProhibitedSyms">Текст содержит недопустимые символы!</string>
+    <string name="tooLong">Текст длиннее 100 символов!</string>
+    <string name="doAsTTS">Воспроизвести текст?</string>
+    <string name="send">Отправить</string>
+    <string name="sent">Отправлено!</string>
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+</resources>

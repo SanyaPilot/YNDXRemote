@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/devicesPage"
+        android:enabled="true"
+        android:icon="@drawable/ic_baseline_speaker_group_24"
+        android:title="@string/devices" />
+    <item
+        android:id="@+id/accountPage"
+        android:enabled="true"
+        android:icon="@drawable/ic_baseline_account_box_24"
+        android:title="@string/account" />
+</menu>
