@@ -8,9 +8,10 @@ import android.view.ViewGroup
 import com.google.android.material.button.MaterialButton
 import com.sanyapilot.yandexstation_controller.DeviceActivity
 import com.sanyapilot.yandexstation_controller.R
+import com.sanyapilot.yandexstation_controller.api.YandexStation
 
 class DevicePlaybackFragment : Fragment() {
-    private var playState: Boolean = false
+    private lateinit var speaker: YandexStation
     private lateinit var playButton: MaterialButton
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -27,34 +28,38 @@ class DevicePlaybackFragment : Fragment() {
         val volUpButton = view.findViewById<MaterialButton>(R.id.volUpButton)
         val volDownButton = view.findViewById<MaterialButton>(R.id.volDownButton)
 
+        speaker = (activity as DeviceActivity).speaker
+        updatePlayBtn()
+
         playButton.setOnClickListener {
-            playState = !playState
+            if (speaker.isPlaying)
+                speaker.pause()
+            else
+                speaker.play()
+
             updatePlayBtn()
-            (activity as DeviceActivity).send(if (playState) "продолжи" else "пауза")
         }
 
         prevButton.setOnClickListener {
-            playState = true
+            speaker.prevTrack()
             updatePlayBtn()
-            (activity as DeviceActivity).send("предыдущий трек")
         }
 
         nextButton.setOnClickListener {
-            playState = true
+            speaker.nextTrack()
             updatePlayBtn()
-            (activity as DeviceActivity).send("следующий трек")
         }
 
         volDownButton.setOnClickListener {
-            (activity as DeviceActivity).send("понизь громкость на 5 процентов")
+            speaker.decreaseVolume(5)
         }
 
         volUpButton.setOnClickListener {
-            (activity as DeviceActivity).send("повысь громкость на 5 процентов")
+            speaker.increaseVolume(5)
         }
     }
     private fun updatePlayBtn() {
-        if (playState)
+        if (speaker.isPlaying)
             playButton.setIconResource(R.drawable.ic_round_pause_24)
         else
             playButton.setIconResource(R.drawable.ic_round_play_arrow_24)

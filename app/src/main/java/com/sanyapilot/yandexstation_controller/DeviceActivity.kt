@@ -10,19 +10,19 @@ import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.navigation.NavigationBarView
 import com.google.android.material.snackbar.Snackbar
 import com.sanyapilot.yandexstation_controller.api.QuasarClient
-import com.sanyapilot.yandexstation_controller.api.Speaker
+import com.sanyapilot.yandexstation_controller.api.YandexStation
 import com.sanyapilot.yandexstation_controller.fragments.devices.DevicePlaybackFragment
 import com.sanyapilot.yandexstation_controller.fragments.devices.DeviceTTSFragment
 import kotlin.concurrent.thread
 
 class DeviceActivity : AppCompatActivity() {
-    private lateinit var speaker: Speaker
+    lateinit var speaker: YandexStation
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_device)
 
         val deviceId = intent.getStringExtra("deviceId")
-        speaker = QuasarClient.getSpeakerById(deviceId!!)!!
+        speaker = YandexStation(QuasarClient.getSpeakerById(deviceId!!)!!)
 
         val appBar = findViewById<MaterialToolbar>(R.id.deviceAppBar)
         appBar.subtitle = intent.getStringExtra("deviceName")
@@ -57,19 +57,6 @@ class DeviceActivity : AppCompatActivity() {
             supportFragmentManager.commit {
                 setReorderingAllowed(true)
                 add<DevicePlaybackFragment>(R.id.deviceFragmentContainer)
-            }
-        }
-    }
-    fun send(text: String, isTTS: Boolean = false, showSnack: Boolean = false) {
-        thread(start = true) {
-            QuasarClient.send(speaker, text, isTTS)
-            if (showSnack) {
-                runOnUiThread {
-                    Snackbar.make(
-                        findViewById(R.id.deviceLayout), getString(R.string.sent),
-                        Snackbar.LENGTH_SHORT
-                    ).show()
-                }
             }
         }
     }

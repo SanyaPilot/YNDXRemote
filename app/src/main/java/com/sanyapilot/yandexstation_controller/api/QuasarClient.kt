@@ -10,6 +10,7 @@ import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 import java.lang.reflect.Executable
+import kotlin.concurrent.thread
 
 @Serializable
 data class DevicesResponse (
@@ -272,41 +273,51 @@ object QuasarClient {
         return result
     }
     fun send(device: Speaker, text: String, isTTS: Boolean) {
-        val name = encodeScenarioID(device.id)
-        val mode = if (isTTS) "phrase_action" else "text_action"
-        val scenario = NewScenario(
-            name = name,
-            icon = "home",
-            triggers = listOf(ScenarioTrigger(
-                type = "scenario.trigger.voice",
-                value = name.drop(4)
-            )),
-            steps = listOf(ScenarioStep(
-                type = "scenarios.steps.actions",
-                parameters = ScenarioParameters(
-                    requested_speaker_capabilities = listOf(),
-                    launch_devices = listOf(ScenarioDevice(
-                        id = device.id,
-                        capabilities = listOf(ScenarioCapability(
-                            type = "devices.capabilities.quasar.server_action",
-                            state = ScenarioCapState(
-                                instance = mode,
-                                value = text
+        thread(start = true) {
+            val name = encodeScenarioID(device.id)
+            val mode = if (isTTS) "phrase_action" else "text_action"
+            val scenario = NewScenario(
+                name = name,
+                icon = "home",
+                triggers = listOf(
+                    ScenarioTrigger(
+                        type = "scenario.trigger.voice",
+                        value = name.drop(4)
+                    )
+                ),
+                steps = listOf(
+                    ScenarioStep(
+                        type = "scenarios.steps.actions",
+                        parameters = ScenarioParameters(
+                            requested_speaker_capabilities = listOf(),
+                            launch_devices = listOf(
+                                ScenarioDevice(
+                                    id = device.id,
+                                    capabilities = listOf(
+                                        ScenarioCapability(
+                                            type = "devices.capabilities.quasar.server_action",
+                                            state = ScenarioCapState(
+                                                instance = mode,
+                                                value = text
+                                            )
+                                        )
+                                    )
+                                )
                             )
-                        ))
-                    ))
+                        )
+                    )
                 )
-            ))
-        )
-        val scenId = device.scenarioId
+            )
+            val scenId = device.scenarioId
 
-        val jsonString = json.encodeToString(scenario)
-        var body = jsonString.toRequestBody(JSON_MEDIA_TYPE)
-        var result = Session.put("$QUASAR_URL_PREFIX/scenarios/$scenId", body)
-        assert(JSONObject(result.response!!.body!!.string()).getString("status") == "ok")
+            val jsonString = json.encodeToString(scenario)
+            var body = jsonString.toRequestBody(JSON_MEDIA_TYPE)
+            var result = Session.put("$QUASAR_URL_PREFIX/scenarios/$scenId", body)
+            assert(JSONObject(result.response!!.body!!.string()).getString("status") == "ok")
 
-        body = byteArrayOf().toRequestBody(null, 0)
-        result = Session.post("$QUASAR_URL_PREFIX/scenarios/$scenId/actions", body)
-        assert(JSONObject(result.response!!.body!!.string()).getString("status") == "ok")
+            body = byteArrayOf().toRequestBody(null, 0)
+            result = Session.post("$QUASAR_URL_PREFIX/scenarios/$scenId/actions", body)
+            assert(JSONObject(result.response!!.body!!.string()).getString("status") == "ok")
+        }
     }
 }

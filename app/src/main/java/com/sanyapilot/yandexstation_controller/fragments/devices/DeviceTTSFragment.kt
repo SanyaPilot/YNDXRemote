@@ -17,9 +17,6 @@ class DeviceTTSFragment : Fragment() {
     private lateinit var textField: EditText
     private lateinit var switch: MaterialSwitch
 
-    /*override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-    }*/
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -64,6 +61,9 @@ class DeviceTTSFragment : Fragment() {
             return
         }
 
-        (activity as DeviceActivity).send(text, switch.isChecked, true)
+        if (switch.isChecked)
+            (activity as DeviceActivity).speaker.sendTTS(text)
+        else
+            (activity as DeviceActivity).speaker.sendCommand(text)
     }
 }
