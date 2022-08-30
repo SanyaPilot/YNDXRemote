@@ -2,11 +2,11 @@ package com.sanyapilot.yandexstation_controller
 
 import android.content.Context
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.view.View
 import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.add
 import androidx.fragment.app.commit
 import androidx.fragment.app.replace
@@ -15,6 +15,7 @@ import com.google.android.material.snackbar.Snackbar
 import com.sanyapilot.yandexstation_controller.api.Errors
 import com.sanyapilot.yandexstation_controller.api.QuasarClient
 import com.sanyapilot.yandexstation_controller.api.Session
+import com.sanyapilot.yandexstation_controller.api.mDNSWorker
 import com.sanyapilot.yandexstation_controller.fragments.DevicesFragment
 import com.sanyapilot.yandexstation_controller.fragments.UserFragment
 import kotlin.concurrent.thread
@@ -23,7 +24,6 @@ const val TOKEN_INVALID = "com.sanyapilot.yandexstation_controller.tokenInvalid"
 
 class MainActivity : AppCompatActivity() {
     private val viewModel: MainViewModel by viewModels()
-    private var loggedIn = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -110,6 +110,7 @@ class MainActivity : AppCompatActivity() {
                     add<UserFragment>(R.id.mainFragmentContainer)
                 }
             }
+            mDNSWorker.init(this)
         }
     }
     fun logOut(view: View) {
@@ -124,15 +125,5 @@ class MainActivity : AppCompatActivity() {
         Log.e(TAG, "TOKEN AFTER CLEARING: ${sharedPrefs.getString("x-token", null)}")
         startActivity(Intent(this, LoginActivity::class.java))
         finish()
-    }
-    fun testGovorilka(view: View) {
-        thread(start = true) {
-            val speakers = QuasarClient.getSpeakers()
-            for (sp in speakers) {
-                if (sp.id == "0bc4049e-8283-4ebd-9612-b77946175fa0") {
-                    QuasarClient.send(sp, "Привет, это Алиса, рада знакомству!", true)
-                }
-            }
-        }
     }
 }

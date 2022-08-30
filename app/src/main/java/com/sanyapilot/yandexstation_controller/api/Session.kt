@@ -1,11 +1,16 @@
 package com.sanyapilot.yandexstation_controller.api
 
+import android.annotation.SuppressLint
 import android.util.Log
 import okhttp3.*
 import okio.Buffer
 import okio.IOException
 import org.json.JSONObject
-import kotlin.concurrent.thread
+import java.security.SecureRandom
+import java.security.cert.CertificateException
+import java.security.cert.X509Certificate
+import javax.net.ssl.*
+
 
 const val TAG = "YaStationController"
 
@@ -70,9 +75,48 @@ object Session {
     private val client = OkHttpClient.Builder()
         .cookieJar(cookieJar)
         .build()
+    private val unsafeClient = getUnsafeOkHttpClient()
     private var trackId: String = ""
     lateinit var xToken: String
     private var csrf: String? = null
+
+    // https://stackoverflow.com/questions/50961123/how-to-ignore-ssl-error-in-okhttp
+    private fun getUnsafeOkHttpClient(): OkHttpClient {
+        try {
+            // Create a trust manager that does not validate certificate chains
+            val trustAllCerts: Array<TrustManager> = arrayOf(
+                @SuppressLint("CustomX509TrustManager")
+                object : X509TrustManager {
+                    @SuppressLint("TrustAllX509TrustManager")
+                    @Throws(CertificateException::class)
+                    override fun checkClientTrusted(chain: Array<X509Certificate?>?, authType: String?) {
+                    }
+
+                    @SuppressLint("TrustAllX509TrustManager")
+                    @Throws(CertificateException::class)
+                    override fun checkServerTrusted(chain: Array<X509Certificate?>?, authType: String?) {
+                    }
+
+                    override fun getAcceptedIssuers(): Array<X509Certificate?> {
+                        return arrayOfNulls(0)
+                    }
+                }
+            )
+
+            // Install the all-trusting trust manager
+            val sslContext = SSLContext.getInstance("SSL")
+            sslContext.init(null, trustAllCerts, SecureRandom())
+            // Create an ssl socket factory with our all-trusting manager
+            val sslSocketFactory: SSLSocketFactory = sslContext.socketFactory
+            return OkHttpClient.Builder()
+                .sslSocketFactory(sslSocketFactory, trustAllCerts[0] as X509TrustManager)
+                .hostnameVerifier { _, _ -> true }
+                .build()
+        } catch (e: Exception) {
+            throw RuntimeException(e)
+        }
+    }
+
     fun login(username: String, password: String): LoginResponse {
         // Get CSRF token
         var csrf: String
@@ -233,6 +277,13 @@ object Session {
     }
     fun put(url: String, body: RequestBody?): RequestResponse {
         return doRequest(Methods.PUT, url, body)
+    }
+    fun wsConnect(url: String, listener: WebSocketListener) {
+        val request = Request.Builder()
+            .url(url)
+            .build()
+
+        unsafeClient.newWebSocket(request, listener)
     }
     private fun doRequest(method: Methods, url: String, body: RequestBody? = null): RequestResponse {
         val request = Request.Builder()

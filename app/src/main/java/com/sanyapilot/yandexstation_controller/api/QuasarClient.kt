@@ -4,12 +4,9 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import okhttp3.FormBody
 import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
-import java.lang.reflect.Executable
 import kotlin.concurrent.thread
 
 @Serializable
@@ -118,7 +115,7 @@ data class Speaker(
     val name: String,
     val type: String,
     val icon_url: String,
-    val quasar_info: QuasarInfo? = null,
+    val quasar_info: QuasarInfo,
     val scenarioId: String // Scenario for TTS over quasar
 )
 
@@ -231,7 +228,7 @@ object QuasarClient {
                     name = device.name,
                     type = device.type,
                     icon_url = device.icon_url,
-                    quasar_info = device.quasar_info,
+                    quasar_info = device.quasar_info!!,
                     scenarioId = scenarios[device.id]!!.id
                 )
                 speakers.add(newSpeaker)

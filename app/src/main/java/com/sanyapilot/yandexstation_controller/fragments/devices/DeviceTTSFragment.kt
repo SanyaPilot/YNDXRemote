@@ -62,8 +62,8 @@ class DeviceTTSFragment : Fragment() {
         }
 
         if (switch.isChecked)
-            (activity as DeviceActivity).speaker.sendTTS(text)
+            (activity as DeviceActivity).station.sendTTS(text)
         else
-            (activity as DeviceActivity).speaker.sendCommand(text)
+            (activity as DeviceActivity).station.sendCommand(text)
     }
 }
