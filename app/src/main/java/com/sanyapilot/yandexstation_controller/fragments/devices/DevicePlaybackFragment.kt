@@ -1,6 +1,7 @@
 package com.sanyapilot.yandexstation_controller.fragments.devices
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -16,13 +17,13 @@ import com.google.android.material.button.MaterialButton
 import com.google.android.material.slider.Slider
 import com.sanyapilot.yandexstation_controller.DeviceActivity
 import com.sanyapilot.yandexstation_controller.R
+import com.sanyapilot.yandexstation_controller.api.TAG
 import com.sanyapilot.yandexstation_controller.api.YandexStation
 import com.sanyapilot.yandexstation_controller.fragments.DeviceViewModel
 
 class DevicePlaybackFragment : Fragment() {
     private lateinit var viewModel: DeviceViewModel
     private lateinit var station: YandexStation
-    private lateinit var playButton: MaterialButton
     private var allowSliderChange = true
 
     override fun onCreateView(
@@ -35,20 +36,9 @@ class DevicePlaybackFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         viewModel = ViewModelProvider(requireActivity())[DeviceViewModel::class.java]
-
-        playButton = view.findViewById(R.id.playButton)
-        val prevButton = view.findViewById<MaterialButton>(R.id.prevButton)
-        val nextButton = view.findViewById<MaterialButton>(R.id.nextButton)
-        val volUpButton = view.findViewById<MaterialButton>(R.id.volUpButton)
-        val volDownButton = view.findViewById<MaterialButton>(R.id.volDownButton)
-        val coverImage = view.findViewById<ImageView>(R.id.cover)
-        val trackName = view.findViewById<TextView>(R.id.trackName)
-        val trackArtist = view.findViewById<TextView>(R.id.trackArtist)
-        val progressBar = view.findViewById<Slider>(R.id.progressBar)
-        val curProgress = view.findViewById<TextView>(R.id.curProgress)
-        val maxProgress = view.findViewById<TextView>(R.id.maxProgress)
-
         station = (activity as DeviceActivity).station
+
+        val progressBar = view.findViewById<Slider>(R.id.progressBar)
 
         progressBar.addOnSliderTouchListener(object : Slider.OnSliderTouchListener {
             override fun onStartTrackingTouch(slider: Slider) {
@@ -64,6 +54,22 @@ class DevicePlaybackFragment : Fragment() {
         progressBar.setLabelFormatter { value: Float ->
             getMinutesSeconds(value.toInt())
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        val playButton = requireView().findViewById<MaterialButton>(R.id.playButton)
+        val prevButton = requireView().findViewById<MaterialButton>(R.id.prevButton)
+        val nextButton = requireView().findViewById<MaterialButton>(R.id.nextButton)
+        val volUpButton = requireView().findViewById<MaterialButton>(R.id.volUpButton)
+        val volDownButton = requireView().findViewById<MaterialButton>(R.id.volDownButton)
+        val coverImage = requireView().findViewById<ImageView>(R.id.cover)
+        val trackName = requireView().findViewById<TextView>(R.id.trackName)
+        val trackArtist = requireView().findViewById<TextView>(R.id.trackArtist)
+        val progressBar = requireView().findViewById<Slider>(R.id.progressBar)
+        val curProgress = requireView().findViewById<TextView>(R.id.curProgress)
+        val maxProgress = requireView().findViewById<TextView>(R.id.maxProgress)
 
         // ViewModel observers here
         viewModel.isLocal.observe(requireActivity()) {
@@ -195,6 +201,7 @@ class DevicePlaybackFragment : Fragment() {
 
     override fun onStop() {
         super.onStop()
+        Log.d(TAG, "onStop()")
         if (viewModel.isLocal.value == true) {
             viewModel.prevCoverURL.value = null
             viewModel.prevTrackName.value = null
