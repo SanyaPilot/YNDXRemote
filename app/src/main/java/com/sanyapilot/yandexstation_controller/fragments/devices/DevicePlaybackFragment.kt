@@ -1,19 +1,21 @@
 package com.sanyapilot.yandexstation_controller.fragments.devices
 
+import android.os.Build
 import android.os.Bundle
+import android.util.DisplayMetrics
 import android.util.Log
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.view.animation.*
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.cardview.widget.CardView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import coil.imageLoader
 import coil.load
 import coil.request.ImageRequest
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.card.MaterialCardView
 import com.google.android.material.slider.Slider
 import com.sanyapilot.yandexstation_controller.DeviceActivity
 import com.sanyapilot.yandexstation_controller.R
@@ -54,6 +56,22 @@ class DevicePlaybackFragment : Fragment() {
         progressBar.setLabelFormatter { value: Float ->
             getMinutesSeconds(value.toInt())
         }
+
+        // Picture card scaling
+        @Suppress("DEPRECATION") val screenHeight = if (Build.VERSION.SDK_INT > Build.VERSION_CODES.R) {
+            val windowMetrics = requireActivity().windowManager.currentWindowMetrics
+            val insets = windowMetrics.windowInsets.getInsetsIgnoringVisibility(WindowInsets.Type.systemBars())
+            windowMetrics.bounds.height() - insets.top - insets.bottom
+        } else {
+            val screenMetrics = DisplayMetrics()
+            requireActivity().windowManager.defaultDisplay.getMetrics(screenMetrics)
+            screenMetrics.heightPixels
+        }
+
+        val imageCard = requireView().findViewById<CardView>(R.id.imageCard)
+        val sideLength = screenHeight / 2.5
+        imageCard.layoutParams.height = sideLength.toInt()
+        imageCard.layoutParams.width = sideLength.toInt()
     }
 
     override fun onResume() {
@@ -74,8 +92,8 @@ class DevicePlaybackFragment : Fragment() {
         // ViewModel observers here
         viewModel.isLocal.observe(requireActivity()) {
             if (it) {
-                trackName.visibility = TextView.VISIBLE
-                trackArtist.visibility = TextView.VISIBLE
+                //trackName.visibility = TextView.VISIBLE
+                //trackArtist.visibility = TextView.VISIBLE
                 progressBar.visibility = TextView.VISIBLE
                 curProgress.visibility = TextView.VISIBLE
                 maxProgress.visibility = TextView.VISIBLE
@@ -112,6 +130,11 @@ class DevicePlaybackFragment : Fragment() {
 
         viewModel.trackName.observe(requireActivity()) {
             if (it != viewModel.prevTrackName.value) {
+                if (viewModel.prevTrackName.value == null) {
+                    Log.d(TAG, "Setting visibility")
+                    Log.d(TAG, "${viewModel.prevTrackName.value}")
+                    trackName.visibility = TextView.VISIBLE
+                }
                 viewModel.prevTrackName.value = it
                 animateText(trackName, it)
             }
@@ -119,6 +142,9 @@ class DevicePlaybackFragment : Fragment() {
 
         viewModel.trackArtist.observe(requireActivity()) {
             if (it != viewModel.prevTrackArtist.value) {
+                if (viewModel.prevTrackArtist.value == null) {
+                    trackArtist.visibility = TextView.VISIBLE
+                }
                 viewModel.prevTrackArtist.value = it
                 animateText(trackArtist, it)
             }
