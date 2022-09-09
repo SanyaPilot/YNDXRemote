@@ -1,30 +1,120 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/deviceLayout"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:layout_height="match_parent">
 
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/deviceAppBar"
-        android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
         android:background="?attr/colorSurface"
         android:minHeight="?attr/actionBarSize"
         android:theme="?attr/actionBarTheme"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
         app:title="@string/deviceActivityHeader" />
 
+    <androidx.cardview.widget.CardView
+        android:id="@+id/imageCard"
+        android:layout_width="300dp"
+        android:layout_height="300dp"
+        android:layout_marginStart="32dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="32dp"
+        app:cardBackgroundColor="?attr/colorSurface"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="0dp"
+        app:layout_constraintDimensionRatio="1:1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/deviceAppBar">
+
+        <ImageView
+            android:id="@+id/cover"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:srcCompat="@tools:sample/avatars" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:orientation="vertical"
+            android:paddingLeft="8dp"
+            android:paddingBottom="8dp">
+
+            <TextView
+                android:id="@+id/trackName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/text_rectangle"
+                android:textColor="@android:color/white"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:visibility="invisible"
+                tools:text="Track name"
+                tools:visibility="visible" />
+
+            <TextView
+                android:id="@+id/trackArtist"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:background="@drawable/text_rectangle"
+                android:textColor="@android:color/white"
+                android:visibility="invisible"
+                tools:text="Track artist"
+                tools:visibility="visible" />
+        </LinearLayout>
+
+    </androidx.cardview.widget.CardView>
+
+
     <androidx.fragment.app.FragmentContainerView
-        android:id="@+id/deviceFragmentContainer"
-        android:layout_width="match_parent"
+        android:id="@+id/controlsContainer"
+        android:name="com.sanyapilot.yandexstation_controller.fragments.devices.DevicePlaybackFragment"
+        android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_weight="1" />
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="8dp"
+        app:layout_constraintBottom_toTopOf="@+id/controlsSelector"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/imageCard" />
 
-    <com.google.android.material.bottomnavigation.BottomNavigationView
-        android:id="@+id/deviceBottomNavigation"
-        android:layout_width="match_parent"
+    <com.google.android.material.button.MaterialButtonToggleGroup
+        android:id="@+id/controlsSelector"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:menu="@menu/device_bottom_navigation_menu" />
+        android:layout_marginBottom="8dp"
+        app:checkedButton="@id/playbackButton"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:selectionRequired="true"
+        app:singleSelection="true">
 
-</LinearLayout>
+        <Button
+            android:id="@+id/playbackButton"
+            style="?attr/materialButtonOutlinedStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/playback" />
+
+        <Button
+            android:id="@+id/TTSButton"
+            style="?attr/materialButtonOutlinedStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/commands" />
+
+    </com.google.android.material.button.MaterialButtonToggleGroup>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

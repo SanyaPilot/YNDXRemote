@@ -1,27 +1,21 @@
 package com.sanyapilot.yandexstation_controller.fragments.devices
 
-import android.os.Build
 import android.os.Bundle
-import android.util.DisplayMetrics
 import android.util.Log
-import android.view.*
-import android.view.animation.*
-import android.widget.ImageView
-import android.widget.TextView
-import androidx.cardview.widget.CardView
 import androidx.fragment.app.Fragment
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.TextView
 import androidx.lifecycle.ViewModelProvider
-import coil.imageLoader
-import coil.load
-import coil.request.ImageRequest
 import com.google.android.material.button.MaterialButton
-import com.google.android.material.card.MaterialCardView
 import com.google.android.material.slider.Slider
 import com.sanyapilot.yandexstation_controller.DeviceActivity
 import com.sanyapilot.yandexstation_controller.R
-import com.sanyapilot.yandexstation_controller.api.TAG
+import com.sanyapilot.yandexstation_controller.TAG
 import com.sanyapilot.yandexstation_controller.api.YandexStation
 import com.sanyapilot.yandexstation_controller.fragments.DeviceViewModel
+
 
 class DevicePlaybackFragment : Fragment() {
     private lateinit var viewModel: DeviceViewModel
@@ -40,7 +34,7 @@ class DevicePlaybackFragment : Fragment() {
         viewModel = ViewModelProvider(requireActivity())[DeviceViewModel::class.java]
         station = (activity as DeviceActivity).station
 
-        val progressBar = view.findViewById<Slider>(R.id.progressBar)
+        val progressBar = requireView().findViewById<Slider>(R.id.progressBar)
 
         progressBar.addOnSliderTouchListener(object : Slider.OnSliderTouchListener {
             override fun onStartTrackingTouch(slider: Slider) {
@@ -56,22 +50,6 @@ class DevicePlaybackFragment : Fragment() {
         progressBar.setLabelFormatter { value: Float ->
             getMinutesSeconds(value.toInt())
         }
-
-        // Picture card scaling
-        @Suppress("DEPRECATION") val screenHeight = if (Build.VERSION.SDK_INT > Build.VERSION_CODES.R) {
-            val windowMetrics = requireActivity().windowManager.currentWindowMetrics
-            val insets = windowMetrics.windowInsets.getInsetsIgnoringVisibility(WindowInsets.Type.systemBars())
-            windowMetrics.bounds.height() - insets.top - insets.bottom
-        } else {
-            val screenMetrics = DisplayMetrics()
-            requireActivity().windowManager.defaultDisplay.getMetrics(screenMetrics)
-            screenMetrics.heightPixels
-        }
-
-        val imageCard = requireView().findViewById<CardView>(R.id.imageCard)
-        val sideLength = screenHeight / 2.5
-        imageCard.layoutParams.height = sideLength.toInt()
-        imageCard.layoutParams.width = sideLength.toInt()
     }
 
     override fun onResume() {
@@ -82,120 +60,46 @@ class DevicePlaybackFragment : Fragment() {
         val nextButton = requireView().findViewById<MaterialButton>(R.id.nextButton)
         val volUpButton = requireView().findViewById<MaterialButton>(R.id.volUpButton)
         val volDownButton = requireView().findViewById<MaterialButton>(R.id.volDownButton)
-        val coverImage = requireView().findViewById<ImageView>(R.id.cover)
-        val trackName = requireView().findViewById<TextView>(R.id.trackName)
-        val trackArtist = requireView().findViewById<TextView>(R.id.trackArtist)
         val progressBar = requireView().findViewById<Slider>(R.id.progressBar)
         val curProgress = requireView().findViewById<TextView>(R.id.curProgress)
         val maxProgress = requireView().findViewById<TextView>(R.id.maxProgress)
 
         // ViewModel observers here
-        viewModel.isLocal.observe(requireActivity()) {
+        viewModel.isLocal.observe(viewLifecycleOwner) {
             if (it) {
-                //trackName.visibility = TextView.VISIBLE
-                //trackArtist.visibility = TextView.VISIBLE
                 progressBar.visibility = TextView.VISIBLE
                 curProgress.visibility = TextView.VISIBLE
                 maxProgress.visibility = TextView.VISIBLE
             } else {
-                trackName.visibility = TextView.INVISIBLE
-                trackArtist.visibility = TextView.INVISIBLE
-                progressBar.visibility = TextView.INVISIBLE
-                curProgress.visibility = TextView.INVISIBLE
-                maxProgress.visibility = TextView.INVISIBLE
-                coverImage.setImageResource(R.drawable.ic_baseline_cloud_24)
+                progressBar.visibility = TextView.GONE
+                curProgress.visibility = TextView.GONE
+                maxProgress.visibility = TextView.GONE
             }
         }
 
-        viewModel.isPlaying.observe(requireActivity()) {
+        viewModel.isPlaying.observe(viewLifecycleOwner) {
             if (it)
                 playButton.setIconResource(R.drawable.ic_round_pause_24)
             else
                 playButton.setIconResource(R.drawable.ic_round_play_arrow_24)
         }
 
-        viewModel.playerActive.observe(requireActivity()) {
-            if (!it) {
-                coverImage.setImageResource(R.drawable.ic_round_pause_on_surface_24)
-            }
-        }
-
-        viewModel.hasPrev.observe(requireActivity()) {
+        viewModel.hasPrev.observe(viewLifecycleOwner) {
             prevButton.isEnabled = it
         }
 
-        viewModel.hasNext.observe(requireActivity()) {
+        viewModel.hasNext.observe(viewLifecycleOwner) {
             nextButton.isEnabled = it
         }
 
-        viewModel.trackName.observe(requireActivity()) {
-            if (it != viewModel.prevTrackName.value) {
-                if (viewModel.prevTrackName.value == null) {
-                    Log.d(TAG, "Setting visibility")
-                    Log.d(TAG, "${viewModel.prevTrackName.value}")
-                    trackName.visibility = TextView.VISIBLE
-                }
-                viewModel.prevTrackName.value = it
-                animateText(trackName, it)
-            }
-        }
-
-        viewModel.trackArtist.observe(requireActivity()) {
-            if (it != viewModel.prevTrackArtist.value) {
-                if (viewModel.prevTrackArtist.value == null) {
-                    trackArtist.visibility = TextView.VISIBLE
-                }
-                viewModel.prevTrackArtist.value = it
-                animateText(trackArtist, it)
-            }
-        }
-
-        viewModel.coverURL.observe(requireActivity()) {
-            if (it != null) {
-                val curImageURL = "https://" + it.removeSuffix("%%") + "400x400"
-                if (curImageURL != viewModel.prevCoverURL.value) {
-                    viewModel.prevCoverURL.value = curImageURL
-
-                    val fadeIn = AlphaAnimation(0f, 1f)
-                    fadeIn.interpolator = DecelerateInterpolator()
-                    fadeIn.duration = 200
-                    val fadeOut = AlphaAnimation(1f, 0f)
-                    fadeOut.interpolator = AccelerateInterpolator()
-                    fadeOut.duration = 200
-
-                    fadeOut.setAnimationListener(object : Animation.AnimationListener {
-                        override fun onAnimationStart(p0: Animation?) {
-                        }
-
-                        override fun onAnimationEnd(p0: Animation?) {
-                            coverImage.load(curImageURL)
-                            val request = ImageRequest.Builder(requireActivity())
-                                .data(curImageURL)
-                                .target(coverImage)
-                                .listener { _, _ ->
-                                    coverImage.startAnimation(fadeIn)
-                                }
-                                .build()
-
-                            context!!.imageLoader.enqueue(request)
-                        }
-
-                        override fun onAnimationRepeat(p0: Animation?) {
-                        }
-                    })
-                    coverImage.startAnimation(fadeOut)
-                }
-            }
-        }
-
-        viewModel.progressMax.observe(requireActivity()) {
+        viewModel.progressMax.observe(viewLifecycleOwner) {
             if (it > 0) {
                 maxProgress.text = getMinutesSeconds(it)
                 progressBar.valueTo = it.toFloat()
             }
         }
 
-        viewModel.progress.observe(requireActivity()) {
+        viewModel.progress.observe(viewLifecycleOwner) {
             curProgress.text = getMinutesSeconds(it)
             if (allowSliderChange)
                 progressBar.value = it.toFloat()
@@ -228,13 +132,7 @@ class DevicePlaybackFragment : Fragment() {
     override fun onStop() {
         super.onStop()
         Log.d(TAG, "onStop()")
-        if (viewModel.isLocal.value == true) {
-            viewModel.prevCoverURL.value = null
-            viewModel.prevTrackName.value = null
-            viewModel.prevTrackArtist.value = null
-        }
-
-        viewModel.removeObservers(requireActivity())
+        viewModel.removeObservers(viewLifecycleOwner)
     }
 
     private fun getMinutesSeconds(value: Int): String {
@@ -246,27 +144,5 @@ class DevicePlaybackFragment : Fragment() {
         }
 
         return "$minutes:${if (newValue < 10) "0" else ""}$newValue"
-    }
-    private fun animateText(textView: TextView, value: String) {
-        val fadeIn = AlphaAnimation(0f, 1f)
-        fadeIn.interpolator = DecelerateInterpolator()
-        fadeIn.duration = 200
-        val fadeOut = AlphaAnimation(1f, 0f)
-        fadeOut.interpolator = AccelerateInterpolator()
-        fadeOut.duration = 200
-
-        fadeOut.setAnimationListener(object : Animation.AnimationListener {
-            override fun onAnimationStart(p0: Animation?) {
-            }
-
-            override fun onAnimationEnd(p0: Animation?) {
-                textView.text = value
-                textView.startAnimation(fadeIn)
-            }
-
-            override fun onAnimationRepeat(p0: Animation?) {
-            }
-        })
-        textView.startAnimation(fadeOut)
     }
 }
