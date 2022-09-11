@@ -18,8 +18,8 @@ import kotlin.concurrent.thread
 class DevicesFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enterTransition = Fade(Fade.MODE_IN)
-        exitTransition = Fade(Fade.MODE_OUT)
+        //enterTransition = Fade(Fade.MODE_IN)
+        //exitTransition = Fade(Fade.MODE_OUT)
     }
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,

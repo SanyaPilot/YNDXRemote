@@ -5,12 +5,16 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.view.animation.AccelerateInterpolator
+import android.view.animation.AlphaAnimation
+import android.view.animation.Animation
+import android.widget.ImageView
+import android.widget.TextView
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.fragment.app.add
-import androidx.fragment.app.commit
-import androidx.fragment.app.replace
+import androidx.fragment.app.*
 import com.google.android.material.navigation.NavigationBarView
+import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.google.android.material.snackbar.Snackbar
 import com.sanyapilot.yandexstation_controller.api.Errors
 import com.sanyapilot.yandexstation_controller.api.QuasarClient
@@ -21,9 +25,15 @@ import com.sanyapilot.yandexstation_controller.fragments.UserFragment
 import kotlin.concurrent.thread
 
 const val TOKEN_INVALID = "com.sanyapilot.yandexstation_controller.tokenInvalid"
+const val SWITCH_ANIM_DURATION: Long = 150
 
 class MainActivity : AppCompatActivity() {
     private val viewModel: MainViewModel by viewModels()
+    private lateinit var progressBar: LinearProgressIndicator
+    private lateinit var bottomNavigation: NavigationBarView
+    private lateinit var loadingImage: ImageView
+    private lateinit var container: FragmentContainerView
+    private lateinit var title: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,29 +41,68 @@ class MainActivity : AppCompatActivity() {
 
         Log.e(TAG, "STARTED MAIN")
 
-        val bottomNavigation = findViewById<NavigationBarView>(R.id.bottomNavigation)
+        // Initialize views
+        progressBar = findViewById(R.id.mainLoadingBar)
+        bottomNavigation = findViewById(R.id.bottomNavigation)
+        loadingImage = findViewById(R.id.loadingImage)
+        container = findViewById(R.id.mainFragmentContainer)
+        title = findViewById(R.id.mainAppBarTitle)
+
+        if (viewModel.isLoggedIn() == true) {
+            progressBar.visibility = View.GONE
+            loadingImage.visibility = View.GONE
+            bottomNavigation.visibility = View.VISIBLE
+        }
 
         // Bottom navbar listener
-        bottomNavigation.selectedItemId = R.id.accountPage
+        bottomNavigation.selectedItemId = R.id.devicesPage
         bottomNavigation.setOnItemSelectedListener { item ->
-            when(item.itemId) {
-                R.id.devicesPage -> {
-                    supportFragmentManager.commit {
-                        setReorderingAllowed(true)
-                        replace<DevicesFragment>(R.id.mainFragmentContainer)
-                    }
-                    true
-                }
-                R.id.accountPage -> {
+            // Animations
+            val fadeOut = AlphaAnimation(1f, 0f)
+            fadeOut.interpolator = AccelerateInterpolator()
+            fadeOut.duration = SWITCH_ANIM_DURATION
 
-                    supportFragmentManager.commit {
-                        setReorderingAllowed(true)
-                        replace<UserFragment>(R.id.mainFragmentContainer)
-                    }
-                    true
+            val fadeIn = AlphaAnimation(0f, 1f)
+            fadeIn.interpolator = AccelerateInterpolator()
+            fadeIn.duration = SWITCH_ANIM_DURATION
+
+            fadeOut.setAnimationListener(object : Animation.AnimationListener {
+                override fun onAnimationStart(p0: Animation?) {
                 }
-                else -> false
-            }
+
+                override fun onAnimationEnd(p0: Animation?) {
+                    when (item.itemId) {
+                        R.id.devicesPage -> {
+                            supportFragmentManager.commit {
+                                setReorderingAllowed(true)
+                                replace<DevicesFragment>(R.id.mainFragmentContainer)
+                            }
+                        }
+                        R.id.accountPage -> {
+                            supportFragmentManager.commit {
+                                setReorderingAllowed(true)
+                                replace<UserFragment>(R.id.mainFragmentContainer)
+                            }
+                        }
+                    }
+
+                    container.startAnimation(fadeIn)
+                    title.startAnimation(fadeIn)
+                }
+
+                override fun onAnimationRepeat(p0: Animation?) {
+                }
+            })
+
+            val fadeOutText = AlphaAnimation(1f, 0f)
+            fadeOutText.interpolator = AccelerateInterpolator()
+            fadeOutText.duration = SWITCH_ANIM_DURATION
+
+            // Start switching from fade out animation
+            title.startAnimation(fadeOutText)
+            container.startAnimation(fadeOut)
+
+            true
         }
         bottomNavigation.setOnItemReselectedListener {}
 
@@ -102,13 +151,57 @@ class MainActivity : AppCompatActivity() {
             }
             Log.e(TAG, "done all checks")
             QuasarClient.prepareSpeakers()
-            //progressBar.visibility = ProgressBar.INVISIBLE
+
             runOnUiThread {
                 viewModel.setLoggedIn(true)
-                supportFragmentManager.commit {
-                    setReorderingAllowed(true)
-                    add<UserFragment>(R.id.mainFragmentContainer)
-                }
+                val fadeOut = AlphaAnimation(1f, 0f)
+                fadeOut.interpolator = AccelerateInterpolator()
+                fadeOut.duration = 200
+
+                fadeOut.setAnimationListener(object : Animation.AnimationListener {
+                    override fun onAnimationStart(p0: Animation?) {
+                    }
+
+                    override fun onAnimationEnd(p0: Animation?) {
+                        // Remove loading progress bar from layout
+                        progressBar.visibility = View.GONE
+
+                        supportFragmentManager.commit {
+                            setReorderingAllowed(true)
+                            add<DevicesFragment>(R.id.mainFragmentContainer)
+                        }
+
+                        // Start fade in animations for elements
+                        val fadeIn = AlphaAnimation(0f, 1f)
+                        fadeIn.interpolator = AccelerateInterpolator()
+                        fadeIn.duration = 200
+
+                        container.startAnimation(fadeIn)
+                        bottomNavigation.visibility = View.VISIBLE
+                        bottomNavigation.startAnimation(fadeIn)
+                    }
+
+                    override fun onAnimationRepeat(p0: Animation?) {
+                    }
+                })
+                progressBar.startAnimation(fadeOut)
+
+                val fadeOutImage = AlphaAnimation(1f, 0f)
+                fadeOutImage.interpolator = AccelerateInterpolator()
+                fadeOutImage.duration = 200
+                fadeOutImage.setAnimationListener(object : Animation.AnimationListener {
+                    override fun onAnimationStart(p0: Animation?) {
+                    }
+
+                    override fun onAnimationEnd(p0: Animation?) {
+                        loadingImage.visibility = View.GONE
+                    }
+
+                    override fun onAnimationRepeat(p0: Animation?) {
+                    }
+                })
+
+                loadingImage.startAnimation(fadeOutImage)
             }
             mDNSWorker.init(this)
         }
