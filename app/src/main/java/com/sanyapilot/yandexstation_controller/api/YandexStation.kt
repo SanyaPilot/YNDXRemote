@@ -9,6 +9,7 @@ import kotlin.concurrent.thread
 // Wrapper class
 class YandexStation(val context: Activity, val speaker: Speaker, val client: GlagolClient, val viewModel: DeviceViewModel) {
     var localMode = false
+    var localTTS = true
 
     init {
         localMode = mDNSWorker.deviceExists(speaker.quasar_info.device_id)
@@ -66,8 +67,21 @@ class YandexStation(val context: Activity, val speaker: Speaker, val client: Gla
         localMode = true
     }
 
-    fun sendTTS(text: String) = QuasarClient.send(speaker, text, true)
-    fun sendCommand(text: String) = QuasarClient.send(speaker, text, false)
+    fun sendTTS(text: String) {
+        // Currently selecting TTS mode is not implemented
+        if (localMode && localTTS) {
+            client.send(GlagolPayload(command = "sendText", text = "Повтори за мной $text"))
+        } else {
+            QuasarClient.send(speaker, text, true)
+        }
+    }
+    fun sendCommand(text: String) {
+        if (localMode) {
+            client.send(GlagolPayload(command = "sendText", text = text))
+        } else {
+            QuasarClient.send(speaker, text, false)
+        }
+    }
     fun play() {
         if (localMode) {
             client.send(GlagolPayload(command = "play"))

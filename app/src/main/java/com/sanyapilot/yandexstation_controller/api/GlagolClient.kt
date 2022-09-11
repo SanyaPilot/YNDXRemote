@@ -94,6 +94,7 @@ data class GenericTrack(
 @Serializable
 data class GlagolPayload(
     val command: String,
+    val text: String? = null,
     val volume: Float? = null,
     val position: Int? = null,
     val serverActionEventPayload: ServerActionEventPayload? = null
