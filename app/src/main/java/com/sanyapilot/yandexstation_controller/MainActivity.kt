@@ -110,6 +110,7 @@ class MainActivity : AppCompatActivity() {
         val sharedPrefs = getSharedPreferences("auth", Context.MODE_PRIVATE)
         if (!sharedPrefs.contains("x-token")) {
             startActivity(Intent(this, LoginActivity::class.java))
+            finish()
             return
         }
         // Authorize with saved x-token
