@@ -121,7 +121,7 @@ class DeviceActivity : AppCompatActivity() {
         viewModel.coverURL.observe(this) {
             if (it != null) {
                 Log.d(TAG, "Img URL: $it")
-                val curImageURL = "https://" + it.removeSuffix("%%") + "400x400"
+                val curImageURL = if (it != "") "https://" + it.removeSuffix("%%") + "800x800" else "dummy"
                 if (curImageURL != viewModel.prevCoverURL.value) {
                     viewModel.prevCoverURL.value = curImageURL
 
@@ -137,16 +137,20 @@ class DeviceActivity : AppCompatActivity() {
                         }
 
                         override fun onAnimationEnd(p0: Animation?) {
-                            coverImage.load(curImageURL)
-                            val request = ImageRequest.Builder(applicationContext)
-                                .data(curImageURL)
-                                .target(coverImage)
-                                .listener { _, _ ->
-                                    coverImage.startAnimation(fadeIn)
-                                }
-                                .build()
+                            if (curImageURL != "dummy") {
+                                val request = ImageRequest.Builder(applicationContext)
+                                    .data(curImageURL)
+                                    .target(coverImage)
+                                    .listener { _, _ ->
+                                        coverImage.startAnimation(fadeIn)
+                                    }
+                                    .build()
 
-                            imageLoader.enqueue(request)
+                                imageLoader.enqueue(request)
+                            } else {
+                                coverImage.setImageResource(R.drawable.ic_round_smart_display_24)
+                                coverImage.startAnimation(fadeIn)
+                            }
                         }
 
                         override fun onAnimationRepeat(p0: Animation?) {

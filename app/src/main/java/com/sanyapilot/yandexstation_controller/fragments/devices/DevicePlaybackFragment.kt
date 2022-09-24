@@ -66,7 +66,7 @@ class DevicePlaybackFragment : Fragment() {
 
         // ViewModel observers here
         viewModel.isLocal.observe(viewLifecycleOwner) {
-            if (it) {
+            if (it && viewModel.playerActive.value == true) {
                 progressBar.visibility = TextView.VISIBLE
                 curProgress.visibility = TextView.VISIBLE
                 maxProgress.visibility = TextView.VISIBLE
@@ -90,6 +90,18 @@ class DevicePlaybackFragment : Fragment() {
 
         viewModel.hasNext.observe(viewLifecycleOwner) {
             nextButton.isEnabled = it
+        }
+
+        viewModel.playerActive.observe(viewLifecycleOwner) {
+            if (it) {
+                progressBar.visibility = TextView.VISIBLE
+                curProgress.visibility = TextView.VISIBLE
+                maxProgress.visibility = TextView.VISIBLE
+            } else {
+                progressBar.visibility = TextView.GONE
+                curProgress.visibility = TextView.GONE
+                maxProgress.visibility = TextView.GONE
+            }
         }
 
         viewModel.progressMax.observe(viewLifecycleOwner) {

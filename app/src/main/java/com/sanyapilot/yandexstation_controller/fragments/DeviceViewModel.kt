@@ -33,7 +33,7 @@ class DeviceViewModel : ViewModel() {
     fun update(data: StationState) {
         isPlaying.value = data.playing
         volume.value = data.volume
-        val active = data.playerState != null
+        val active = data.playerState != null && data.playerState.title != ""
         playerActive.value = active
         if (!active)
             return

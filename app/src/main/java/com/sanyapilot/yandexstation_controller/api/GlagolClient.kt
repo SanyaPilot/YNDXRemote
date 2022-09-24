@@ -5,6 +5,7 @@ import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
 import android.util.Log
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -202,7 +203,12 @@ class GlagolClient(private val speaker: Speaker) : WebSocketListener() {
     override fun onMessage(webSocket: WebSocket, text: String) {
         Log.d(TAG, "RECEIVED MESSAGE")
         Log.d(TAG, JSONObject(text).getJSONObject("state").toString())
-        listener(json.decodeFromString<StationResponse>(text).state)
+        try {
+            listener(json.decodeFromString<StationResponse>(text).state)
+        } catch (e: SerializationException) {
+            Log.e(TAG, "Station throws invalid response!")
+            e.printStackTrace()
+        }
     }
 
     override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
