@@ -1,13 +1,25 @@
 package com.sanyapilot.yandexstation_controller.fragments.devices
 
+import android.content.res.Configuration
+import android.os.Build
 import android.os.Bundle
+import android.util.DisplayMetrics
 import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowInsets
+import android.view.animation.AccelerateInterpolator
+import android.view.animation.AlphaAnimation
+import android.view.animation.Animation
+import android.view.animation.DecelerateInterpolator
+import android.widget.ImageView
 import android.widget.TextView
+import androidx.cardview.widget.CardView
 import androidx.lifecycle.ViewModelProvider
+import coil.imageLoader
+import coil.request.ImageRequest
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.slider.Slider
 import com.sanyapilot.yandexstation_controller.DeviceActivity
@@ -20,6 +32,7 @@ import com.sanyapilot.yandexstation_controller.fragments.DeviceViewModel
 class DevicePlaybackFragment : Fragment() {
     private lateinit var viewModel: DeviceViewModel
     private lateinit var station: YandexStation
+    private var orientation: Int = 0
     private var allowSliderChange = true
 
     override fun onCreateView(
@@ -33,6 +46,7 @@ class DevicePlaybackFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         viewModel = ViewModelProvider(requireActivity())[DeviceViewModel::class.java]
         station = (activity as DeviceActivity).station
+        orientation = resources.configuration.orientation
 
         val progressBar = requireView().findViewById<Slider>(R.id.progressBar)
 
@@ -50,6 +64,24 @@ class DevicePlaybackFragment : Fragment() {
         progressBar.setLabelFormatter { value: Float ->
             getMinutesSeconds(value.toInt())
         }
+
+        // Picture card scaling
+        if (orientation == Configuration.ORIENTATION_PORTRAIT) {
+            @Suppress("DEPRECATION") val screenHeight = if (Build.VERSION.SDK_INT > Build.VERSION_CODES.R) {
+                val windowMetrics = requireActivity().windowManager.currentWindowMetrics
+                val insets = windowMetrics.windowInsets.getInsetsIgnoringVisibility(WindowInsets.Type.systemBars())
+                windowMetrics.bounds.height() - insets.top - insets.bottom
+            } else {
+                val screenMetrics = DisplayMetrics()
+                requireActivity().windowManager.defaultDisplay.getMetrics(screenMetrics)
+                screenMetrics.heightPixels
+            }
+
+            val imageCard = requireView().findViewById<CardView>(R.id.imageCard)
+            val sideLength = screenHeight / 2.3
+            imageCard.layoutParams.height = sideLength.toInt()
+            imageCard.layoutParams.width = sideLength.toInt()
+        }
     }
 
     override fun onResume() {
@@ -63,6 +95,9 @@ class DevicePlaybackFragment : Fragment() {
         val progressBar = requireView().findViewById<Slider>(R.id.progressBar)
         val curProgress = requireView().findViewById<TextView>(R.id.curProgress)
         val maxProgress = requireView().findViewById<TextView>(R.id.maxProgress)
+        val coverImage = requireView().findViewById<ImageView>(R.id.cover)
+        val trackName = requireView().findViewById<TextView>(R.id.trackName)
+        val trackArtist = requireView().findViewById<TextView>(R.id.trackArtist)
 
         // ViewModel observers here
         viewModel.isLocal.observe(viewLifecycleOwner) {
@@ -74,6 +109,12 @@ class DevicePlaybackFragment : Fragment() {
                 progressBar.visibility = TextView.GONE
                 curProgress.visibility = TextView.GONE
                 maxProgress.visibility = TextView.GONE
+            }
+
+            if (!it && orientation == Configuration.ORIENTATION_PORTRAIT) {
+                trackName.visibility = TextView.INVISIBLE
+                trackArtist.visibility = TextView.INVISIBLE
+                coverImage.setImageResource(R.drawable.ic_baseline_cloud_24)
             }
         }
 
@@ -101,6 +142,9 @@ class DevicePlaybackFragment : Fragment() {
                 progressBar.visibility = TextView.GONE
                 curProgress.visibility = TextView.GONE
                 maxProgress.visibility = TextView.GONE
+
+                if (orientation == Configuration.ORIENTATION_PORTRAIT)
+                    coverImage.setImageResource(R.drawable.ic_round_pause_on_surface_24)
             }
         }
 
@@ -115,6 +159,18 @@ class DevicePlaybackFragment : Fragment() {
             curProgress.text = getMinutesSeconds(it)
             if (allowSliderChange)
                 progressBar.value = it.toFloat()
+        }
+
+        // Observers for cover in portrait
+        if (orientation == Configuration.ORIENTATION_PORTRAIT) {
+            val observers = PlaybackInfoObservers(viewModel, requireContext())
+            viewModel.isLocal.observe(this) {
+                observers.isLocalObserver(trackName, trackArtist, coverImage, it)
+            }
+            viewModel.playerActive.observe(this) { observers.playerActiveObserver(coverImage, it) }
+            viewModel.trackName.observe(this) { observers.trackNameObserver(trackName, it) }
+            viewModel.trackArtist.observe(this) { observers.trackArtistObserver(trackArtist, it) }
+            viewModel.coverURL.observe(this) { observers.coverObserver(coverImage, it) }
         }
 
         playButton.setOnClickListener {
@@ -144,6 +200,11 @@ class DevicePlaybackFragment : Fragment() {
     override fun onStop() {
         super.onStop()
         Log.d(TAG, "onStop()")
+        if (viewModel.isLocal.value == true && orientation == Configuration.ORIENTATION_PORTRAIT) {
+            viewModel.prevCoverURL.value = null
+            viewModel.prevTrackName.value = null
+            viewModel.prevTrackArtist.value = null
+        }
         viewModel.removeObservers(viewLifecycleOwner)
     }
 

@@ -1,25 +1,14 @@
 package com.sanyapilot.yandexstation_controller
 
 import android.content.res.Configuration
-import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.DisplayMetrics
 import android.util.Log
-import android.view.WindowInsets
-import android.view.animation.AccelerateInterpolator
-import android.view.animation.AlphaAnimation
-import android.view.animation.Animation
-import android.view.animation.DecelerateInterpolator
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.activity.viewModels
-import androidx.cardview.widget.CardView
 import androidx.fragment.app.commit
 import androidx.fragment.app.replace
-import coil.imageLoader
-import coil.load
-import coil.request.ImageRequest
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.button.MaterialButtonToggleGroup
 import com.sanyapilot.yandexstation_controller.api.GlagolClient
@@ -28,6 +17,7 @@ import com.sanyapilot.yandexstation_controller.api.YandexStation
 import com.sanyapilot.yandexstation_controller.fragments.DeviceViewModel
 import com.sanyapilot.yandexstation_controller.fragments.devices.DevicePlaybackFragment
 import com.sanyapilot.yandexstation_controller.fragments.devices.DeviceTTSFragment
+import com.sanyapilot.yandexstation_controller.fragments.devices.PlaybackInfoObservers
 
 class DeviceActivity : AppCompatActivity() {
     lateinit var station: YandexStation
@@ -55,110 +45,18 @@ class DeviceActivity : AppCompatActivity() {
         val appBar = findViewById<MaterialToolbar>(R.id.deviceAppBar)
         appBar?.let { appBar.subtitle = intent.getStringExtra("deviceName") }
 
-        // Picture card scaling
-        val orientation = resources.configuration.orientation
-        if (orientation == Configuration.ORIENTATION_PORTRAIT) {
-            @Suppress("DEPRECATION") val screenHeight = if (Build.VERSION.SDK_INT > Build.VERSION_CODES.R) {
-                val windowMetrics = windowManager.currentWindowMetrics
-                val insets = windowMetrics.windowInsets.getInsetsIgnoringVisibility(WindowInsets.Type.systemBars())
-                windowMetrics.bounds.height() - insets.top - insets.bottom
-            } else {
-                val screenMetrics = DisplayMetrics()
-                windowManager.defaultDisplay.getMetrics(screenMetrics)
-                screenMetrics.heightPixels
-            }
+        if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            val coverImage = findViewById<ImageView>(R.id.cover)
+            val trackName = findViewById<TextView>(R.id.trackName)
+            val trackArtist = findViewById<TextView>(R.id.trackArtist)
 
-            val imageCard = findViewById<CardView>(R.id.imageCard)
-            val sideLength = screenHeight / 2.3
-            imageCard.layoutParams.height = sideLength.toInt()
-            imageCard.layoutParams.width = sideLength.toInt()
-        }
-
-        val coverImage = findViewById<ImageView>(R.id.cover)
-        val trackName = findViewById<TextView>(R.id.trackName)
-        val trackArtist = findViewById<TextView>(R.id.trackArtist)
-
-        // ViewModel observers here
-        viewModel.isLocal.observe(this) {
-            if (it) {
-                //trackName.visibility = TextView.VISIBLE
-                //trackArtist.visibility = TextView.VISIBLE
-            } else {
-                trackName.visibility = TextView.INVISIBLE
-                trackArtist.visibility = TextView.INVISIBLE
-                coverImage.setImageResource(R.drawable.ic_baseline_cloud_24)
-            }
-        }
-
-        viewModel.playerActive.observe(this) {
-            if (!it) {
-                coverImage.setImageResource(R.drawable.ic_round_pause_on_surface_24)
-            }
-        }
-
-        viewModel.trackName.observe(this) {
-            if (it != viewModel.prevTrackName.value) {
-                if (viewModel.prevTrackName.value == null) {
-                    Log.d(com.sanyapilot.yandexstation_controller.api.TAG, "Setting visibility")
-                    Log.d(com.sanyapilot.yandexstation_controller.api.TAG, "${viewModel.prevTrackName.value}")
-                    trackName.visibility = TextView.VISIBLE
-                }
-                viewModel.prevTrackName.value = it
-                animateText(trackName, it)
-            }
-        }
-
-        viewModel.trackArtist.observe(this) {
-            if (it != viewModel.prevTrackArtist.value) {
-                if (viewModel.prevTrackArtist.value == null) {
-                    trackArtist.visibility = TextView.VISIBLE
-                }
-                viewModel.prevTrackArtist.value = it
-                animateText(trackArtist, it)
-            }
-        }
-
-        viewModel.coverURL.observe(this) {
-            if (it != null) {
-                Log.d(TAG, "Img URL: $it")
-                val curImageURL = if (it != "") "https://" + it.removeSuffix("%%") + "800x800" else "dummy"
-                if (curImageURL != viewModel.prevCoverURL.value) {
-                    viewModel.prevCoverURL.value = curImageURL
-
-                    val fadeIn = AlphaAnimation(0f, 1f)
-                    fadeIn.interpolator = DecelerateInterpolator()
-                    fadeIn.duration = 200
-                    val fadeOut = AlphaAnimation(1f, 0f)
-                    fadeOut.interpolator = AccelerateInterpolator()
-                    fadeOut.duration = 200
-
-                    fadeOut.setAnimationListener(object : Animation.AnimationListener {
-                        override fun onAnimationStart(p0: Animation?) {
-                        }
-
-                        override fun onAnimationEnd(p0: Animation?) {
-                            if (curImageURL != "dummy") {
-                                val request = ImageRequest.Builder(applicationContext)
-                                    .data(curImageURL)
-                                    .target(coverImage)
-                                    .listener { _, _ ->
-                                        coverImage.startAnimation(fadeIn)
-                                    }
-                                    .build()
-
-                                imageLoader.enqueue(request)
-                            } else {
-                                coverImage.setImageResource(R.drawable.ic_round_smart_display_24)
-                                coverImage.startAnimation(fadeIn)
-                            }
-                        }
-
-                        override fun onAnimationRepeat(p0: Animation?) {
-                        }
-                    })
-                    coverImage.startAnimation(fadeOut)
-                }
-            }
+            // ViewModel observers here
+            val observers = PlaybackInfoObservers(viewModel, applicationContext)
+            viewModel.isLocal.observe(this) { observers.isLocalObserver(trackName, trackArtist, coverImage, it) }
+            viewModel.playerActive.observe(this) { observers.playerActiveObserver(coverImage, it) }
+            viewModel.trackName.observe(this) { observers.trackNameObserver(trackName, it) }
+            viewModel.trackArtist.observe(this) { observers.trackArtistObserver(trackArtist, it) }
+            viewModel.coverURL.observe(this) { observers.coverObserver(coverImage, it) }
         }
 
         val controlSelector = findViewById<MaterialButtonToggleGroup>(R.id.controlsSelector)
@@ -179,29 +77,6 @@ class DeviceActivity : AppCompatActivity() {
                 }
             }
         }
-    }
-
-    private fun animateText(textView: TextView, value: String) {
-        val fadeIn = AlphaAnimation(0f, 1f)
-        fadeIn.interpolator = DecelerateInterpolator()
-        fadeIn.duration = 200
-        val fadeOut = AlphaAnimation(1f, 0f)
-        fadeOut.interpolator = AccelerateInterpolator()
-        fadeOut.duration = 200
-
-        fadeOut.setAnimationListener(object : Animation.AnimationListener {
-            override fun onAnimationStart(p0: Animation?) {
-            }
-
-            override fun onAnimationEnd(p0: Animation?) {
-                textView.text = value
-                textView.startAnimation(fadeIn)
-            }
-
-            override fun onAnimationRepeat(p0: Animation?) {
-            }
-        })
-        textView.startAnimation(fadeOut)
     }
 
     override fun onDestroy() {
