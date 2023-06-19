@@ -8,11 +8,24 @@
     <string name="loginAction">Войти</string>
     <string name="loginInvalidUser">Неверный логин!</string>
     <string name="loginInvalidPasswd">Неверный пароль!</string>
+    <string name="loginInvalidCode">Неверный код!</string>
     <string name="loginNotSupported">Вход с паролем не удался! Отключите 2FA, или включите вход по Яндекс.Ключу</string>
     <string name="loginXTokenFailed">Не удалось войти в аккаунт! Попробуйте авторизоваться заново</string>
     <string name="errorNoInternet">Нет подключения к сети!</string>
     <string name="aboutAccount">Об аккаунте</string>
     <string name="logOut">Выйти</string>
+    <string name="loginHello">Привет!</string>
+    <string name="loginDescription">Это приложение для управления вашей прошитой станцией.
+Для начала, зарегистрируйтесь в нашем Telegram боте:
+t.me/yndxfuck_bot
+Получите у бота код для приложения, и введите его в поле ниже
+
+По всем вопросам обращайтесь в наш чат:
+t.me/yndxfuck_chat</string>
+    <string name="authCode">Код из бота</string>
+
+    <string name="serverDead">Упс… С сервером что-то не так!</string>
+    <string name="wtf">WTF</string>
 
     <string name="devices">Устройства</string>
     <string name="account">Аккаунт</string>

@@ -11,8 +11,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.sanyapilot.yandexstation_controller.R
-import com.sanyapilot.yandexstation_controller.TAG
-import com.sanyapilot.yandexstation_controller.api.QuasarClient
+import com.sanyapilot.yandexstation_controller.api.FuckedQuasarClient
 import kotlin.concurrent.thread
 
 class DevicesFragment : Fragment() {
@@ -36,21 +35,9 @@ class DevicesFragment : Fragment() {
         val recycler = view.findViewById<RecyclerView>(R.id.devicesRecycler)
 
         thread(start = true) {
-            val result = QuasarClient.getSpeakersByRoom()
-            val dataSet = mutableListOf<Any>()
-            val titlePos = mutableListOf<Int>()
-            for (key in result.keys.iterator()) {
-                Log.d(TAG, "New title, ")
-                val title = (key ?: "Без комнаты")
-                dataSet.add(title as Any)
-                titlePos.add(dataSet.indexOf(title as Any))
-                for (item in result[key]!!) {
-                    dataSet.add(item)
-                }
-            }
             requireActivity().runOnUiThread {
                 recycler.layoutManager = LinearLayoutManager(view.context)
-                recycler.adapter = DevicesRecyclerAdapter(dataSet, titlePos)
+                recycler.adapter = DevicesRecyclerAdapter(FuckedQuasarClient.getDevices())
             }
         }
     }

@@ -5,7 +5,8 @@ import android.content.Context
 import com.google.android.material.color.DynamicColors
 import com.sanyapilot.yandexstation_controller.api.Session
 
-class MainApplication: Application() {
+class
+MainApplication: Application() {
     override fun onCreate() {
         super.onCreate()
         // Apply dynamic color
@@ -13,7 +14,7 @@ class MainApplication: Application() {
 
         // Load token from storage (if exists)
         val sharedPrefs = getSharedPreferences("auth", Context.MODE_PRIVATE)
-        if (sharedPrefs.contains("x-token")) Session.xToken = sharedPrefs.getString("x-token", null)!!
+        if (sharedPrefs.contains("access-token")) Session.accessToken = sharedPrefs.getString("access-token", null)!!
 
     }
 }

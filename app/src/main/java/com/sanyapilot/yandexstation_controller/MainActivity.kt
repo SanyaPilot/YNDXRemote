@@ -1,5 +1,7 @@
 package com.sanyapilot.yandexstation_controller
 
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
@@ -17,8 +19,7 @@ import com.google.android.material.navigation.NavigationBarView
 import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.google.android.material.snackbar.Snackbar
 import com.sanyapilot.yandexstation_controller.api.Errors
-import com.sanyapilot.yandexstation_controller.api.QuasarClient
-import com.sanyapilot.yandexstation_controller.api.Session
+import com.sanyapilot.yandexstation_controller.api.FuckedQuasarClient
 import com.sanyapilot.yandexstation_controller.api.mDNSWorker
 import com.sanyapilot.yandexstation_controller.fragments.DevicesFragment
 import com.sanyapilot.yandexstation_controller.fragments.UserFragment
@@ -26,6 +27,7 @@ import kotlin.concurrent.thread
 
 const val TOKEN_INVALID = "com.sanyapilot.yandexstation_controller.tokenInvalid"
 const val SWITCH_ANIM_DURATION: Long = 150
+const val PLAYER_CHANNEL_ID = "yast_control"
 
 class MainActivity : AppCompatActivity() {
     private val viewModel: MainViewModel by viewModels()
@@ -40,6 +42,9 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         Log.e(TAG, "STARTED MAIN")
+
+        // Register notification channel
+        createNotificationChannel()
 
         // Initialize views
         progressBar = findViewById(R.id.mainLoadingBar)
@@ -108,12 +113,12 @@ class MainActivity : AppCompatActivity() {
 
         // Check if we need auth
         val sharedPrefs = getSharedPreferences("auth", Context.MODE_PRIVATE)
-        if (!sharedPrefs.contains("x-token")) {
+        if (!sharedPrefs.contains("access-token")) {
             startActivity(Intent(this, LoginActivity::class.java))
             finish()
             return
         }
-        // Authorize with saved x-token
+        // Authorize with saved access token
         if (savedInstanceState == null) doNetwork()
         else viewModel.setLoggedIn(true)
     }
@@ -128,30 +133,36 @@ class MainActivity : AppCompatActivity() {
         }
     }
     private fun doNetwork() {
-        // Refresh cookies and push default fragment to layout
         // Prepare speakers
         thread(start = true) {
-            val result = Session.refreshCookies()
-            Log.e(TAG, "refreshed cookies")
-            if (result.errorId == Errors.TIMEOUT) {
-                Log.e(TAG, "timeout")
-                runOnUiThread {
-                    Snackbar.make(
-                        findViewById(R.id.mainLayout), getString(R.string.errorNoInternet),
-                        Snackbar.LENGTH_INDEFINITE
-                    ).show()
-                }
-            } else if (result.errorId == Errors.TOKEN_AUTH_FAILED) {
-                Log.e(TAG, "token auth fail")
-                runOnUiThread {
-                    startActivity(
-                        Intent(this, LoginActivity::class.java)
-                            .putExtra(TOKEN_INVALID, true)
-                    )
+            val result = FuckedQuasarClient.fetchDevices()
+            if (!result.ok) {
+                if (result.errorId == Errors.TIMEOUT) {
+                    Log.e(TAG, "timeout")
+                    runOnUiThread {
+                        Snackbar.make(
+                            findViewById(R.id.mainLayout), getString(R.string.errorNoInternet),
+                            Snackbar.LENGTH_INDEFINITE
+                        ).show()
+                    }
+                } else if (result.errorId == Errors.INVALID_TOKEN) {
+                    Log.e(TAG, "token auth fail")
+                    runOnUiThread {
+                        startActivity(
+                            Intent(this, LoginActivity::class.java)
+                                .putExtra(TOKEN_INVALID, true)
+                        )
+                    }
+                } else if (result.errorId == Errors.INTERNAL_SERVER_ERROR) {
+                    Log.e(TAG, "Internal server error!")
+                    runOnUiThread {
+                        Snackbar.make(
+                            findViewById(R.id.mainLayout), getString(R.string.serverDead),
+                            Snackbar.LENGTH_LONG
+                        ).show()
+                    }
                 }
             }
-            Log.e(TAG, "done all checks")
-            QuasarClient.prepareSpeakers()
 
             runOnUiThread {
                 viewModel.setLoggedIn(true)
@@ -210,14 +221,24 @@ class MainActivity : AppCompatActivity() {
     fun logOut(view: View) {
         // Logout action, starting LoginActivity
         val sharedPrefs = getSharedPreferences("auth", Context.MODE_PRIVATE)
-        Log.e(TAG, "TOKEN B4 CLEARING: ${sharedPrefs.getString("x-token", null)}")
+        Log.e(TAG, "TOKEN B4 CLEARING: ${sharedPrefs.getString("access-token", null)}")
         with (sharedPrefs.edit()) {
-            remove("x-token")
+            remove("access-token")
             commit()
         }
-        Session.clearAllCookies()
-        Log.e(TAG, "TOKEN AFTER CLEARING: ${sharedPrefs.getString("x-token", null)}")
+        Log.e(TAG, "TOKEN AFTER CLEARING: ${sharedPrefs.getString("access-token", null)}")
         startActivity(Intent(this, LoginActivity::class.java))
         finish()
+    }
+    private fun createNotificationChannel() {
+        val name = "Station player"
+        val descriptionText = "Control media on station"
+        val importance = NotificationManager.IMPORTANCE_DEFAULT
+        val channel = NotificationChannel(PLAYER_CHANNEL_ID, name, importance).apply {
+            description = descriptionText
+        }
+        val notificationManager: NotificationManager =
+            getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.createNotificationChannel(channel)
     }
 }

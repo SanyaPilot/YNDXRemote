@@ -7,13 +7,12 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import coil.load
 import com.google.android.material.card.MaterialCardView
 import com.sanyapilot.yandexstation_controller.DeviceActivity
 import com.sanyapilot.yandexstation_controller.R
-import com.sanyapilot.yandexstation_controller.api.GenericDevice
+import com.sanyapilot.yandexstation_controller.api.Speaker
 
-class DevicesRecyclerAdapter(private val dataSet: List<Any>, private val titlePos: List<Int>) :
+class DevicesRecyclerAdapter(private val dataSet: List<Any>) :
     RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     /**
@@ -41,8 +40,6 @@ class DevicesRecyclerAdapter(private val dataSet: List<Any>, private val titlePo
         }
     }
 
-    override fun getItemViewType(position: Int): Int = if (position in titlePos) 1 else 0
-
     // Create new views (invoked by the layout manager)
     override fun onCreateViewHolder(viewGroup: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         // Create a new view, which defines the UI of the list item
@@ -64,12 +61,10 @@ class DevicesRecyclerAdapter(private val dataSet: List<Any>, private val titlePo
         if (viewHolder.itemViewType == 0) {
             val curViewHolder = viewHolder as ViewHolder
             val curDevice = dataSet[position]
-            if (curDevice is GenericDevice) {
-                curViewHolder.image.load(curDevice.icon_url) {
-                    crossfade(100)
-                }
+            if (curDevice is Speaker) {
+                curViewHolder.image.setImageResource(R.drawable.station_icon)
                 curViewHolder.name.text = curDevice.name
-                curViewHolder.type.text = curDevice.type
+                curViewHolder.type.text = curDevice.platform
                 curViewHolder.card.setOnClickListener {
                     val intent = Intent(it.context, DeviceActivity::class.java).apply {
                         putExtra("deviceId", curDevice.id)
@@ -78,7 +73,6 @@ class DevicesRecyclerAdapter(private val dataSet: List<Any>, private val titlePo
                     it.context.startActivity(intent)
                 }
             }
-
         } else {
             val curViewHolder = viewHolder as TitleHolder
             val curTitle = dataSet[position]
@@ -86,10 +80,8 @@ class DevicesRecyclerAdapter(private val dataSet: List<Any>, private val titlePo
             if (curTitle is String)
                 curViewHolder.textView.text = curTitle
         }
-
     }
 
     // Return the size of your dataset (invoked by the layout manager)
     override fun getItemCount() = dataSet.size
-
 }
