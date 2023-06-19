@@ -17,8 +17,7 @@ import kotlin.concurrent.thread
 const val TAG = "YaStationController"
 
 class LoginActivity : AppCompatActivity() {
-    private lateinit var loginField: EditText
-    private lateinit var passwdField: EditText
+    private lateinit var codeField: EditText
     private lateinit var sharedPrefs: SharedPreferences
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,17 +33,17 @@ class LoginActivity : AppCompatActivity() {
             ).show()
         }
 
-        loginField = findViewById<TextInputLayout>(R.id.loginField).editText!!
-        passwdField =findViewById<TextInputLayout>(R.id.passwdField).editText!!
+        codeField = findViewById<TextInputLayout>(R.id.codeField).editText!!
     }
     fun auth(view: View) {
         thread(start = true) {
-            val res = Session.login(loginField.text.toString(), passwdField.text.toString())
-            if (res.errorId != null) {
-                var stringID = 0
-                if (res.errorId == Errors.INVALID_ACCOUNT) stringID = R.string.loginInvalidUser
-                if (res.errorId == Errors.INVALID_PASSSWD) stringID = R.string.loginInvalidPasswd
-                if (res.errorId == Errors.NEEDS_PHONE_CHALLENGE) stringID = R.string.loginNotSupported
+            val res = Session.login(codeField.text.toString().toInt())
+            if (!res.ok) {
+                val stringID = when (res.errorId) {
+                    Errors.INVALID_CODE -> R.string.loginInvalidCode
+                    Errors.INTERNAL_SERVER_ERROR -> R.string.serverDead
+                    else -> R.string.wtf
+                }
 
                 runOnUiThread {
                     Snackbar.make(
@@ -54,14 +53,12 @@ class LoginActivity : AppCompatActivity() {
                 }
                 return@thread
             }
-            Session.loginCookies()
-
-            Log.e(TAG, "TOKEN AT LOGIN: ${sharedPrefs.getString("x-token", null)}")
+            Log.e(TAG, "TOKEN AT LOGIN: ${sharedPrefs.getString("access-token", null)}")
             with(sharedPrefs.edit()) {
-                putString("x-token", Session.xToken)
+                putString("access-token", Session.accessToken)
                 apply()
             }
-            Log.e(TAG, "TOKEN AFTER LOGIN: ${sharedPrefs.getString("x-token", null)}")
+            Log.e(TAG, "TOKEN AFTER LOGIN: ${sharedPrefs.getString("access-token", null)}")
             runOnUiThread {
                 startActivity(Intent(this, MainActivity::class.java))
                 finish()
