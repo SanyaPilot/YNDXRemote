@@ -4,6 +4,8 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -12,6 +14,7 @@ import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.activity.result.contract.ActivityResultContracts.RequestPermission
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.*
@@ -36,6 +39,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var loadingImage: ImageView
     private lateinit var container: FragmentContainerView
     private lateinit var title: TextView
+    private lateinit var sharedPrefs: SharedPreferences
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -112,7 +116,7 @@ class MainActivity : AppCompatActivity() {
         bottomNavigation.setOnItemReselectedListener {}
 
         // Check if we need auth
-        val sharedPrefs = getSharedPreferences("auth", Context.MODE_PRIVATE)
+        sharedPrefs = getSharedPreferences("auth", Context.MODE_PRIVATE)
         if (!sharedPrefs.contains("access-token")) {
             startActivity(Intent(this, LoginActivity::class.java))
             finish()
@@ -148,6 +152,10 @@ class MainActivity : AppCompatActivity() {
                 } else if (result.errorId == Errors.INVALID_TOKEN) {
                     Log.e(TAG, "token auth fail")
                     runOnUiThread {
+                        with (sharedPrefs.edit()) {
+                            remove("access-token")
+                            commit()
+                        }
                         startActivity(
                             Intent(this, LoginActivity::class.java)
                                 .putExtra(TOKEN_INVALID, true)
@@ -220,7 +228,6 @@ class MainActivity : AppCompatActivity() {
     }
     fun logOut(view: View) {
         // Logout action, starting LoginActivity
-        val sharedPrefs = getSharedPreferences("auth", Context.MODE_PRIVATE)
         Log.e(TAG, "TOKEN B4 CLEARING: ${sharedPrefs.getString("access-token", null)}")
         with (sharedPrefs.edit()) {
             remove("access-token")
@@ -233,12 +240,32 @@ class MainActivity : AppCompatActivity() {
     private fun createNotificationChannel() {
         val name = "Station player"
         val descriptionText = "Control media on station"
-        val importance = NotificationManager.IMPORTANCE_DEFAULT
+        val importance = NotificationManager.IMPORTANCE_LOW
         val channel = NotificationChannel(PLAYER_CHANNEL_ID, name, importance).apply {
             description = descriptionText
         }
         val notificationManager: NotificationManager =
             getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.createNotificationChannel(channel)
+
+        if (!notificationManager.areNotificationsEnabled() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            // Request a permission
+            val requestPermissionLauncher =
+                registerForActivityResult(RequestPermission()
+                ) { isGranted: Boolean ->
+                    if (isGranted) {
+                        // Permission is granted. Continue the action or workflow in your
+                        // app.
+                    } else {
+                        // Explain to the user that the feature is unavailable because the
+                        // feature requires a permission that the user has denied. At the
+                        // same time, respect the user's decision. Don't link to system
+                        // settings in an effort to convince the user to change their
+                        // decision.
+                    }
+                }
+
+            requestPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+        }
     }
 }

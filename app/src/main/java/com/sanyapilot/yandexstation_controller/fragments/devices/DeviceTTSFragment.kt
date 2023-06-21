@@ -10,7 +10,6 @@ import android.widget.EditText
 import com.google.android.material.materialswitch.MaterialSwitch
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.TextInputLayout
-import com.sanyapilot.yandexstation_controller.DeviceActivity
 import com.sanyapilot.yandexstation_controller.R
 
 class DeviceTTSFragment : Fragment() {
@@ -61,9 +60,9 @@ class DeviceTTSFragment : Fragment() {
             return
         }
 
-        if (switch.isChecked)
+        /*if (switch.isChecked)
             (activity as DeviceActivity).station.sendTTS(text)
         else
-            (activity as DeviceActivity).station.sendCommand(text)
+            (activity as DeviceActivity).station.sendCommand(text)*/
     }
 }

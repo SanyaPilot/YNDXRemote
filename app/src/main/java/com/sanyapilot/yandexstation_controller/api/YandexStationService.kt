@@ -1,23 +1,18 @@
 package com.sanyapilot.yandexstation_controller.api
 
-import android.app.Activity
-import com.google.android.material.snackbar.Snackbar
-import com.sanyapilot.yandexstation_controller.R
-import com.sanyapilot.yandexstation_controller.fragments.DeviceViewModel
 import kotlin.concurrent.thread
 
 // Wrapper class
-class YandexStation(val context: Activity, val speaker: Speaker, val client: GlagolClient, val viewModel: DeviceViewModel) {
+class YandexStationService(val speaker: Speaker, val client: GlagolClient, val listener: (data: StationState) -> Unit) {
     var localMode = false
     var localTTS = true
 
     init {
-        localMode = mDNSWorker.deviceExists(speaker.quasar_info.device_id)
+        localMode = mDNSWorker.deviceExists(speaker.id)
         if (localMode) {
             startLocal(false)
         } else {
-            mDNSWorker.addListener(speaker.quasar_info.device_id) { startLocal(true) }
-            viewModel.isLocal.value = false
+            mDNSWorker.addListener(speaker.id) { startLocal(true) }
         }
     }
 
@@ -28,40 +23,16 @@ class YandexStation(val context: Activity, val speaker: Speaker, val client: Gla
         }
     }
 
-    private fun showExitSnack() {
-        context.runOnUiThread {
-            Snackbar.make(
-                context.findViewById(R.id.deviceLayout), context.getString(R.string.revertToCloud),
-                Snackbar.LENGTH_LONG
-            ).show()
-            viewModel.isLocal.value = false
-        }
-    }
-
     fun startLocal(showSnack: Boolean) {
         thread(start = true) {
-            client.start { context.runOnUiThread { viewModel.update(it) } }
+            client.start { listener(it) }
             client.setOnSocketClosedListener {
-                showExitSnack()
                 localMode = false
             }
             client.setOnFailureListener {
-                showExitSnack()
                 localMode = false
-                mDNSWorker.removeDevice(speaker.quasar_info.device_id)
-                mDNSWorker.addListener(speaker.quasar_info.device_id) { startLocal(true) }
-            }
-            if (showSnack) {
-                context.runOnUiThread {
-                    Snackbar.make(
-                        context.findViewById(R.id.deviceLayout),
-                        context.getString(R.string.revertToLocal),
-                        Snackbar.LENGTH_LONG
-                    ).show()
-                }
-            }
-            context.runOnUiThread {
-                viewModel.isLocal.value = true
+                mDNSWorker.removeDevice(speaker.id)
+                mDNSWorker.addListener(speaker.id) { startLocal(true) }
             }
         }
         localMode = true
@@ -72,49 +43,45 @@ class YandexStation(val context: Activity, val speaker: Speaker, val client: Gla
         if (localMode && localTTS) {
             client.send(GlagolPayload(command = "sendText", text = "Повтори за мной $text"))
         } else {
-            QuasarClient.send(speaker, text, true)
+            //QuasarClient.send(speaker, text, true)
         }
     }
     fun sendCommand(text: String) {
         if (localMode) {
             client.send(GlagolPayload(command = "sendText", text = text))
         } else {
-            QuasarClient.send(speaker, text, false)
+            //QuasarClient.send(speaker, text, false)
         }
     }
     fun play() {
         if (localMode) {
             client.send(GlagolPayload(command = "play"))
         } else {
-            QuasarClient.send(speaker, "продолжи", false)
-            viewModel.isPlaying.value = true
+            //QuasarClient.send(speaker, "продолжи", false)
         }
     }
     fun pause() {
         if (localMode) {
             client.send(GlagolPayload(command = "stop"))
         } else {
-            QuasarClient.send(speaker, "пауза", false)
-            viewModel.isPlaying.value = false
+            //QuasarClient.send(speaker, "пауза", false)
         }
     }
     fun nextTrack() {
         if (localMode) {
             client.send(GlagolPayload(command = "next"))
         } else {
-            QuasarClient.send(speaker, "следующий трек", false)
-            viewModel.isPlaying.value = true
+            //QuasarClient.send(speaker, "следующий трек", false)
         }
     }
     fun prevTrack() {
         if (localMode) {
             client.send(GlagolPayload(command = "prev"))
         } else {
-            QuasarClient.send(speaker, "предыдущий трек", false)
-            viewModel.isPlaying.value = true
+            //QuasarClient.send(speaker, "предыдущий трек", false)
         }
     }
-    fun increaseVolume(value: Float) {
+    /*fun increaseVolume(value: Float) {
         if (localMode) {
             client.send(GlagolPayload(
                 command = "setVolume",
@@ -133,9 +100,19 @@ class YandexStation(val context: Activity, val speaker: Speaker, val client: Gla
         } else {
             QuasarClient.send(speaker, "понизь громкость на ${value.toInt()} процентов", false)
         }
+    }*/
+    fun setVolume(value: Float) {
+        if (localMode) {
+            client.send(GlagolPayload(
+                command = "setVolume",
+                volume = value / 10
+            ))
+        } else {
+            //QuasarClient.send(speaker, "громкость ${value * 10} процентов", false)
+        }
     }
     fun seek(value: Int) {
-        viewModel.seekTime.value = value
+        //viewModel.seekTime.value = value
         client.send(GlagolPayload(
             command = "rewind",
             position = value

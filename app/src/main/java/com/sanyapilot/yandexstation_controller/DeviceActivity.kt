@@ -1,33 +1,67 @@
 package com.sanyapilot.yandexstation_controller
 
+import android.content.ComponentName
 import android.content.res.Configuration
+import android.media.AudioManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
+import android.support.v4.media.MediaBrowserCompat
+import android.support.v4.media.session.MediaControllerCompat
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.activity.viewModels
-import androidx.fragment.app.commit
-import androidx.fragment.app.replace
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.button.MaterialButtonToggleGroup
-import com.sanyapilot.yandexstation_controller.api.GlagolClient
-import com.sanyapilot.yandexstation_controller.api.QuasarClient
-import com.sanyapilot.yandexstation_controller.api.YandexStation
 import com.sanyapilot.yandexstation_controller.fragments.DeviceViewModel
-import com.sanyapilot.yandexstation_controller.fragments.devices.DevicePlaybackFragment
-import com.sanyapilot.yandexstation_controller.fragments.devices.DeviceTTSFragment
 import com.sanyapilot.yandexstation_controller.fragments.devices.PlaybackInfoObservers
 
 class DeviceActivity : AppCompatActivity() {
-    lateinit var station: YandexStation
+    //lateinit var station: YandexStation
     private val viewModel: DeviceViewModel by viewModels()
+    private lateinit var mediaBrowser: MediaBrowserCompat
+
+    private val connectionCallbacks = object : MediaBrowserCompat.ConnectionCallback() {
+        override fun onConnected() {
+            // Get the token for the MediaSession
+            mediaBrowser.sessionToken.also { token ->
+                // Create a MediaControllerCompat
+                val mediaController = MediaControllerCompat(
+                    this@DeviceActivity, // Context
+                    token
+                )
+                // Save the controller
+                MediaControllerCompat.setMediaController(this@DeviceActivity, mediaController)
+            }
+            // Finish building the UI
+            //buildTransportControls()
+            val mediaController = MediaControllerCompat.getMediaController(this@DeviceActivity)
+            //mediaController.transportControls.play()
+        }
+
+        override fun onConnectionSuspended() {
+            // The Service has crashed. Disable transport controls until it automatically reconnects
+        }
+
+        override fun onConnectionFailed() {
+            // The Service has refused our connection
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_device)
 
-        val deviceId = intent.getStringExtra("deviceId")
+        // Start StationControlService
+        val serviceBundle = Bundle()
+        serviceBundle.putString("deviceId", intent.getStringExtra("deviceId"))
+        mediaBrowser = MediaBrowserCompat(
+            this,
+            ComponentName(this, StationControlService::class.java),
+            connectionCallbacks,
+            serviceBundle
+        )
+
+        /*val deviceId = intent.getStringExtra("deviceId")
         val speaker = QuasarClient.getSpeakerById(deviceId!!)!!
 
         if (viewModel.station.value == null) {
@@ -40,7 +74,7 @@ class DeviceActivity : AppCompatActivity() {
             viewModel.station.value = station
         } else {
             station = viewModel.station.value!!
-        }
+        }*/
 
         val appBar = findViewById<MaterialToolbar>(R.id.deviceAppBar)
         appBar?.let { appBar.subtitle = intent.getStringExtra("deviceName") }
@@ -62,7 +96,7 @@ class DeviceActivity : AppCompatActivity() {
         val controlSelector = findViewById<MaterialButtonToggleGroup>(R.id.controlsSelector)
 
         // Bottom selector listener
-        controlSelector.addOnButtonCheckedListener { _, checkedId, isChecked ->
+        /*controlSelector.addOnButtonCheckedListener { _, checkedId, isChecked ->
             Log.d(TAG, "Checked id: $checkedId")
             if (checkedId == R.id.playbackButton && isChecked) {
                 supportFragmentManager.commit {
@@ -76,10 +110,30 @@ class DeviceActivity : AppCompatActivity() {
                     replace<DeviceTTSFragment>(R.id.controlsContainer)
                 }
             }
-        }
+        }*/
     }
 
-    override fun onDestroy() {
+    override fun onStart() {
+        super.onStart()
+        mediaBrowser.connect()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        volumeControlStream = AudioManager.STREAM_MUSIC
+    }
+
+    override fun onStop() {
+        super.onStop()
+        //mediaBrowser.disconnect()
+    }
+    /*override fun onStop() {
+        super.onStop()
+        MediaControllerCompat.getMediaController(this)?.unregisterCallback(controllerCallback)
+        mediaBrowser.disconnect()
+    }*/
+
+    /*override fun onDestroy() {
         if (isFinishing) {
             station.endLocal()
         } else {
@@ -91,5 +145,5 @@ class DeviceActivity : AppCompatActivity() {
         }
 
         super.onDestroy()
-    }
+    }*/
 }

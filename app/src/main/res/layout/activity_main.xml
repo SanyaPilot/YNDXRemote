@@ -42,8 +42,11 @@
         android:layout_height="0dp"
         app:layout_constraintBottom_toTopOf="@+id/bottomNavigation"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/mainLoadingBar" />
+        app:layout_constraintTop_toBottomOf="@+id/mainLoadingBar"
+        app:layout_constraintVertical_bias="0.0"
+        tools:layout="@layout/fragment_devices" />
 
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottomNavigation"

@@ -4,7 +4,6 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.sanyapilot.yandexstation_controller.api.StationState
-import com.sanyapilot.yandexstation_controller.api.YandexStation
 
 class DeviceViewModel : ViewModel() {
     val isLocal: MutableLiveData<Boolean> by lazy { MutableLiveData<Boolean>() }
@@ -28,7 +27,7 @@ class DeviceViewModel : ViewModel() {
     val seekTime = MutableLiveData<Int?>(null)
 
     // Station object
-    val station: MutableLiveData<YandexStation> by lazy { MutableLiveData<YandexStation>() }
+    //val station: MutableLiveData<YandexStation> by lazy { MutableLiveData<YandexStation>() }
 
     fun update(data: StationState) {
         isPlaying.value = data.playing

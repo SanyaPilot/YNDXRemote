@@ -10,28 +10,20 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowInsets
-import android.view.animation.AccelerateInterpolator
-import android.view.animation.AlphaAnimation
-import android.view.animation.Animation
-import android.view.animation.DecelerateInterpolator
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.cardview.widget.CardView
 import androidx.lifecycle.ViewModelProvider
-import coil.imageLoader
-import coil.request.ImageRequest
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.slider.Slider
-import com.sanyapilot.yandexstation_controller.DeviceActivity
 import com.sanyapilot.yandexstation_controller.R
 import com.sanyapilot.yandexstation_controller.TAG
-import com.sanyapilot.yandexstation_controller.api.YandexStation
 import com.sanyapilot.yandexstation_controller.fragments.DeviceViewModel
 
 
 class DevicePlaybackFragment : Fragment() {
     private lateinit var viewModel: DeviceViewModel
-    private lateinit var station: YandexStation
+    //private lateinit var station: YandexStation
     private var orientation: Int = 0
     private var allowSliderChange = true
 
@@ -45,7 +37,7 @@ class DevicePlaybackFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         viewModel = ViewModelProvider(requireActivity())[DeviceViewModel::class.java]
-        station = (activity as DeviceActivity).station
+        //station = (activity as DeviceActivity).station
         orientation = resources.configuration.orientation
 
         val progressBar = requireView().findViewById<Slider>(R.id.progressBar)
@@ -57,7 +49,7 @@ class DevicePlaybackFragment : Fragment() {
             override fun onStopTrackingTouch(slider: Slider) {
                 viewModel.progress.value = slider.value.toInt()
                 allowSliderChange = true
-                station.seek(slider.value.toInt())
+                //station.seek(slider.value.toInt())
             }
         })
 
@@ -173,7 +165,7 @@ class DevicePlaybackFragment : Fragment() {
             viewModel.coverURL.observe(this) { observers.coverObserver(coverImage, it) }
         }
 
-        playButton.setOnClickListener {
+        /*playButton.setOnClickListener {
             if (viewModel.isPlaying.value == true)
                 station.pause()
             else
@@ -194,7 +186,7 @@ class DevicePlaybackFragment : Fragment() {
 
         volUpButton.setOnClickListener {
             station.increaseVolume(10f)
-        }
+        }*/
     }
 
     override fun onStop() {
