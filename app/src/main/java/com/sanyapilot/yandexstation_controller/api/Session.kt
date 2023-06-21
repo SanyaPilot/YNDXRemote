@@ -1,10 +1,7 @@
 package com.sanyapilot.yandexstation_controller.api
 
 import android.annotation.SuppressLint
-import android.util.Log
-import com.sanyapilot.yandexstation_controller.TAG
 import okhttp3.*
-import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
 import okio.IOException
 import org.json.JSONObject
@@ -122,21 +119,20 @@ object Session {
         }
 
         try {
-            client.newCall(request.build()).execute().use {
-                when (it.code) {
-                    400 -> {
-                        // Invalid device?
-                        return RequestResponse(false, Errors.BAD_REQUEST)
-                    }
-                    401 -> {
-                        // Token is dead, no refresh flow for now
-                        return RequestResponse(false, Errors.INVALID_TOKEN)
-                    }
-                    500 -> {
-                        return RequestResponse(false, Errors.INTERNAL_SERVER_ERROR)
-                    }
-                    else -> return RequestResponse(true, response = it)
+            val resp = client.newCall(request.build()).execute()
+            return when (resp.code) {
+                400 -> {
+                    // Invalid device?
+                    RequestResponse(false, Errors.BAD_REQUEST)
                 }
+                401 -> {
+                    // Token is dead, no refresh flow for now
+                    RequestResponse(false, Errors.INVALID_TOKEN)
+                }
+                500 -> {
+                    RequestResponse(false, Errors.INTERNAL_SERVER_ERROR)
+                }
+                else -> RequestResponse(true, response = resp)
             }
         } catch (e: IOException) {
             return RequestResponse(false, Errors.TIMEOUT)

@@ -4,9 +4,9 @@ import android.content.Context
 import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
 import android.util.Log
+import com.sanyapilot.yandexstation_controller.TAG
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import okhttp3.Response
@@ -138,13 +138,13 @@ class GlagolClient(private val speaker: Speaker) : WebSocketListener() {
     private var failureListener: (() -> Unit)? = null
 
     fun start(func: (data: StationState) -> Unit): GlagolResponse {
-        localDevice = mDNSWorker.getDevice(speaker.quasar_info.device_id)
+        localDevice = mDNSWorker.getDevice(speaker.id)
         if (localDevice == null)
             return GlagolResponse(false, GlagolErrors.DEVICE_NOT_DISCOVERED)
 
         // Get device token
-        val response = Session.get("https://quasar.yandex.ru/glagol/token?device_id=${speaker.quasar_info.device_id}&platform=${speaker.quasar_info.platform}")
-        val parsed = json.decodeFromString<TokenResponse>(response.response!!.body!!.string())
+        val response = Session.get("$FQ_BACKEND_URL/glagol/token?device_id=${speaker.id}&platform=${speaker.platform}")
+        val parsed = json.decodeFromString<TokenResponse>(response.response!!.body.string())
         token = parsed.token
         Log.d(TAG, "Got token $token")
 
@@ -415,9 +415,10 @@ object mDNSWorker {
     }
     fun removeDevice(uuid: String) {
         for (device in devices) {
-            if (device.uuid == uuid)
+            if (device.uuid == uuid) {
                 devices.remove(device)
                 return
+            }
         }
     }
     fun getDevice(uuid: String): LocalDevice? {

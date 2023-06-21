@@ -8,8 +8,7 @@ import okhttp3.MediaType.Companion.toMediaType
 
 @Serializable
 data class DevicesResponse(
-    val devices: List<Speaker>,
-    val status: Boolean
+    val devices: List<Speaker>
 )
 
 @Serializable
@@ -27,15 +26,18 @@ data class NetworkInfo(
     val mac_addresses: List<String>
 )
 
-const val FQ_BACKEND_URL = "https://iot.quasar.yandex.ru/m/user"
+const val FQ_BACKEND_URL = "https://testing.yndxfuck.ru"
 val JSON_MEDIA_TYPE = "application/json; charset=utf-8".toMediaType()
 
 object FuckedQuasarClient {
     private var devices = listOf<Speaker>()
     private val json = Json { ignoreUnknownKeys = true }
 
-    fun fetchDevices() {
+    fun fetchDevices(): RequestResponse {
         val result = Session.get("$FQ_BACKEND_URL/glagol/device_list")
+        if (!result.ok) {
+            return result
+        }
         val body = result.response!!.body.string()
         Log.d(TAG, body)
         val parsed = json.decodeFromString<DevicesResponse>(body)
@@ -43,6 +45,8 @@ object FuckedQuasarClient {
 
         Log.e(TAG, parsed.toString())
         devices = parsed.devices
+
+        return result
     }
     fun getDevices(): List<Speaker> = devices
 
