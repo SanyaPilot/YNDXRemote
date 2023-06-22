@@ -1,12 +1,16 @@
 package com.sanyapilot.yandexstation_controller
 
 import android.content.ComponentName
+import android.content.Intent
 import android.content.res.Configuration
 import android.media.AudioManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
+import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaControllerCompat
+import android.support.v4.media.session.PlaybackStateCompat
+import android.util.Log
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.activity.viewModels
@@ -14,11 +18,12 @@ import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.button.MaterialButtonToggleGroup
 import com.sanyapilot.yandexstation_controller.fragments.DeviceViewModel
 import com.sanyapilot.yandexstation_controller.fragments.devices.PlaybackInfoObservers
+import kotlin.concurrent.thread
 
 class DeviceActivity : AppCompatActivity() {
-    //lateinit var station: YandexStation
     private val viewModel: DeviceViewModel by viewModels()
     private lateinit var mediaBrowser: MediaBrowserCompat
+    lateinit var mediaController: MediaControllerCompat
 
     private val connectionCallbacks = object : MediaBrowserCompat.ConnectionCallback() {
         override fun onConnected() {
@@ -33,9 +38,20 @@ class DeviceActivity : AppCompatActivity() {
                 MediaControllerCompat.setMediaController(this@DeviceActivity, mediaController)
             }
             // Finish building the UI
-            //buildTransportControls()
-            val mediaController = MediaControllerCompat.getMediaController(this@DeviceActivity)
-            //mediaController.transportControls.play()
+            mediaController = MediaControllerCompat.getMediaController(this@DeviceActivity)
+            mediaController.registerCallback(controllerCallback)
+
+            // Update progress bar
+            thread(start = true) {
+                while (true) {
+                    runOnUiThread {
+                        viewModel.progress.value = (mediaController.playbackState.position / 1000).toInt()
+                    }
+                    Thread.sleep(250)
+                }
+            }
+
+            viewModel.isReady.value = true
         }
 
         override fun onConnectionSuspended() {
@@ -47,34 +63,36 @@ class DeviceActivity : AppCompatActivity() {
         }
     }
 
+    private var controllerCallback = object : MediaControllerCompat.Callback() {
+        override fun onMetadataChanged(metadata: MediaMetadataCompat?) {
+            Log.d(TAG, "onMetadataChanged!")
+            viewModel.trackName.value = metadata!!.getString(MediaMetadataCompat.METADATA_KEY_TITLE)
+            viewModel.trackArtist.value = metadata.getString(MediaMetadataCompat.METADATA_KEY_ARTIST)
+            viewModel.progressMax.value = (metadata.getLong(MediaMetadataCompat.METADATA_KEY_DURATION) / 1000).toInt()
+            viewModel.coverURL.value = metadata.getString(MediaMetadataCompat.METADATA_KEY_ALBUM_ART_URI)
+            viewModel.coverBitmap.value = metadata.getBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART)
+        }
+
+        override fun onPlaybackStateChanged(state: PlaybackStateCompat?) {
+            viewModel.isPlaying.value = (state!!.state == PlaybackStateCompat.STATE_PLAYING)
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_device)
 
         // Start StationControlService
-        val serviceBundle = Bundle()
-        serviceBundle.putString("deviceId", intent.getStringExtra("deviceId"))
+        startService(
+            Intent(this, StationControlService::class.java)
+                .putExtra(DEVICE_ID, intent.getStringExtra("deviceId"))
+        )
         mediaBrowser = MediaBrowserCompat(
             this,
             ComponentName(this, StationControlService::class.java),
             connectionCallbacks,
-            serviceBundle
+            null
         )
-
-        /*val deviceId = intent.getStringExtra("deviceId")
-        val speaker = QuasarClient.getSpeakerById(deviceId!!)!!
-
-        if (viewModel.station.value == null) {
-            station = YandexStation(
-                this,
-                speaker = speaker,
-                client = GlagolClient(speaker),
-                viewModel = viewModel
-            )
-            viewModel.station.value = station
-        } else {
-            station = viewModel.station.value!!
-        }*/
 
         val appBar = findViewById<MaterialToolbar>(R.id.deviceAppBar)
         appBar?.let { appBar.subtitle = intent.getStringExtra("deviceName") }
@@ -86,11 +104,10 @@ class DeviceActivity : AppCompatActivity() {
 
             // ViewModel observers here
             val observers = PlaybackInfoObservers(viewModel, applicationContext)
-            viewModel.isLocal.observe(this) { observers.isLocalObserver(trackName, trackArtist, coverImage, it) }
             viewModel.playerActive.observe(this) { observers.playerActiveObserver(coverImage, it) }
             viewModel.trackName.observe(this) { observers.trackNameObserver(trackName, it) }
             viewModel.trackArtist.observe(this) { observers.trackArtistObserver(trackArtist, it) }
-            viewModel.coverURL.observe(this) { observers.coverObserver(coverImage, it) }
+            viewModel.coverBitmap.observe(this) { observers.coverObserver(coverImage, it, viewModel.coverURL.value) }
         }
 
         val controlSelector = findViewById<MaterialButtonToggleGroup>(R.id.controlsSelector)
@@ -123,15 +140,11 @@ class DeviceActivity : AppCompatActivity() {
         volumeControlStream = AudioManager.STREAM_MUSIC
     }
 
-    override fun onStop() {
+    public override fun onStop() {
         super.onStop()
-        //mediaBrowser.disconnect()
-    }
-    /*override fun onStop() {
-        super.onStop()
-        MediaControllerCompat.getMediaController(this)?.unregisterCallback(controllerCallback)
+        mediaController.unregisterCallback(controllerCallback)
         mediaBrowser.disconnect()
-    }*/
+    }
 
     /*override fun onDestroy() {
         if (isFinishing) {

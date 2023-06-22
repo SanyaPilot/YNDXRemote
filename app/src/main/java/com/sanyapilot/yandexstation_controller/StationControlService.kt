@@ -2,6 +2,7 @@ package com.sanyapilot.yandexstation_controller
 import android.app.Notification
 import android.app.NotificationManager
 import android.content.Context
+import android.content.Intent
 import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
@@ -21,6 +22,8 @@ private const val MY_MEDIA_ROOT_ID = "media_root_id"
 private const val MY_EMPTY_MEDIA_ROOT_ID = "empty_root_id"
 private const val PLAYER_NOTIFICATION_ID = 732
 
+const val DEVICE_ID = "com.sanyapilot.yandexstation_controller.deviceId"
+
 class StationControlService : MediaBrowserServiceCompat() {
     private lateinit var mediaSession: MediaSessionCompat
     private lateinit var stateBuilder: PlaybackStateCompat.Builder
@@ -28,13 +31,13 @@ class StationControlService : MediaBrowserServiceCompat() {
     private lateinit var station: YandexStationService
     private lateinit var notificationManager: NotificationManager
     private lateinit var volumeProvider: VolumeProviderCompat
-    private var deviceId: String? = null
 
     private var coverURL: String? = null
     private var initialFetchingDone = false
     private var seekTime: Int? = null
     private var hasNext = true
     private var hasPrev = true
+    private lateinit var prevAction: String
 
     override fun onCreate() {
         super.onCreate()
@@ -46,13 +49,25 @@ class StationControlService : MediaBrowserServiceCompat() {
         // MediaSession callbacks here
         val mediaSessionCallback = object : MediaSessionCompat.Callback() {
             override fun onPlay() {
-                Log.e(TAG, "onPlay")
                 station.play()
+                stateBuilder.setState(
+                    PlaybackStateCompat.STATE_PLAYING,
+                    mediaSession.controller.playbackState.position,
+                    1F
+                )
+                mediaSession.setPlaybackState(stateBuilder.build())
+                prevAction = "pause"
             }
 
             override fun onPause() {
-                Log.e(TAG, "onPause")
                 station.pause()
+                stateBuilder.setState(
+                    PlaybackStateCompat.STATE_PAUSED,
+                    mediaSession.controller.playbackState.position,
+                    0F
+                )
+                mediaSession.setPlaybackState(stateBuilder.build())
+                prevAction = "play"
             }
 
             override fun onStop() {
@@ -60,25 +75,24 @@ class StationControlService : MediaBrowserServiceCompat() {
             }
 
             override fun onSkipToNext() {
-                Log.e(TAG, "onNext")
                 station.nextTrack()
             }
 
             override fun onSkipToPrevious() {
-                Log.e(TAG, "onPrev")
                 station.prevTrack()
             }
 
             override fun onSeekTo(pos: Long) {
-                Log.e(TAG, "onSeek")
                 val intPos = (pos / 1000).toInt()
+                val curState = mediaSession.controller.playbackState
                 seekTime = intPos
                 station.seek(intPos)
                 stateBuilder.setState(
-                    PlaybackStateCompat.STATE_PLAYING,
+                    curState.state,
                     pos,
-                    1F
+                    curState.playbackSpeed
                 )
+                mediaSession.setPlaybackState(stateBuilder.build())
             }
         }
 
@@ -118,6 +132,29 @@ class StationControlService : MediaBrowserServiceCompat() {
             // Remote playback
             setPlaybackToRemote(volumeProvider)
         }
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        val deviceId = intent!!.getStringExtra(DEVICE_ID)
+        Log.d(TAG, "DeviceID: $deviceId")
+        val speaker = FuckedQuasarClient.getDeviceById(deviceId!!)!!
+        Log.e(TAG, speaker.id)
+
+        station = YandexStationService(
+            speaker = speaker,
+            client = GlagolClient(speaker)
+        ) { observer(it) }
+
+        // Start MediaSession and go foreground
+        mediaMetadataBuilder
+            .putString(MediaMetadataCompat.METADATA_KEY_TITLE, "Fetching data...")
+            .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, station.speaker.name)
+        mediaSession.setMetadata(mediaMetadataBuilder.build())
+        mediaSession.isActive = true
+
+        startForeground(PLAYER_NOTIFICATION_ID, buildMediaNotification())
+
+        return super.onStartCommand(intent, flags, startId)
     }
 
     private fun updateNotification() {
@@ -219,28 +256,6 @@ class StationControlService : MediaBrowserServiceCompat() {
         clientUid: Int,
         rootHints: Bundle?
     ): BrowserRoot {
-        // Really bad way to retrieve device ID
-        if (deviceId == null) {
-            // Work with speaker
-            deviceId = browserRootHints.getString("deviceId")
-            val speaker = FuckedQuasarClient.getDeviceById(deviceId!!)!!
-            Log.e(TAG, speaker.id)
-
-            station = YandexStationService(
-                speaker = speaker,
-                client = GlagolClient(speaker)
-            ) { observer(it) }
-
-            // Start MediaSession and go foreground
-            mediaMetadataBuilder
-                .putString(MediaMetadataCompat.METADATA_KEY_TITLE, "Fetching data...")
-                .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, station.speaker.name)
-            mediaSession.setMetadata(mediaMetadataBuilder.build())
-            mediaSession.isActive = true
-
-            startForeground(PLAYER_NOTIFICATION_ID, buildMediaNotification())
-        }
-
         return BrowserRoot(MY_EMPTY_MEDIA_ROOT_ID, null)
     }
 
@@ -274,7 +289,8 @@ class StationControlService : MediaBrowserServiceCompat() {
         val state = controller.playbackState.state
         val url = data.playerState?.extra?.coverURI
         val description = controller.metadata.description
-        var update = false
+        var updateState = false
+        var updateMeta = false
 
         // Initial fetching or seek performed
         if (!initialFetchingDone || (seekTime != null && data.playerState!!.progress.toInt() == seekTime!!)) {
@@ -283,23 +299,26 @@ class StationControlService : MediaBrowserServiceCompat() {
                 (data.playerState!!.progress * 1000).toLong(),
                 if (data.playing) 1F else 0F
             )
-            update = true
+            updateState = true
             initialFetchingDone = true
             seekTime = null
-        } else if (state == PlaybackStateCompat.STATE_PLAYING && !data.playing) {
+            prevAction = if (data.playing) "play" else "pause"
+        } else if (prevAction == "play" && !data.playing) {
             stateBuilder.setState(
                     PlaybackStateCompat.STATE_PAUSED,
                     (data.playerState!!.progress * 1000).toLong(),
                     0F
                 )
-            update = true
-        } else if (state == PlaybackStateCompat.STATE_PAUSED && data.playing) {
+            prevAction = "pause"
+            updateState = true
+        } else if (prevAction == "pause" && data.playing && data.playerState!!.progress > 0) { // Sometimes 0 can be received here. Station bug?
             stateBuilder.setState(
                 PlaybackStateCompat.STATE_PLAYING,
                 (data.playerState!!.progress * 1000).toLong(),
                 1F
             )
-            update = true
+            prevAction = "play"
+            updateState = true
         }
 
         // Set currently supported actions
@@ -317,7 +336,17 @@ class StationControlService : MediaBrowserServiceCompat() {
             mediaMetadataBuilder
                 .putString(MediaMetadataCompat.METADATA_KEY_TITLE, data.playerState.title)
                 .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, data.playerState.subtitle)
-            update = true
+
+            // Update position
+            if (state == PlaybackStateCompat.STATE_PLAYING && data.playing){
+                stateBuilder.setState(
+                    PlaybackStateCompat.STATE_PLAYING,
+                    (data.playerState.progress * 1000).toLong(),
+                    1F
+                )
+                updateState = true
+            }
+            updateMeta = true
         }
 
         // Sometimes duration can be suddenly 0 while playing typical tracks. Station bug?
@@ -330,32 +359,41 @@ class StationControlService : MediaBrowserServiceCompat() {
 
         // Remove seek bar if needs
         if (!data.playerState.hasProgressBar)
-            mediaMetadataBuilder.putLong( MediaMetadataCompat.METADATA_KEY_DURATION, -1L)
+            mediaMetadataBuilder.putLong(MediaMetadataCompat.METADATA_KEY_DURATION, -1L)
 
-        if (coverURL != url && url != null) {
-            val curImageURL = if (url != "") "https://" + url.removeSuffix("%%") + "800x800" else "dummy"
-            val request = Request.Builder()
-                .url(curImageURL)
-                .build()
+        if (url != null) {
+            val curImageURL =
+                if (url != "") "https://" + url.removeSuffix("%%") + "800x800" else "dummy"
+            if (coverURL != curImageURL) {
+                mediaMetadataBuilder.putString(
+                    MediaMetadataCompat.METADATA_KEY_ALBUM_ART_URI,
+                    curImageURL
+                )
+                val request = Request.Builder()
+                    .url(curImageURL)
+                    .build()
 
-            Session.client.newCall(request).execute().use { resp ->
-                if (resp.isSuccessful) {
-                    val image = BitmapFactory.decodeStream(resp.body!!.byteStream())
-                    mediaMetadataBuilder.putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, image)
+                Session.client.newCall(request).execute().use { resp ->
+                    if (resp.isSuccessful) {
+                        val image = BitmapFactory.decodeStream(resp.body!!.byteStream())
+                        mediaMetadataBuilder.putBitmap(
+                            MediaMetadataCompat.METADATA_KEY_ALBUM_ART,
+                            image
+                        )
+                    }
                 }
+                coverURL = curImageURL
+                updateMeta = true
             }
-            coverURL = curImageURL
-            update = true
         }
 
         // Set current volume level
         if (volumeProvider.currentVolume != (data.volume * 10).toInt())
             volumeProvider.currentVolume = (data.volume * 10).toInt()
 
-        if (update) {
-            mediaSession.setPlaybackState(stateBuilder.build())
-            mediaSession.setMetadata(mediaMetadataBuilder.build())
-            updateNotification()
-        }
+        if (updateState) mediaSession.setPlaybackState(stateBuilder.build())
+        if (updateMeta) mediaSession.setMetadata(mediaMetadataBuilder.build())
+
+        updateNotification()
     }
 }

@@ -3,6 +3,7 @@ package com.sanyapilot.yandexstation_controller.api
 import android.content.Context
 import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
+import android.net.wifi.WifiManager
 import android.util.Log
 import com.sanyapilot.yandexstation_controller.TAG
 import kotlinx.serialization.Serializable
@@ -12,10 +13,8 @@ import kotlinx.serialization.json.Json
 import okhttp3.Response
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
-import org.json.JSONObject
 import java.util.*
-import java.util.concurrent.ConcurrentLinkedQueue
-import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.thread
 
 enum class GlagolErrors {
@@ -201,8 +200,8 @@ class GlagolClient(private val speaker: Speaker) : WebSocketListener() {
     }
 
     override fun onMessage(webSocket: WebSocket, text: String) {
-        Log.d(TAG, "RECEIVED MESSAGE")
-        Log.d(TAG, JSONObject(text).getJSONObject("state").toString())
+        //Log.d(TAG, "RECEIVED MESSAGE")
+        //Log.d(TAG, JSONObject(text).getJSONObject("state").toString())
         try {
             listener(json.decodeFromString<StationResponse>(text).state)
         } catch (e: SerializationException) {
@@ -228,171 +227,115 @@ data class LocalDevice(
     val port: Int
 )
 
-// Thanks to
-// https://stackoverflow.com/questions/57940021/nsdmanager-resolvelistener-error-code-3-failure-already-active
-class NsdHelper(val context: Context) {
+// Thanks to Home Assistant!
+// https://github.com/home-assistant/android/blob/16eabfe34f6be1110a3a3899562b3d680b9ad14d/app/src/main/java/io/homeassistant/companion/android/onboarding/discovery/HomeAssistantSearcher.kt
+class StationSearcher constructor(
+    context: Context,
+) : NsdManager.DiscoveryListener {
 
-    // Declare DNS-SD related variables for service discovery
-    val nsdManager: NsdManager = context.getSystemService(Context.NSD_SERVICE) as NsdManager
-    private var discoveryListener: NsdManager.DiscoveryListener? = null
-    private var resolveListener: NsdManager.ResolveListener? = null
-    private var resolveListenerBusy = AtomicBoolean(false)
-    private var pendingNsdServices = ConcurrentLinkedQueue<NsdServiceInfo>()
-    var resolvedNsdServices: MutableList<NsdServiceInfo> = Collections.synchronizedList(ArrayList<NsdServiceInfo>())
+    private val nsdManager: NsdManager = context.getSystemService(Context.NSD_SERVICE) as NsdManager
+    private val wifiManager: WifiManager = context.getSystemService(Context.WIFI_SERVICE) as WifiManager
 
     companion object {
-
-        // Type of services to look for
-        const val NSD_SERVICE_TYPE: String = "_yandexio._tcp."
-        // Services' Names must start with this
-        // const val NSD_SERVICE_NAME: String = "MyServiceName-"
+        private const val SERVICE_TYPE = "_yandexio._tcp"
+        private const val TAG = "StationNSD"
+        private val lock = ReentrantLock()
     }
 
-    // Initialize Listeners
-    fun initializeNsd() {
-        // Initialize only resolve listener
-        initializeResolveListener()
-    }
+    private var isSearching = false
+    private var multicastLock: WifiManager.MulticastLock? = null
 
-    // Instantiate DNS-SD discovery listener
-    private fun initializeDiscoveryListener() {
-
-        // Instantiate a new DiscoveryListener
-        discoveryListener = object : NsdManager.DiscoveryListener {
-
-            override fun onDiscoveryStarted(regType: String) {
-                // Called as soon as service discovery begins.
-                Log.d(TAG, "Service discovery started: $regType")
+    fun beginSearch() {
+        if (isSearching) {
+            return
+        }
+        isSearching = true
+        try {
+            nsdManager.discoverServices(SERVICE_TYPE, NsdManager.PROTOCOL_DNS_SD, this)
+        } catch (e: Exception) {
+            Log.e(TAG, "Issue starting discover.", e)
+            isSearching = false
+            return
+        }
+        try {
+            if (multicastLock == null) {
+                multicastLock = wifiManager.createMulticastLock(TAG)
+                multicastLock?.setReferenceCounted(true)
+                multicastLock?.acquire()
             }
+        } catch (e: Exception) {
+            Log.e(TAG, "Issue acquiring multicast lock", e)
+            // Discovery might still work so continue
+        }
+    }
 
-            override fun onServiceFound(service: NsdServiceInfo) {
-                // A service was found! Do something with it
-                Log.d(TAG, "Service discovery success: $service")
+    fun stopSearch() {
+        if (!isSearching) {
+            return
+        }
+        isSearching = false
+        try {
+            nsdManager.stopServiceDiscovery(this)
+            multicastLock?.release()
+            multicastLock = null
+        } catch (e: Exception) {
+            Log.e(TAG, "Issue stopping discovery", e)
+        }
+    }
 
-                if ( service.serviceType == NSD_SERVICE_TYPE ) {
-                    // Both service type and service name are the ones we want
-                    // If the resolver is free, resolve the service to get all the details
-                    if (resolveListenerBusy.compareAndSet(false, true)) {
-                        nsdManager.resolveService(service, resolveListener)
-                    } else {
-                        // Resolver was busy. Add the service to the list of pending services
-                        pendingNsdServices.add(service)
+    // Called as soon as service discovery begins.
+    override fun onDiscoveryStarted(regType: String) {
+        Log.d(TAG, "Service discovery started")
+    }
+
+    override fun onServiceFound(foundService: NsdServiceInfo) {
+        Log.i(TAG, "Service discovery found: $foundService")
+        lock.lock()
+        Thread.sleep(200) // Чтобы просралось
+        nsdManager.resolveService(
+            foundService,
+            object : NsdManager.ResolveListener {
+                override fun onResolveFailed(failedService: NsdServiceInfo?, errorCode: Int) {
+                    // discoveryView.onScanError()
+                    Log.w(TAG, "Failed to resolve service: $failedService, error: $errorCode")
+                    lock.unlock()
+                    // Жуткий костыль ALERT!
+                    this@StationSearcher.onServiceFound(failedService!!)
+                }
+
+                override fun onServiceResolved(resolvedService: NsdServiceInfo?) {
+                    Log.i(TAG, "Service resolved: $resolvedService")
+                    resolvedService?.let {
+                        mDNSWorker.addDevice(LocalDevice(
+                            uuid = String(it.attributes["deviceId"]!!),
+                            host = it.host.hostAddress!!,
+                            port = it.port
+                        ))
                     }
+                    lock.unlock()
                 }
             }
-
-            override fun onServiceLost(service: NsdServiceInfo) {
-                Log.d(TAG, "Service lost: $service")
-
-                // If the lost service was in the queue of pending services, remove it
-                for (pending in pendingNsdServices) {
-                    if (pending.serviceName == service.serviceName)
-                        pendingNsdServices.remove(pending)
-                }
-
-                // If the lost service was in the list of resolved services, remove it
-                synchronized(resolvedNsdServices) {
-                    for (resolved in pendingNsdServices) {
-                        if (resolved.serviceName == service.serviceName)
-                            resolvedNsdServices.remove(resolved)
-                    }
-                }
-
-                // Do the rest of the processing for the lost service
-                onNsdServiceLost(service)
-            }
-
-            override fun onDiscoveryStopped(serviceType: String) {
-                Log.i(TAG, "Discovery stopped: $serviceType")
-            }
-
-            override fun onStartDiscoveryFailed(serviceType: String, errorCode: Int) {
-                Log.e(TAG, "Start Discovery failed: Error code: $errorCode")
-                stopDiscovery()
-            }
-
-            override fun onStopDiscoveryFailed(serviceType: String, errorCode: Int) {
-                Log.e(TAG, "Stop Discovery failed: Error code: $errorCode")
-                nsdManager.stopServiceDiscovery(this)
-            }
-        }
+        )
     }
 
-    // Instantiate DNS-SD resolve listener to get extra information about the service
-    private fun initializeResolveListener() {
-        resolveListener =  object : NsdManager.ResolveListener {
-
-            override fun onServiceResolved(service: NsdServiceInfo) {
-                Log.d(TAG, "Resolve Succeeded: $service")
-
-                // Register the newly resolved service into our list of resolved services
-                resolvedNsdServices.add(service)
-
-                // Process the newly resolved service
-                onNsdServiceResolved(service)
-
-                // Process the next service waiting to be resolved
-                resolveNextInQueue()
-            }
-
-            override fun onResolveFailed(serviceInfo: NsdServiceInfo, errorCode: Int) {
-                // Called when the resolve fails. Use the error code to debug.
-                Log.e(TAG, "Resolve failed: $serviceInfo - Error code: $errorCode")
-
-                // Process the next service waiting to be resolved
-                resolveNextInQueue()
-            }
-        }
+    override fun onServiceLost(service: NsdServiceInfo) {
+        // When the network service is no longer available.
+        // Internal bookkeeping code goes here.
+        Log.e(TAG, "service lost: $service")
     }
 
-    // Start discovering services on the network
-    fun discoverServices() {
-        // Cancel any existing discovery request
-        stopDiscovery()
-
-        initializeDiscoveryListener()
-
-        nsdManager.discoverServices(NSD_SERVICE_TYPE, NsdManager.PROTOCOL_DNS_SD, discoveryListener)
+    override fun onDiscoveryStopped(serviceType: String) {
+        Log.i(TAG, "Discovery stopped: $serviceType")
     }
 
-    // Stop DNS-SD service discovery
-    fun stopDiscovery() {
-        if (discoveryListener != null) {
-            try {
-                nsdManager.stopServiceDiscovery(discoveryListener)
-            } finally {
-            }
-            discoveryListener = null
-        }
+    override fun onStartDiscoveryFailed(serviceType: String, errorCode: Int) {
+        Log.e(TAG, "Discovery failed: Error code:$errorCode")
+        stopSearch()
     }
 
-    // Resolve next NSD service pending resolution
-    private fun resolveNextInQueue() {
-        // Get the next NSD service waiting to be resolved from the queue
-        val nextNsdService = pendingNsdServices.poll()
-        if (nextNsdService != null) {
-            // There was one. Send to be resolved.
-            nsdManager.resolveService(nextNsdService, resolveListener)
-        }
-        else {
-            // There was no pending service. Release the flag
-            resolveListenerBusy.set(false)
-        }
-    }
-
-    // Function to be overriden with custom logic for new service resolved
-    private fun onNsdServiceResolved(service: NsdServiceInfo) {
-        Log.d(TAG, "Device ${service.serviceName} deviceId ${String(service.attributes["deviceId"]!!)}")
-        mDNSWorker.addDevice(LocalDevice(
-            uuid = String(service.attributes["deviceId"]!!),
-            host = service.host.hostAddress!!,
-            port = service.port
-        ))
-    }
-
-    // Function to be overriden with custom logic for service lost
-    private fun onNsdServiceLost(service: NsdServiceInfo) {
-        Log.d(TAG, "Service ${service.serviceName} lost!")
+    override fun onStopDiscoveryFailed(serviceType: String, errorCode: Int) {
+        Log.e(TAG, "Discovery failed: Error code:$errorCode")
+        stopSearch()
     }
 }
 
@@ -402,9 +345,8 @@ object mDNSWorker {
 
     fun init(context: Context) {
         Log.d(TAG, "Registering listener")
-        val helper = NsdHelper(context)
-        helper.initializeNsd()
-        helper.discoverServices()
+        val helper = StationSearcher(context)
+        helper.beginSearch()
     }
     fun addListener(uuid: String, listener: () -> Unit) {
         listeners[uuid] = listener

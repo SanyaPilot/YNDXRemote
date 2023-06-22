@@ -1,6 +1,7 @@
 package com.sanyapilot.yandexstation_controller.fragments.devices
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.util.Log
 import android.view.animation.AccelerateInterpolator
 import android.view.animation.AlphaAnimation
@@ -8,18 +9,18 @@ import android.view.animation.Animation
 import android.view.animation.DecelerateInterpolator
 import android.widget.ImageView
 import android.widget.TextView
-import coil.imageLoader
-import coil.request.ImageRequest
 import com.sanyapilot.yandexstation_controller.R
 import com.sanyapilot.yandexstation_controller.TAG
 import com.sanyapilot.yandexstation_controller.fragments.DeviceViewModel
 
-class PlaybackInfoObservers (private val viewModel: DeviceViewModel, private val context: Context) {
-    fun coverObserver(image: ImageView, url: String?) {
-        if (url != null) {
-            Log.d(TAG, "Img URL: $url")
-            val curImageURL = if (url != "") "https://" + url.removeSuffix("%%") + "800x800" else "dummy"
+class PlaybackInfoObservers (
+        private val viewModel: DeviceViewModel,
+        private val context: Context
+    ) {
+    fun coverObserver(image: ImageView, bitmap: Bitmap?, curImageURL: String?) {
+        if (bitmap != null) {
             if (curImageURL != viewModel.prevCoverURL.value) {
+                Log.d(TAG, "Update cover!")
                 viewModel.prevCoverURL.value = curImageURL
 
                 val fadeIn = AlphaAnimation(0f, 1f)
@@ -35,19 +36,11 @@ class PlaybackInfoObservers (private val viewModel: DeviceViewModel, private val
 
                     override fun onAnimationEnd(p0: Animation?) {
                         if (curImageURL != "dummy") {
-                            val request = ImageRequest.Builder(context)
-                                .data(curImageURL)
-                                .target(image)
-                                .listener { _, _ ->
-                                    image.startAnimation(fadeIn)
-                                }
-                                .build()
-
-                            context.imageLoader.enqueue(request)
+                            image.setImageBitmap(bitmap)
                         } else {
                             image.setImageResource(R.drawable.ic_round_smart_display_24)
-                            image.startAnimation(fadeIn)
                         }
+                        image.startAnimation(fadeIn)
                     }
 
                     override fun onAnimationRepeat(p0: Animation?) {

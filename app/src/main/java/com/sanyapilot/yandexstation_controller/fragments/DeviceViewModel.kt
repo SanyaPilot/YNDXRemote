@@ -1,12 +1,13 @@
 package com.sanyapilot.yandexstation_controller.fragments
 
+import android.graphics.Bitmap
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.sanyapilot.yandexstation_controller.api.StationState
 
 class DeviceViewModel : ViewModel() {
-    val isLocal: MutableLiveData<Boolean> by lazy { MutableLiveData<Boolean>() }
+    val isReady: MutableLiveData<Boolean> by lazy { MutableLiveData<Boolean>() }
     val playerActive: MutableLiveData<Boolean> by lazy { MutableLiveData<Boolean>() }
     val isPlaying: MutableLiveData<Boolean> by lazy { MutableLiveData<Boolean>() }
     val trackName: MutableLiveData<String> by lazy { MutableLiveData<String>() }
@@ -17,6 +18,7 @@ class DeviceViewModel : ViewModel() {
     val progressMax: MutableLiveData<Int> by lazy { MutableLiveData<Int>() }
     val progress: MutableLiveData<Int> by lazy { MutableLiveData<Int>() }
     val type: MutableLiveData<String> by lazy { MutableLiveData<String>() }
+    val coverBitmap: MutableLiveData<Bitmap> by lazy { MutableLiveData<Bitmap>() }
     val coverURL: MutableLiveData<String?> by lazy { MutableLiveData<String?>() }
     val prevCoverURL: MutableLiveData<String?> by lazy { MutableLiveData<String?>() }
     val hasProgressBar: MutableLiveData<Boolean> by lazy { MutableLiveData<Boolean>() }
@@ -59,7 +61,7 @@ class DeviceViewModel : ViewModel() {
     }
 
     fun removeObservers(owner: LifecycleOwner) {
-        isLocal.removeObservers(owner)
+        isReady.removeObservers(owner)
         playerActive.removeObservers(owner)
         isPlaying.removeObservers(owner)
         trackName.removeObservers(owner)
@@ -68,6 +70,7 @@ class DeviceViewModel : ViewModel() {
         progressMax.removeObservers(owner)
         progress.removeObservers(owner)
         type.removeObservers(owner)
+        coverBitmap.removeObservers(owner)
         coverURL.removeObservers(owner)
         hasProgressBar.removeObservers(owner)
         hasNext.removeObservers(owner)

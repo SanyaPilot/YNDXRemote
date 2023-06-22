@@ -3,6 +3,7 @@ package com.sanyapilot.yandexstation_controller.fragments.devices
 import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
+import android.support.v4.media.session.PlaybackStateCompat
 import android.util.DisplayMetrics
 import android.util.Log
 import androidx.fragment.app.Fragment
@@ -16,6 +17,7 @@ import androidx.cardview.widget.CardView
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.slider.Slider
+import com.sanyapilot.yandexstation_controller.DeviceActivity
 import com.sanyapilot.yandexstation_controller.R
 import com.sanyapilot.yandexstation_controller.TAG
 import com.sanyapilot.yandexstation_controller.fragments.DeviceViewModel
@@ -23,7 +25,6 @@ import com.sanyapilot.yandexstation_controller.fragments.DeviceViewModel
 
 class DevicePlaybackFragment : Fragment() {
     private lateinit var viewModel: DeviceViewModel
-    //private lateinit var station: YandexStation
     private var orientation: Int = 0
     private var allowSliderChange = true
 
@@ -36,8 +37,8 @@ class DevicePlaybackFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        viewModel = ViewModelProvider(requireActivity())[DeviceViewModel::class.java]
-        //station = (activity as DeviceActivity).station
+        val activity = requireActivity()
+        viewModel = ViewModelProvider(activity)[DeviceViewModel::class.java]
         orientation = resources.configuration.orientation
 
         val progressBar = requireView().findViewById<Slider>(R.id.progressBar)
@@ -92,24 +93,6 @@ class DevicePlaybackFragment : Fragment() {
         val trackArtist = requireView().findViewById<TextView>(R.id.trackArtist)
 
         // ViewModel observers here
-        viewModel.isLocal.observe(viewLifecycleOwner) {
-            if (it && viewModel.playerActive.value == true) {
-                progressBar.visibility = TextView.VISIBLE
-                curProgress.visibility = TextView.VISIBLE
-                maxProgress.visibility = TextView.VISIBLE
-            } else {
-                progressBar.visibility = TextView.GONE
-                curProgress.visibility = TextView.GONE
-                maxProgress.visibility = TextView.GONE
-            }
-
-            if (!it && orientation == Configuration.ORIENTATION_PORTRAIT) {
-                trackName.visibility = TextView.INVISIBLE
-                trackArtist.visibility = TextView.INVISIBLE
-                coverImage.setImageResource(R.drawable.ic_baseline_cloud_24)
-            }
-        }
-
         viewModel.isPlaying.observe(viewLifecycleOwner) {
             if (it)
                 playButton.setIconResource(R.drawable.ic_round_pause_24)
@@ -142,45 +125,56 @@ class DevicePlaybackFragment : Fragment() {
 
         viewModel.progressMax.observe(viewLifecycleOwner) {
             if (it > 0) {
+                if (progressBar.value >= it) {
+                    Log.d(TAG, "Resetting slider to 0")
+                    curProgress.text = getMinutesSeconds(0)
+                    progressBar.value = 0F
+                }
+
                 maxProgress.text = getMinutesSeconds(it)
                 progressBar.valueTo = it.toFloat()
             }
         }
 
         viewModel.progress.observe(viewLifecycleOwner) {
-            curProgress.text = getMinutesSeconds(it)
-            if (allowSliderChange)
-                progressBar.value = it.toFloat()
+            if (it <= progressBar.valueTo) {
+                curProgress.text = getMinutesSeconds(it)
+                if (allowSliderChange)
+                    progressBar.value = it.toFloat()
+            }
         }
 
         // Observers for cover in portrait
         if (orientation == Configuration.ORIENTATION_PORTRAIT) {
             val observers = PlaybackInfoObservers(viewModel, requireContext())
-            viewModel.isLocal.observe(this) {
-                observers.isLocalObserver(trackName, trackArtist, coverImage, it)
-            }
             viewModel.playerActive.observe(this) { observers.playerActiveObserver(coverImage, it) }
             viewModel.trackName.observe(this) { observers.trackNameObserver(trackName, it) }
             viewModel.trackArtist.observe(this) { observers.trackArtistObserver(trackArtist, it) }
-            viewModel.coverURL.observe(this) { observers.coverObserver(coverImage, it) }
+            viewModel.coverBitmap.observe(this) { observers.coverObserver(coverImage, it, viewModel.coverURL.value) }
         }
 
-        /*playButton.setOnClickListener {
-            if (viewModel.isPlaying.value == true)
-                station.pause()
-            else
-                station.play()
+        // MediaController is ready
+        viewModel.isReady.observe(viewLifecycleOwner) {
+            if (it) {
+                val mediaController = (activity as DeviceActivity).mediaController
+                playButton.setOnClickListener {
+                    if (mediaController.playbackState.state == PlaybackStateCompat.STATE_PLAYING)
+                        mediaController.transportControls.pause()
+                    else
+                        mediaController.transportControls.play()
+                }
+
+                prevButton.setOnClickListener {
+                    mediaController.transportControls.skipToPrevious()
+                }
+
+                nextButton.setOnClickListener {
+                    mediaController.transportControls.skipToNext()
+                }
+            }
         }
 
-        prevButton.setOnClickListener {
-            station.prevTrack()
-        }
-
-        nextButton.setOnClickListener {
-            station.nextTrack()
-        }
-
-        volDownButton.setOnClickListener {
+        /*volDownButton.setOnClickListener {
             station.decreaseVolume(10f)
         }
 
@@ -192,7 +186,7 @@ class DevicePlaybackFragment : Fragment() {
     override fun onStop() {
         super.onStop()
         Log.d(TAG, "onStop()")
-        if (viewModel.isLocal.value == true && orientation == Configuration.ORIENTATION_PORTRAIT) {
+        if (orientation == Configuration.ORIENTATION_PORTRAIT) {
             viewModel.prevCoverURL.value = null
             viewModel.prevTrackName.value = null
             viewModel.prevTrackArtist.value = null
