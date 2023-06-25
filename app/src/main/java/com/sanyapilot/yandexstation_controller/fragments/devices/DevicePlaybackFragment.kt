@@ -37,22 +37,10 @@ class DevicePlaybackFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        val activity = requireActivity()
-        viewModel = ViewModelProvider(activity)[DeviceViewModel::class.java]
+        viewModel = ViewModelProvider(requireActivity())[DeviceViewModel::class.java]
         orientation = resources.configuration.orientation
 
         val progressBar = requireView().findViewById<Slider>(R.id.progressBar)
-
-        progressBar.addOnSliderTouchListener(object : Slider.OnSliderTouchListener {
-            override fun onStartTrackingTouch(slider: Slider) {
-                allowSliderChange = false
-            }
-            override fun onStopTrackingTouch(slider: Slider) {
-                viewModel.progress.value = slider.value.toInt()
-                allowSliderChange = true
-                //station.seek(slider.value.toInt())
-            }
-        })
 
         progressBar.setLabelFormatter { value: Float ->
             getMinutesSeconds(value.toInt())
@@ -83,8 +71,6 @@ class DevicePlaybackFragment : Fragment() {
         val playButton = requireView().findViewById<MaterialButton>(R.id.playButton)
         val prevButton = requireView().findViewById<MaterialButton>(R.id.prevButton)
         val nextButton = requireView().findViewById<MaterialButton>(R.id.nextButton)
-        val volUpButton = requireView().findViewById<MaterialButton>(R.id.volUpButton)
-        val volDownButton = requireView().findViewById<MaterialButton>(R.id.volDownButton)
         val progressBar = requireView().findViewById<Slider>(R.id.progressBar)
         val curProgress = requireView().findViewById<TextView>(R.id.curProgress)
         val maxProgress = requireView().findViewById<TextView>(R.id.maxProgress)
@@ -171,16 +157,18 @@ class DevicePlaybackFragment : Fragment() {
                 nextButton.setOnClickListener {
                     mediaController.transportControls.skipToNext()
                 }
+                progressBar.addOnSliderTouchListener(object : Slider.OnSliderTouchListener {
+                    override fun onStartTrackingTouch(slider: Slider) {
+                        allowSliderChange = false
+                    }
+                    override fun onStopTrackingTouch(slider: Slider) {
+                        viewModel.progress.value = slider.value.toInt()
+                        allowSliderChange = true
+                        mediaController.transportControls.seekTo(slider.value.toLong() * 1000)
+                    }
+                })
             }
         }
-
-        /*volDownButton.setOnClickListener {
-            station.decreaseVolume(10f)
-        }
-
-        volUpButton.setOnClickListener {
-            station.increaseVolume(10f)
-        }*/
     }
 
     override fun onStop() {
