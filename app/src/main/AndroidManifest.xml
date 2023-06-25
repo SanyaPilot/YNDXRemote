@@ -17,7 +17,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
-        tools:targetApi="34">
+        tools:targetApi="33">
         <activity
             android:name=".DeviceActivity"
             android:exported="false" />
@@ -35,7 +35,8 @@
             android:exported="false"
             android:parentActivityName=".MainActivity" />
         <service android:name=".StationControlService"
-            android:exported="false">
+            android:exported="false"
+            android:foregroundServiceType="mediaPlayback">
             <intent-filter>
                 <action android:name="android.media.browse.MediaBrowserService" />
             </intent-filter>

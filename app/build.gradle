@@ -7,12 +7,12 @@ plugins {
 }
 
 android {
-    compileSdk 34
+    compileSdk 33
 
     defaultConfig {
         applicationId "com.sanyapilot.yandexstation_controller"
         minSdk 26
-        targetSdk 34
+        targetSdk 33
         versionCode 1
         versionName "1.0"
 
@@ -40,7 +40,7 @@ dependencies {
     implementation 'androidx.core:core-ktx:1.10.1'
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'androidx.media:media:1.6.0'
-    implementation 'com.google.android.material:material:1.10.0-alpha04'
+    implementation 'com.google.android.material:material:1.9.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation 'androidx.coordinatorlayout:coordinatorlayout:1.2.0'
     implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
@@ -50,7 +50,7 @@ dependencies {
     implementation 'com.squareup.okhttp3:okhttp:5.0.0-alpha.11'
     implementation 'org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1'
     implementation 'io.coil-kt:coil:2.4.0'
-    implementation 'androidx.mediarouter:mediarouter:1.6.0-alpha04'
+    implementation 'androidx.mediarouter:mediarouter:1.4.0'
 
     def lifecycle_version = '2.6.1'
     def arch_version = "2.1.0"
@@ -59,9 +59,15 @@ dependencies {
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_version"
     implementation "androidx.lifecycle:lifecycle-livedata-ktx:$lifecycle_version"
     implementation "androidx.lifecycle:lifecycle-viewmodel-savedstate:$lifecycle_version"
+    //noinspection LifecycleAnnotationProcessorWithJava8
     kapt "androidx.lifecycle:lifecycle-compiler:$lifecycle_version"
-    implementation 'androidx.activity:activity-ktx:1.7.2'
 
     // AndroidX fragment lib
     implementation 'androidx.fragment:fragment-ktx:1.6.0'
+
+    def activity_version = "1.7.2"
+    // Java language implementation
+    implementation "androidx.activity:activity:$activity_version"
+    // Kotlin
+    implementation "androidx.activity:activity-ktx:$activity_version"
 }
