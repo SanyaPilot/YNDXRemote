@@ -1,11 +1,16 @@
 package com.sanyapilot.yandexstation_controller.fragments
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.card.MaterialCardView
 import com.sanyapilot.yandexstation_controller.DeviceActivity
@@ -22,6 +27,7 @@ class DevicesRecyclerAdapter(private val dataSet: List<Any>) :
     private inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val name: TextView
         val type: TextView
+        val udid: TextView
         val image: ImageView
         val card: MaterialCardView
 
@@ -29,6 +35,7 @@ class DevicesRecyclerAdapter(private val dataSet: List<Any>) :
             // Define click listener for the ViewHolder's View.
             name = view.findViewById(R.id.deviceName)
             type = view.findViewById(R.id.deviceType)
+            udid = view.findViewById(R.id.deviceUDID)
             image = view.findViewById(R.id.deviceImage)
             card = view.findViewById(R.id.deviceCard)
         }
@@ -65,12 +72,27 @@ class DevicesRecyclerAdapter(private val dataSet: List<Any>) :
                 curViewHolder.image.setImageResource(R.drawable.station_icon)
                 curViewHolder.name.text = curDevice.name
                 curViewHolder.type.text = curDevice.platform
+                curViewHolder.udid.text = curDevice.id
                 curViewHolder.card.setOnClickListener {
                     val intent = Intent(it.context, DeviceActivity::class.java).apply {
                         putExtra("deviceId", curDevice.id)
                         putExtra("deviceName", curDevice.name)
                     }
                     it.context.startActivity(intent)
+                }
+                curViewHolder.card.setOnLongClickListener {
+                    val clipboard: ClipboardManager = it.context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                    val clip = ClipData.newPlainText("UDID", curDevice.id)
+                    clipboard.setPrimaryClip(clip)
+                    // Display toast
+                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                        Toast(it.context).apply {
+                            duration = Toast.LENGTH_SHORT
+                            setText("UDID скопирован!")
+                            show()
+                        }
+                    }
+                    return@setOnLongClickListener true
                 }
             }
         } else {

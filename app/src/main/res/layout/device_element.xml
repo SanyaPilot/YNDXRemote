@@ -45,11 +45,19 @@
                 android:id="@+id/deviceType"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
                 android:layout_marginTop="4dp"
                 android:text="TextView"
-                app:layout_constraintStart_toEndOf="@+id/deviceImage"
+                app:layout_constraintStart_toStartOf="@+id/deviceName"
                 app:layout_constraintTop_toBottomOf="@+id/deviceName" />
+
+            <TextView
+                android:id="@+id/deviceUDID"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="TextView"
+                app:layout_constraintStart_toStartOf="@+id/deviceType"
+                app:layout_constraintTop_toBottomOf="@+id/deviceType" />
         </androidx.constraintlayout.widget.ConstraintLayout>
     </com.google.android.material.card.MaterialCardView>
 
