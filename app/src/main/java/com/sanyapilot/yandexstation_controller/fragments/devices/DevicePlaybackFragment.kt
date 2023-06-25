@@ -158,7 +158,7 @@ class DevicePlaybackFragment : Fragment() {
             if (it) {
                 val mediaController = (activity as DeviceActivity).mediaController
                 playButton.setOnClickListener {
-                    if (mediaController.playbackState.state == PlaybackStateCompat.STATE_PLAYING)
+                    if (mediaController.playbackState!!.state == PlaybackStateCompat.STATE_PLAYING)
                         mediaController.transportControls.pause()
                     else
                         mediaController.transportControls.play()
@@ -185,7 +185,6 @@ class DevicePlaybackFragment : Fragment() {
 
     override fun onStop() {
         super.onStop()
-        Log.d(TAG, "onStop()")
         if (orientation == Configuration.ORIENTATION_PORTRAIT) {
             viewModel.prevCoverURL.value = null
             viewModel.prevTrackName.value = null

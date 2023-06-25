@@ -23,7 +23,6 @@ import kotlin.concurrent.thread
 class DeviceActivity : AppCompatActivity() {
     private val viewModel: DeviceViewModel by viewModels()
     private lateinit var mediaBrowser: MediaBrowserCompat
-    lateinit var mediaController: MediaControllerCompat
 
     private val connectionCallbacks = object : MediaBrowserCompat.ConnectionCallback() {
         override fun onConnected() {
@@ -38,8 +37,16 @@ class DeviceActivity : AppCompatActivity() {
                 MediaControllerCompat.setMediaController(this@DeviceActivity, mediaController)
             }
             // Finish building the UI
-            mediaController = MediaControllerCompat.getMediaController(this@DeviceActivity)
-            mediaController.registerCallback(controllerCallback)
+            val mediaController = MediaControllerCompat.getMediaController(this@DeviceActivity)
+
+            // Fill UI initially
+            val metadata = mediaController.metadata
+            viewModel.trackName.value = metadata.getString(MediaMetadataCompat.METADATA_KEY_TITLE)
+            viewModel.trackArtist.value = metadata.getString(MediaMetadataCompat.METADATA_KEY_ARTIST)
+            viewModel.progressMax.value = (metadata.getLong(MediaMetadataCompat.METADATA_KEY_DURATION) / 1000).toInt()
+            viewModel.coverURL.value = metadata.getString(MediaMetadataCompat.METADATA_KEY_ALBUM_ART_URI)
+            viewModel.coverBitmap.value = metadata.getBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART)
+            viewModel.isPlaying.value = (mediaController.playbackState.state == PlaybackStateCompat.STATE_PLAYING)
 
             // Update progress bar
             thread(start = true) {
@@ -51,11 +58,13 @@ class DeviceActivity : AppCompatActivity() {
                 }
             }
 
+            mediaController.registerCallback(controllerCallback)
             viewModel.isReady.value = true
         }
 
         override fun onConnectionSuspended() {
             // The Service has crashed. Disable transport controls until it automatically reconnects
+            Log.d(TAG, "Service has crashed!")
         }
 
         override fun onConnectionFailed() {
@@ -65,7 +74,6 @@ class DeviceActivity : AppCompatActivity() {
 
     private var controllerCallback = object : MediaControllerCompat.Callback() {
         override fun onMetadataChanged(metadata: MediaMetadataCompat?) {
-            Log.d(TAG, "onMetadataChanged!")
             viewModel.trackName.value = metadata!!.getString(MediaMetadataCompat.METADATA_KEY_TITLE)
             viewModel.trackArtist.value = metadata.getString(MediaMetadataCompat.METADATA_KEY_ARTIST)
             viewModel.progressMax.value = (metadata.getLong(MediaMetadataCompat.METADATA_KEY_DURATION) / 1000).toInt()
@@ -76,6 +84,11 @@ class DeviceActivity : AppCompatActivity() {
         override fun onPlaybackStateChanged(state: PlaybackStateCompat?) {
             viewModel.isPlaying.value = (state!!.state == PlaybackStateCompat.STATE_PLAYING)
         }
+
+        override fun onSessionDestroyed() {
+            mediaBrowser.disconnect()
+            finish()
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -84,8 +97,10 @@ class DeviceActivity : AppCompatActivity() {
 
         // Start StationControlService
         startService(
-            Intent(this, StationControlService::class.java)
-                .putExtra(DEVICE_ID, intent.getStringExtra("deviceId"))
+            Intent(this, StationControlService::class.java).apply {
+                putExtra(DEVICE_ID, intent.getStringExtra("deviceId"))
+                putExtra(DEVICE_NAME, intent.getStringExtra("deviceName"))
+            }
         )
         mediaBrowser = MediaBrowserCompat(
             this,
@@ -142,21 +157,7 @@ class DeviceActivity : AppCompatActivity() {
 
     public override fun onStop() {
         super.onStop()
-        mediaController.unregisterCallback(controllerCallback)
+        MediaControllerCompat.getMediaController(this)?.unregisterCallback(controllerCallback)
         mediaBrowser.disconnect()
     }
-
-    /*override fun onDestroy() {
-        if (isFinishing) {
-            station.endLocal()
-        } else {
-            if (viewModel.isLocal.value == true) {
-                viewModel.prevCoverURL.value = null
-                viewModel.prevTrackName.value = null
-                viewModel.prevTrackArtist.value = null
-            }
-        }
-
-        super.onDestroy()
-    }*/
 }

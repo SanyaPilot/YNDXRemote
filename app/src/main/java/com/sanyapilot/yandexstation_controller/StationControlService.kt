@@ -1,9 +1,13 @@
 package com.sanyapilot.yandexstation_controller
 import android.app.Notification
 import android.app.NotificationManager
+import android.app.PendingIntent
+import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ServiceInfo
 import android.graphics.BitmapFactory
+import android.os.Build
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaMetadataCompat
@@ -11,6 +15,7 @@ import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import androidx.media.MediaBrowserServiceCompat
 import androidx.media.VolumeProviderCompat
 import androidx.media.app.NotificationCompat.MediaStyle
@@ -18,11 +23,11 @@ import androidx.media.session.MediaButtonReceiver
 import com.sanyapilot.yandexstation_controller.api.*
 import okhttp3.Request
 
-private const val MY_MEDIA_ROOT_ID = "media_root_id"
 private const val MY_EMPTY_MEDIA_ROOT_ID = "empty_root_id"
 private const val PLAYER_NOTIFICATION_ID = 732
 
 const val DEVICE_ID = "com.sanyapilot.yandexstation_controller.deviceId"
+const val DEVICE_NAME = "com.sanyapilot.yandexstation_controller.deviceName"
 
 class StationControlService : MediaBrowserServiceCompat() {
     private lateinit var mediaSession: MediaSessionCompat
@@ -38,6 +43,7 @@ class StationControlService : MediaBrowserServiceCompat() {
     private var hasNext = true
     private var hasPrev = true
     private lateinit var prevAction: String
+    private var isForeground = false
 
     override fun onCreate() {
         super.onCreate()
@@ -68,10 +74,18 @@ class StationControlService : MediaBrowserServiceCompat() {
                 )
                 mediaSession.setPlaybackState(stateBuilder.build())
                 prevAction = "play"
+                stopForeground(Service.STOP_FOREGROUND_DETACH)
+                isForeground = false
             }
 
             override fun onStop() {
-                Log.e(TAG, "onStop")
+                Log.d(TAG, "onStop callback")
+                station.endLocal()
+                stopSelf()
+                mediaSession.isActive = false
+                mediaSession.release()
+                stopForeground(Service.STOP_FOREGROUND_DETACH)
+                isForeground = false
             }
 
             override fun onSkipToNext() {
@@ -115,16 +129,15 @@ class StationControlService : MediaBrowserServiceCompat() {
         mediaSession = MediaSessionCompat(baseContext, TAG).apply {
             // Set an initial PlaybackState with ACTION_PLAY, so media buttons can start the player
             stateBuilder = PlaybackStateCompat.Builder()
-                .setActions(PlaybackStateCompat.ACTION_PLAY)
+                .setActions(
+                    PlaybackStateCompat.ACTION_PLAY or PlaybackStateCompat.ACTION_PLAY_PAUSE or PlaybackStateCompat.ACTION_STOP
+                )
             setPlaybackState(stateBuilder.build())
 
             mediaMetadataBuilder = MediaMetadataCompat.Builder()
-            //    .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, "Test artist")
-            //    .putString(MediaMetadataCompat.METADATA_KEY_TITLE, "Testi title")
 
             // MySessionCallback() has methods that handle callbacks from a media controller
             setCallback(mediaSessionCallback)
-            setMetadata(mediaMetadataBuilder.build())
 
             // Set the session's token so that client activities can communicate with it.
             setSessionToken(sessionToken)
@@ -135,29 +148,41 @@ class StationControlService : MediaBrowserServiceCompat() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        val deviceId = intent!!.getStringExtra(DEVICE_ID)
-        Log.d(TAG, "DeviceID: $deviceId")
-        val speaker = FuckedQuasarClient.getDeviceById(deviceId!!)!!
-        Log.e(TAG, speaker.id)
+        if (!this::station.isInitialized) {
+            val deviceId = intent!!.getStringExtra(DEVICE_ID)
+            val deviceName = intent.getStringExtra(DEVICE_NAME)
+            Log.d(TAG, "DeviceID: $deviceId")
+            val speaker = FuckedQuasarClient.getDeviceById(deviceId!!)!!
+            Log.e(TAG, speaker.id)
 
-        station = YandexStationService(
-            speaker = speaker,
-            client = GlagolClient(speaker)
-        ) { observer(it) }
+            station = YandexStationService(
+                speaker = speaker,
+                client = GlagolClient(speaker)
+            ) { observer(it) }
 
-        // Start MediaSession and go foreground
-        mediaMetadataBuilder
-            .putString(MediaMetadataCompat.METADATA_KEY_TITLE, "Fetching data...")
-            .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, station.speaker.name)
-        mediaSession.setMetadata(mediaMetadataBuilder.build())
-        mediaSession.isActive = true
+            // Start MediaSession and go foreground
+            val sessionActivityIntent = Intent(this, DeviceActivity::class.java).apply {
+                putExtra("deviceId", deviceId)
+                putExtra("deviceName", deviceName)
+            }
+            val sessionActivityPendingIntent = PendingIntent.getActivity(
+                this, 0, sessionActivityIntent, PendingIntent.FLAG_IMMUTABLE
+            )
+            mediaSession.setSessionActivity(sessionActivityPendingIntent)
 
-        startForeground(PLAYER_NOTIFICATION_ID, buildMediaNotification())
+            mediaMetadataBuilder
+                .putString(MediaMetadataCompat.METADATA_KEY_TITLE, "Fetching data...")
+                .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, station.speaker.name)
+            mediaSession.setMetadata(mediaMetadataBuilder.build())
+            mediaSession.isActive = true
+            updateNotification()
+        }
 
         return super.onStartCommand(intent, flags, startId)
     }
 
     private fun updateNotification() {
+        Log.d(TAG, "Update notification")
         notificationManager.notify(PLAYER_NOTIFICATION_ID, buildMediaNotification())
     }
 
@@ -167,6 +192,12 @@ class StationControlService : MediaBrowserServiceCompat() {
         val description = mediaMetadata.description
 
         val builder = NotificationCompat.Builder(this@StationControlService, PLAYER_CHANNEL_ID).apply {
+            // Take advantage of MediaStyle features
+            setStyle(MediaStyle()
+                .setMediaSession(mediaSession.sessionToken)
+                .setShowActionsInCompactView(0, 1, 2)
+            )
+
             // Add the metadata for the currently playing track
             setContentTitle(description.title)
             setContentText(description.subtitle)
@@ -175,9 +206,6 @@ class StationControlService : MediaBrowserServiceCompat() {
 
             // Enable launching the player by clicking the notification
             setContentIntent(controller.sessionActivity)
-
-            setOnlyAlertOnce(true)
-            setOngoing(true)
 
             // Stop the service when the notification is swiped away
             setDeleteIntent(
@@ -192,14 +220,14 @@ class StationControlService : MediaBrowserServiceCompat() {
 
             // Add an app icon and set its accent color
             // Be careful about the color
-            setSmallIcon(R.drawable.ic_round_play_arrow_24)
-            //color = ContextCompat.getColor(baseContext, R.color.primaryDark)
+            setSmallIcon(R.drawable.station_icon)
+            color = ContextCompat.getColor(baseContext, R.color.md_theme_dark_primary)
 
             // Skip prev button
             addAction(
                 NotificationCompat.Action(
                     R.drawable.ic_round_skip_previous_24,
-                    "Next",
+                    "Prev",
                     if (hasPrev) MediaButtonReceiver.buildMediaButtonPendingIntent(
                         this@StationControlService,
                         PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS
@@ -233,20 +261,8 @@ class StationControlService : MediaBrowserServiceCompat() {
                 )
             )
 
-            // Take advantage of MediaStyle features
-            setStyle(MediaStyle()
-                .setMediaSession(mediaSession.sessionToken)
-                .setShowActionsInCompactView(0, 1, 2)
-
-                // Add a cancel button
-                .setShowCancelButton(true)
-                .setCancelButtonIntent(
-                    MediaButtonReceiver.buildMediaButtonPendingIntent(
-                        this@StationControlService,
-                        PlaybackStateCompat.ACTION_STOP
-                    )
-                )
-            )
+            setOnlyAlertOnce(true)
+            setOngoing(controller.playbackState.state == PlaybackStateCompat.STATE_PLAYING)
         }
         return builder.build()
     }
@@ -271,9 +287,10 @@ class StationControlService : MediaBrowserServiceCompat() {
         // Check idle
         val active = data.playerState != null && data.playerState.title != ""
         if (!active) {
-            stateBuilder.setActions(PlaybackStateCompat.ACTION_PLAY)
+            stateBuilder.setActions(PlaybackStateCompat.ACTION_PLAY or PlaybackStateCompat.ACTION_STOP)
             mediaMetadataBuilder
                 .putString(MediaMetadataCompat.METADATA_KEY_TITLE, "Idle")
+                .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE, "Idle")
                 .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, station.speaker.name)
             mediaSession.setPlaybackState(stateBuilder.build())
             mediaSession.setMetadata(mediaMetadataBuilder.build())
@@ -314,7 +331,7 @@ class StationControlService : MediaBrowserServiceCompat() {
         } else if (prevAction == "pause" && data.playing && data.playerState!!.progress > 0) { // Sometimes 0 can be received here. Station bug?
             stateBuilder.setState(
                 PlaybackStateCompat.STATE_PLAYING,
-                (data.playerState!!.progress * 1000).toLong(),
+                (data.playerState.progress * 1000).toLong(),
                 1F
             )
             prevAction = "play"
@@ -324,6 +341,7 @@ class StationControlService : MediaBrowserServiceCompat() {
         // Set currently supported actions
         stateBuilder.setActions(
             PlaybackStateCompat.ACTION_PLAY_PAUSE or
+            PlaybackStateCompat.ACTION_STOP or
             (if (data.playerState!!.hasPrev) PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS else 0) or
             (if (data.playerState.hasNext) PlaybackStateCompat.ACTION_SKIP_TO_NEXT else 0) or
             (if (data.playerState.hasProgressBar) PlaybackStateCompat.ACTION_SEEK_TO else 0)
@@ -332,9 +350,10 @@ class StationControlService : MediaBrowserServiceCompat() {
         hasPrev = data.playerState.hasPrev
         hasNext = data.playerState.hasNext
 
-        if (description.title != data.playerState.title || description.subtitle != data.playerState.subtitle) {
+        if (description.title != data.playerState.title || controller.metadata.getString(MediaMetadataCompat.METADATA_KEY_ARTIST) != data.playerState.subtitle) {
             mediaMetadataBuilder
                 .putString(MediaMetadataCompat.METADATA_KEY_TITLE, data.playerState.title)
+                .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE, data.playerState.title)
                 .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, data.playerState.subtitle)
 
             // Update position
@@ -375,7 +394,7 @@ class StationControlService : MediaBrowserServiceCompat() {
 
                 Session.client.newCall(request).execute().use { resp ->
                     if (resp.isSuccessful) {
-                        val image = BitmapFactory.decodeStream(resp.body!!.byteStream())
+                        val image = BitmapFactory.decodeStream(resp.body.byteStream())
                         mediaMetadataBuilder.putBitmap(
                             MediaMetadataCompat.METADATA_KEY_ALBUM_ART,
                             image
@@ -394,6 +413,11 @@ class StationControlService : MediaBrowserServiceCompat() {
         if (updateState) mediaSession.setPlaybackState(stateBuilder.build())
         if (updateMeta) mediaSession.setMetadata(mediaMetadataBuilder.build())
 
-        updateNotification()
+        if (updateMeta) {
+            if (isForeground) updateNotification()
+            else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
+                startForeground(PLAYER_NOTIFICATION_ID, buildMediaNotification(), ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK)
+            else startForeground(PLAYER_NOTIFICATION_ID, buildMediaNotification())
+        }
     }
 }
