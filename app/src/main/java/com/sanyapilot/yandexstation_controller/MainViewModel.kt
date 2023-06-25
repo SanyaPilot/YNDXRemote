@@ -5,11 +5,9 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 
 data class UserDataObj(
-    val nickname: String,
-    val firstname: String,
-    val lastName: String,
-    val email: String,
-    val avatarURL: String
+    val displayName: String,
+    val nickname: String?,
+    val avatarURL: String?
 )
 
 class MainViewModel : ViewModel() {

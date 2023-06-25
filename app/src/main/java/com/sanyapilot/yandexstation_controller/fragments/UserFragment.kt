@@ -1,7 +1,6 @@
 package com.sanyapilot.yandexstation_controller.fragments
 
 import android.os.Bundle
-import android.transition.Fade
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -41,24 +40,26 @@ class UserFragment : Fragment() {
         val appBarTitle = requireActivity().findViewById<TextView>(R.id.mainAppBarTitle)
         appBarTitle.text = getString(R.string.aboutAccount)
 
-
-
         // Register observer
         viewModel.getUserData().observe(viewLifecycleOwner) { userData ->
             val avatar = view.findViewById<ImageView>(R.id.userAvatar)
             val displayName = view.findViewById<TextView>(R.id.userName)
-            val displayEmail = view.findViewById<TextView>(R.id.userEmail)
+            val displayNickname = view.findViewById<TextView>(R.id.userNickname)
 
-            avatar.load(userData.avatarURL) {
-                crossfade(100)
-                transformations(CircleCropTransformation())
+            if (userData.avatarURL != null) {
+                avatar.load(userData.avatarURL) {
+                    crossfade(100)
+                    transformations(CircleCropTransformation())
+                }
+            } else {
+                avatar.setImageResource(R.drawable.baseline_account_circle_24)
             }
 
-            displayName.text = userData.nickname
-            displayEmail.text = userData.email
+            displayName.text = userData.displayName
+            displayNickname.text = userData.nickname
 
             displayName.visibility = TextView.VISIBLE
-            displayEmail.visibility = TextView.VISIBLE
+            displayNickname.visibility = if (displayNickname != null) TextView.VISIBLE else TextView.GONE
         }
 
         //requireActivity().findViewById<Button>(R.id.logOutButton).setOnClickListener { logOut() }
@@ -70,11 +71,11 @@ class UserFragment : Fragment() {
                 // Get data about user
                 UserData.updateUserData()
                 requireActivity().runOnUiThread {
-                    val displayNames = UserData.getDisplayName()
                     viewModel.updateUserData(
                         UserDataObj(
-                            displayNames.name, displayNames.firstname,
-                            displayNames.lastname, UserData.getEmail(), UserData.getAvatarURL()
+                            UserData.getDisplayName(),
+                            UserData.getNickname(),
+                            UserData.getAvatarURL()
                         )
                     )
                 }
