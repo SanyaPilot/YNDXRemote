@@ -45,6 +45,7 @@ class StationControlService : MediaBrowserServiceCompat() {
     private var hasPrev = true
     private lateinit var prevAction: String
     private var isForeground = false
+    private var waitForVolumeChange = false
 
     override fun onCreate() {
         super.onCreate()
@@ -127,11 +128,15 @@ class StationControlService : MediaBrowserServiceCompat() {
         ) {
             override fun onSetVolumeTo(volume: Int) {
                 station.setVolume(volume.toFloat())
+                waitForVolumeChange = true
             }
 
             override fun onAdjustVolume(direction: Int) {
-                if (direction != 0)
+                if (direction != 0) {
                     station.setVolume((currentVolume + direction).toFloat())
+                    currentVolume += direction
+                    waitForVolumeChange = true
+                }
             }
         }
 
@@ -416,8 +421,14 @@ class StationControlService : MediaBrowserServiceCompat() {
         }
 
         // Set current volume level
-        if (volumeProvider.currentVolume != (data.volume * 10).toInt())
-            volumeProvider.currentVolume = (data.volume * 10).toInt()
+        val deviceVolume = (data.volume * 10).toInt()
+        if (waitForVolumeChange) {
+            if (volumeProvider.currentVolume == deviceVolume) {
+                volumeProvider.currentVolume = deviceVolume
+                waitForVolumeChange = false
+            }
+        } else if (volumeProvider.currentVolume != (data.volume * 10).toInt())
+            volumeProvider.currentVolume = deviceVolume
 
         if (updateState) mediaSession.setPlaybackState(stateBuilder.build())
         if (updateMeta) mediaSession.setMetadata(mediaMetadataBuilder.build())
