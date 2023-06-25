@@ -1,6 +1,7 @@
 package com.sanyapilot.yandexstation_controller.fragments.devices
 
 import android.os.Bundle
+import android.support.v4.media.session.MediaControllerCompat
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -15,6 +16,7 @@ import com.sanyapilot.yandexstation_controller.R
 class DeviceTTSFragment : Fragment() {
     private lateinit var textField: EditText
     private lateinit var switch: MaterialSwitch
+    private lateinit var mediaController: MediaControllerCompat
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -27,6 +29,8 @@ class DeviceTTSFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         textField = view.findViewById<TextInputLayout>(R.id.ttsField).editText!!
         switch = view.findViewById(R.id.ttsSwitch)
+
+        mediaController = MediaControllerCompat.getMediaController(requireActivity())
 
         val button = view.findViewById<Button>(R.id.sendButton)
         button.setOnClickListener { onClick() }
@@ -60,9 +64,11 @@ class DeviceTTSFragment : Fragment() {
             return
         }
 
-        /*if (switch.isChecked)
-            (activity as DeviceActivity).station.sendTTS(text)
+        val commandParams = Bundle()
+        commandParams.putString("text", text)
+        if (switch.isChecked)
+            mediaController.sendCommand("sendTTS", commandParams, null)
         else
-            (activity as DeviceActivity).station.sendCommand(text)*/
+            mediaController.sendCommand("sendCommand", commandParams, null)
     }
 }

@@ -14,9 +14,13 @@ import android.util.Log
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.activity.viewModels
+import androidx.fragment.app.commit
+import androidx.fragment.app.replace
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.button.MaterialButtonToggleGroup
 import com.sanyapilot.yandexstation_controller.fragments.DeviceViewModel
+import com.sanyapilot.yandexstation_controller.fragments.devices.DevicePlaybackFragment
+import com.sanyapilot.yandexstation_controller.fragments.devices.DeviceTTSFragment
 import com.sanyapilot.yandexstation_controller.fragments.devices.PlaybackInfoObservers
 import kotlin.concurrent.thread
 
@@ -128,12 +132,10 @@ class DeviceActivity : AppCompatActivity() {
         val controlSelector = findViewById<MaterialButtonToggleGroup>(R.id.controlsSelector)
 
         // Bottom selector listener
-        /*controlSelector.addOnButtonCheckedListener { _, checkedId, isChecked ->
-            Log.d(TAG, "Checked id: $checkedId")
+        controlSelector.addOnButtonCheckedListener { _, checkedId, isChecked ->
             if (checkedId == R.id.playbackButton && isChecked) {
                 supportFragmentManager.commit {
                     setReorderingAllowed(true)
-                    Log.e(TAG, "Adding controls fragment!")
                     replace<DevicePlaybackFragment>(R.id.controlsContainer)
                 }
             } else if (checkedId == R.id.TTSButton && isChecked) {
@@ -142,7 +144,7 @@ class DeviceActivity : AppCompatActivity() {
                     replace<DeviceTTSFragment>(R.id.controlsContainer)
                 }
             }
-        }*/
+        }
     }
 
     override fun onStart() {

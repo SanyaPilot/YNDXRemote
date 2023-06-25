@@ -9,6 +9,7 @@ import android.content.pm.ServiceInfo
 import android.graphics.BitmapFactory
 import android.os.Build
 import android.os.Bundle
+import android.os.ResultReceiver
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
@@ -107,6 +108,14 @@ class StationControlService : MediaBrowserServiceCompat() {
                     curState.playbackSpeed
                 )
                 mediaSession.setPlaybackState(stateBuilder.build())
+            }
+
+            override fun onCommand(command: String?, extras: Bundle?, cb: ResultReceiver?) {
+                if (command == "sendCommand") {
+                    station.sendCommand(extras!!.getString("text")!!)
+                } else if (command == "sendTTS") {
+                    station.sendTTS(extras!!.getString("text")!!)
+                }
             }
         }
 
