@@ -70,7 +70,7 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginTop="16dp"
-        android:layout_marginBottom="8dp"
+        android:layout_marginBottom="16dp"
         app:layout_constraintBottom_toTopOf="@+id/controlsSelector"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/imageCard"
@@ -90,17 +90,27 @@
 
         <Button
             android:id="@+id/playbackButton"
-            style="?attr/materialButtonOutlinedStyle"
+            style="@style/ToggleIconButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/playback" />
+            android:layout_weight="1"
+            app:icon="@drawable/round_library_music_24" />
+
+        <Button
+            android:id="@+id/remoteButton"
+            style="@style/ToggleIconButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            app:icon="@drawable/round_control_camera_24" />
 
         <Button
             android:id="@+id/TTSButton"
-            style="?attr/materialButtonOutlinedStyle"
+            style="@style/ToggleIconButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/commands" />
+            android:layout_weight="1"
+            app:icon="@drawable/round_message_24" />
 
     </com.google.android.material.button.MaterialButtonToggleGroup>
 

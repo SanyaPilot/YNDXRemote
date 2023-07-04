@@ -97,7 +97,10 @@ data class GlagolPayload(
     val text: String? = null,
     val volume: Float? = null,
     val position: Int? = null,
-    val serverActionEventPayload: ServerActionEventPayload? = null
+    val serverActionEventPayload: ServerActionEventPayload? = null,
+    val action: String? = null,
+    var scrollAmount: String? = null,
+    var scrollExactValue: Int? = null
 )
 
 @Serializable
@@ -291,7 +294,7 @@ class StationSearcher constructor(
     override fun onServiceFound(foundService: NsdServiceInfo) {
         Log.i(TAG, "Service discovery found: $foundService")
         lock.lock()
-        Thread.sleep(200) // Чтобы просралось
+        Thread.sleep(100) // Чтобы просралось
         nsdManager.resolveService(
             foundService,
             object : NsdManager.ResolveListener {

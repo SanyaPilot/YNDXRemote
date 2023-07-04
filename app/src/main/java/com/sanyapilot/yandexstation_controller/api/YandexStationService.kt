@@ -81,26 +81,6 @@ class YandexStationService(val speaker: Speaker, val client: GlagolClient, val l
             //QuasarClient.send(speaker, "предыдущий трек", false)
         }
     }
-    /*fun increaseVolume(value: Float) {
-        if (localMode) {
-            client.send(GlagolPayload(
-                command = "setVolume",
-                volume = viewModel.volume.value!! + (value / 100)
-            ))
-        } else {
-            QuasarClient.send(speaker, "повысь громкость на ${value.toInt()} процентов", false)
-        }
-    }
-    fun decreaseVolume(value: Float) {
-        if (localMode) {
-            client.send(GlagolPayload(
-                command = "setVolume",
-                volume = viewModel.volume.value!! - (value / 100)
-            ))
-        } else {
-            QuasarClient.send(speaker, "понизь громкость на ${value.toInt()} процентов", false)
-        }
-    }*/
     fun setVolume(value: Float) {
         if (localMode) {
             client.send(GlagolPayload(
@@ -116,6 +96,71 @@ class YandexStationService(val speaker: Speaker, val client: GlagolClient, val l
         client.send(GlagolPayload(
             command = "rewind",
             position = value
+        ))
+    }
+    // Yandex unreleased navigation over Glagol
+    fun navUp(steps: Int?) {
+        val payload = GlagolPayload(
+            command = "control",
+            action = "go_up"
+        )
+        if (steps != null) {
+            payload.scrollAmount = "exact"
+            payload.scrollExactValue = steps
+        }
+        client.send(payload)
+    }
+    fun navDown(steps: Int?) {
+        val payload = GlagolPayload(
+            command = "control",
+            action = "go_down"
+        )
+        if (steps != null) {
+            payload.scrollAmount = "exact"
+            payload.scrollExactValue = steps
+        }
+        client.send(payload)
+    }
+    fun navLeft(steps: Int?) {
+        val payload = GlagolPayload(
+            command = "control",
+            action = "go_left"
+        )
+        if (steps != null) {
+            payload.scrollAmount = "exact"
+            payload.scrollExactValue = steps
+        }
+        client.send(payload)
+    }
+    fun navRight(steps: Int?) {
+        val payload = GlagolPayload(
+            command = "control",
+            action = "go_right"
+        )
+        if (steps != null) {
+            payload.scrollAmount = "exact"
+            payload.scrollExactValue = steps
+        }
+        client.send(payload)
+    }
+    fun click() {
+        client.send(GlagolPayload(
+            command = "control",
+            action = "click_action"
+        ))
+    }
+    fun navBack() {
+        // Workaround via sendText command
+        client.send(GlagolPayload(
+            command = "sendText",
+            text = "назад"
+        ))
+    }
+    fun navHome() {
+        // Another workaround
+        client.send(GlagolPayload(
+            command = "sendText",
+            text = "домой"
         ))
     }
 }

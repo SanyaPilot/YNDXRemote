@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <Button
+        android:id="@+id/clickButton"
+        style="?attr/materialIconButtonFilledStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:icon="@drawable/outline_circle_24"
+        app:iconSize="48dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/navUpButton"
+        style="?attr/materialIconButtonStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        app:icon="@drawable/round_keyboard_arrow_up_24"
+        app:iconSize="64dp"
+        app:layout_constraintBottom_toTopOf="@+id/clickButton"
+        app:layout_constraintEnd_toEndOf="@+id/clickButton"
+        app:layout_constraintStart_toStartOf="@+id/clickButton" />
+
+    <Button
+        android:id="@+id/navLeftButton"
+        style="?attr/materialIconButtonStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        app:icon="@drawable/round_keyboard_arrow_left_24"
+        app:iconSize="64dp"
+        app:layout_constraintBottom_toBottomOf="@+id/clickButton"
+        app:layout_constraintEnd_toStartOf="@+id/clickButton"
+        app:layout_constraintTop_toTopOf="@+id/clickButton" />
+
+    <Button
+        android:id="@+id/navRightButton"
+        style="?attr/materialIconButtonStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        app:icon="@drawable/round_keyboard_arrow_right_24"
+        app:iconSize="64dp"
+        app:layout_constraintBottom_toBottomOf="@+id/clickButton"
+        app:layout_constraintStart_toEndOf="@+id/clickButton"
+        app:layout_constraintTop_toTopOf="@+id/clickButton" />
+
+    <Button
+        android:id="@+id/navDownButton"
+        style="?attr/materialIconButtonStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        app:icon="@drawable/round_keyboard_arrow_down_24"
+        app:iconSize="64dp"
+        app:layout_constraintEnd_toEndOf="@+id/clickButton"
+        app:layout_constraintStart_toStartOf="@+id/clickButton"
+        app:layout_constraintTop_toBottomOf="@+id/clickButton" />
+
+    <Button
+        android:id="@+id/navBackButton"
+        style="?attr/materialIconButtonStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        app:icon="@drawable/round_arrow_back_24"
+        app:iconSize="32dp"
+        app:layout_constraintBottom_toBottomOf="@+id/navDownButton"
+        app:layout_constraintEnd_toStartOf="@+id/navDownButton"
+        app:layout_constraintTop_toTopOf="@+id/navDownButton" />
+
+    <Button
+        android:id="@+id/navHomeButton"
+        style="?attr/materialIconButtonStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        app:icon="@drawable/round_home_24"
+        app:iconSize="32dp"
+        app:layout_constraintBottom_toBottomOf="@+id/navDownButton"
+        app:layout_constraintStart_toEndOf="@+id/navDownButton"
+        app:layout_constraintTop_toTopOf="@+id/navDownButton" />
+</androidx.constraintlayout.widget.ConstraintLayout>

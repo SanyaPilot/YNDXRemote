@@ -38,6 +38,7 @@ class StationControlService : MediaBrowserServiceCompat() {
     private lateinit var notificationManager: NotificationManager
     private lateinit var volumeProvider: VolumeProviderCompat
 
+    private var deviceId: String? = null
     private var coverURL: String? = null
     private var initialFetchingDone = false
     private var seekTime: Int? = null
@@ -61,10 +62,12 @@ class StationControlService : MediaBrowserServiceCompat() {
                 stateBuilder.setState(
                     PlaybackStateCompat.STATE_PLAYING,
                     mediaSession.controller.playbackState.position,
-                    1F
+                    0F
                 )
                 mediaSession.setPlaybackState(stateBuilder.build())
                 prevAction = "pause"
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S)
+                    updateNotification()
             }
 
             override fun onPause() {
@@ -78,6 +81,8 @@ class StationControlService : MediaBrowserServiceCompat() {
                 prevAction = "play"
                 stopForeground(Service.STOP_FOREGROUND_DETACH)
                 isForeground = false
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S)
+                    updateNotification()
             }
 
             override fun onStop() {
@@ -116,6 +121,20 @@ class StationControlService : MediaBrowserServiceCompat() {
                     station.sendCommand(extras!!.getString("text")!!)
                 } else if (command == "sendTTS") {
                     station.sendTTS(extras!!.getString("text")!!)
+                } else if (command == "navUp") {
+                    station.navUp(extras?.getInt("steps"))
+                } else if (command == "navDown") {
+                    station.navDown(extras?.getInt("steps"))
+                } else if (command == "navLeft") {
+                    station.navLeft(extras?.getInt("steps"))
+                } else if (command == "navRight") {
+                    station.navRight(extras?.getInt("steps"))
+                } else if (command == "click") {
+                    station.click()
+                } else if (command == "navBack") {
+                    station.navBack()
+                } else if (command == "navHome") {
+                    station.navHome()
                 }
             }
         }
@@ -162,12 +181,18 @@ class StationControlService : MediaBrowserServiceCompat() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        if (!this::station.isInitialized) {
-            val deviceId = intent!!.getStringExtra(DEVICE_ID)
-            val deviceName = intent.getStringExtra(DEVICE_NAME)
-            Log.d(TAG, "DeviceID: $deviceId")
-            val speaker = FuckedQuasarClient.getDeviceById(deviceId!!)!!
-            Log.e(TAG, speaker.id)
+        val curDeviceId = intent!!.getStringExtra(DEVICE_ID)
+        val curDeviceName = intent.getStringExtra(DEVICE_NAME)
+        if (curDeviceId != deviceId) {
+            if (deviceId != null) {
+                // Switch the device
+                Log.d(TAG, "Switching device!")
+                station.endLocal()
+                mediaSession.isActive = false
+                stopForeground(Service.STOP_FOREGROUND_DETACH)
+            }
+            Log.d(TAG, "DeviceID: $curDeviceId")
+            val speaker = FuckedQuasarClient.getDeviceById(curDeviceId!!)!!
 
             station = YandexStationService(
                 speaker = speaker,
@@ -176,8 +201,8 @@ class StationControlService : MediaBrowserServiceCompat() {
 
             // Start MediaSession and go foreground
             val sessionActivityIntent = Intent(this, DeviceActivity::class.java).apply {
-                putExtra("deviceId", deviceId)
-                putExtra("deviceName", deviceName)
+                putExtra("deviceId", curDeviceId)
+                putExtra("deviceName", curDeviceName)
             }
             val sessionActivityPendingIntent = PendingIntent.getActivity(
                 this, 0, sessionActivityIntent, PendingIntent.FLAG_IMMUTABLE
@@ -190,6 +215,8 @@ class StationControlService : MediaBrowserServiceCompat() {
             mediaSession.setMetadata(mediaMetadataBuilder.build())
             mediaSession.isActive = true
             updateNotification()
+
+            deviceId = curDeviceId
         }
 
         return super.onStartCommand(intent, flags, startId)
@@ -253,10 +280,9 @@ class StationControlService : MediaBrowserServiceCompat() {
             addAction(
                 NotificationCompat.Action(
                     if (controller.playbackState.state == PlaybackStateCompat.STATE_PLAYING)
-                        R.drawable.ic_round_pause_24
-                    else R.drawable.ic_round_play_arrow_24,
-                    "PAUSE",
-                   MediaButtonReceiver.buildMediaButtonPendingIntent(
+                        R.drawable.ic_round_pause_24 else R.drawable.ic_round_play_arrow_24,
+                    "Play/pause",
+                    MediaButtonReceiver.buildMediaButtonPendingIntent(
                         this@StationControlService,
                         PlaybackStateCompat.ACTION_PLAY_PAUSE
                     )
@@ -304,7 +330,6 @@ class StationControlService : MediaBrowserServiceCompat() {
             stateBuilder.setActions(PlaybackStateCompat.ACTION_PLAY or PlaybackStateCompat.ACTION_STOP)
             mediaMetadataBuilder
                 .putString(MediaMetadataCompat.METADATA_KEY_TITLE, "Idle")
-                .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE, "Idle")
                 .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, station.speaker.name)
             mediaSession.setPlaybackState(stateBuilder.build())
             mediaSession.setMetadata(mediaMetadataBuilder.build())
@@ -356,6 +381,7 @@ class StationControlService : MediaBrowserServiceCompat() {
         stateBuilder.setActions(
             PlaybackStateCompat.ACTION_PLAY_PAUSE or
             PlaybackStateCompat.ACTION_STOP or
+            (if (data.playing) PlaybackStateCompat.ACTION_PAUSE else PlaybackStateCompat.ACTION_PLAY) or
             (if (data.playerState!!.hasPrev) PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS else 0) or
             (if (data.playerState.hasNext) PlaybackStateCompat.ACTION_SKIP_TO_NEXT else 0) or
             (if (data.playerState.hasProgressBar) PlaybackStateCompat.ACTION_SEEK_TO else 0)
@@ -367,7 +393,6 @@ class StationControlService : MediaBrowserServiceCompat() {
         if (description.title != data.playerState.title || controller.metadata.getString(MediaMetadataCompat.METADATA_KEY_ARTIST) != data.playerState.subtitle) {
             mediaMetadataBuilder
                 .putString(MediaMetadataCompat.METADATA_KEY_TITLE, data.playerState.title)
-                .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE, data.playerState.title)
                 .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, data.playerState.subtitle)
 
             // Update position
@@ -433,11 +458,22 @@ class StationControlService : MediaBrowserServiceCompat() {
         if (updateState) mediaSession.setPlaybackState(stateBuilder.build())
         if (updateMeta) mediaSession.setMetadata(mediaMetadataBuilder.build())
 
-        if (updateMeta) {
-            if (isForeground) updateNotification()
-            else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
-                startForeground(PLAYER_NOTIFICATION_ID, buildMediaNotification(), ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK)
-            else startForeground(PLAYER_NOTIFICATION_ID, buildMediaNotification())
+        if (updateMeta || updateState) {
+            if (isForeground && !data.playing) {
+                Log.d(TAG, "Stop FG")
+                stopForeground(Service.STOP_FOREGROUND_DETACH)
+                isForeground = false
+
+                updateNotification()
+            } else if (!isForeground && data.playing) {
+                Log.d(TAG, "Go FG")
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
+                    startForeground(PLAYER_NOTIFICATION_ID, buildMediaNotification(), ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK)
+                else startForeground(PLAYER_NOTIFICATION_ID, buildMediaNotification())
+                isForeground = true
+            } else {
+                updateNotification()
+            }
         }
     }
 }

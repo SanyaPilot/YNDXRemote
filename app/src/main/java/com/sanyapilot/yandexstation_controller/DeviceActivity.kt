@@ -20,6 +20,7 @@ import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.button.MaterialButtonToggleGroup
 import com.sanyapilot.yandexstation_controller.fragments.DeviceViewModel
 import com.sanyapilot.yandexstation_controller.fragments.devices.DevicePlaybackFragment
+import com.sanyapilot.yandexstation_controller.fragments.devices.DeviceRemoteFragment
 import com.sanyapilot.yandexstation_controller.fragments.devices.DeviceTTSFragment
 import com.sanyapilot.yandexstation_controller.fragments.devices.PlaybackInfoObservers
 import kotlin.concurrent.thread
@@ -133,15 +134,26 @@ class DeviceActivity : AppCompatActivity() {
 
         // Bottom selector listener
         controlSelector.addOnButtonCheckedListener { _, checkedId, isChecked ->
-            if (checkedId == R.id.playbackButton && isChecked) {
-                supportFragmentManager.commit {
-                    setReorderingAllowed(true)
-                    replace<DevicePlaybackFragment>(R.id.controlsContainer)
-                }
-            } else if (checkedId == R.id.TTSButton && isChecked) {
-                supportFragmentManager.commit {
-                    setReorderingAllowed(true)
-                    replace<DeviceTTSFragment>(R.id.controlsContainer)
+            if (isChecked) {
+                when (checkedId) {
+                    R.id.playbackButton -> {
+                        supportFragmentManager.commit {
+                            setReorderingAllowed(true)
+                            replace<DevicePlaybackFragment>(R.id.controlsContainer)
+                        }
+                    }
+                    R.id.TTSButton -> {
+                        supportFragmentManager.commit {
+                            setReorderingAllowed(true)
+                            replace<DeviceTTSFragment>(R.id.controlsContainer)
+                        }
+                    }
+                    R.id.remoteButton -> {
+                        supportFragmentManager.commit {
+                            setReorderingAllowed(true)
+                            replace<DeviceRemoteFragment>(R.id.controlsContainer)
+                        }
+                    }
                 }
             }
         }
