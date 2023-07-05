@@ -77,6 +77,7 @@ data class EntityInfo(
     val next: GenericTrack? = null,
     val prev: GenericTrack? = null,
     val repeatMode: String? = null,
+    val shuffled: Boolean? = null,
     val type: String
 )
 
@@ -100,7 +101,10 @@ data class GlagolPayload(
     val serverActionEventPayload: ServerActionEventPayload? = null,
     val action: String? = null,
     var scrollAmount: String? = null,
-    var scrollExactValue: Int? = null
+    var scrollExactValue: Int? = null,
+    val type: String? = null,
+    val id: String? = null,
+    var offset: Float? = null
 )
 
 @Serializable

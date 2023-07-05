@@ -7,14 +7,15 @@
 
     <androidx.cardview.widget.CardView
         android:id="@+id/imageCard"
-        android:layout_width="300dp"
-        android:layout_height="300dp"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         android:layout_marginStart="32dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="8dp"
         android:layout_marginEnd="32dp"
         app:cardBackgroundColor="?attr/colorSurface"
         app:cardCornerRadius="12dp"
         app:cardElevation="0dp"
+        app:layout_constraintBottom_toTopOf="@+id/coverGuideline"
         app:layout_constraintDimensionRatio="1:1"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -99,9 +100,11 @@
 
     <LinearLayout
         android:id="@+id/linearLayout"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
         android:layout_marginBottom="8dp"
         android:gravity="center_horizontal"
         android:orientation="vertical"
@@ -114,6 +117,18 @@
             android:id="@+id/playbackButtons"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content">
+
+            <Button
+                android:id="@+id/likeButton"
+                style="?attr/materialIconButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                app:icon="@drawable/round_favorite_24"
+                app:iconSize="32dp"
+                app:layout_constraintBottom_toBottomOf="@+id/prevButton"
+                app:layout_constraintEnd_toStartOf="@+id/prevButton"
+                app:layout_constraintTop_toTopOf="@+id/prevButton" />
 
             <Button
                 android:id="@+id/playButton"
@@ -131,7 +146,7 @@
                 style="?attr/materialIconButtonStyle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="16dp"
+                android:layout_marginEnd="8dp"
                 app:icon="@drawable/ic_round_skip_previous_24"
                 app:iconSize="32dp"
                 app:layout_constraintBottom_toBottomOf="@+id/playButton"
@@ -143,14 +158,59 @@
                 style="?attr/materialIconButtonStyle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
+                android:layout_marginStart="8dp"
                 app:icon="@drawable/ic_round_skip_next_24"
                 app:iconSize="32dp"
                 app:layout_constraintBottom_toBottomOf="@+id/playButton"
                 app:layout_constraintStart_toEndOf="@+id/playButton"
                 app:layout_constraintTop_toTopOf="@+id/playButton" />
+
+            <Button
+                android:id="@+id/shuffleButton"
+                style="?attr/materialIconButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                app:icon="@drawable/round_shuffle_24"
+                app:iconSize="32dp"
+                app:layout_constraintBottom_toBottomOf="@+id/nextButton"
+                app:layout_constraintStart_toEndOf="@+id/nextButton"
+                app:layout_constraintTop_toTopOf="@+id/nextButton" />
         </androidx.constraintlayout.widget.ConstraintLayout>
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginVertical="8dp"
+            android:layout_marginLeft="8dp"
+            android:layout_marginRight="8dp"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/myVibeButton"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/myWave" />
+
+            <Button
+                android:id="@+id/myFavsButton"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="8dp"
+                android:layout_weight="1"
+                android:text="@string/myFavourites" />
+        </LinearLayout>
+
     </LinearLayout>
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/coverGuideline"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.55" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

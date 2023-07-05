@@ -116,25 +116,29 @@ class StationControlService : MediaBrowserServiceCompat() {
                 mediaSession.setPlaybackState(stateBuilder.build())
             }
 
+            override fun onSetShuffleMode(shuffleMode: Int) {
+                Log.d(TAG, "Set shuffle!")
+                if (shuffleMode == PlaybackStateCompat.SHUFFLE_MODE_ALL)
+                    station.shuffle()
+            }
+
             override fun onCommand(command: String?, extras: Bundle?, cb: ResultReceiver?) {
-                if (command == "sendCommand") {
-                    station.sendCommand(extras!!.getString("text")!!)
-                } else if (command == "sendTTS") {
-                    station.sendTTS(extras!!.getString("text")!!)
-                } else if (command == "navUp") {
-                    station.navUp(extras?.getInt("steps"))
-                } else if (command == "navDown") {
-                    station.navDown(extras?.getInt("steps"))
-                } else if (command == "navLeft") {
-                    station.navLeft(extras?.getInt("steps"))
-                } else if (command == "navRight") {
-                    station.navRight(extras?.getInt("steps"))
-                } else if (command == "click") {
-                    station.click()
-                } else if (command == "navBack") {
-                    station.navBack()
-                } else if (command == "navHome") {
-                    station.navHome()
+                when (command) {
+                    "sendCommand" -> station.sendCommand(extras!!.getString("text")!!)
+                    "sendTTS" -> station.sendTTS(extras!!.getString("text")!!)
+                    "navUp" -> station.navUp(extras?.getInt("steps"))
+                    "navDown" -> station.navDown(extras?.getInt("steps"))
+                    "navLeft" -> station.navLeft(extras?.getInt("steps"))
+                    "navRight" -> station.navRight(extras?.getInt("steps"))
+                    "click" -> station.click()
+                    "navBack" -> station.navBack()
+                    "navHome" -> station.navHome()
+                    "playTrack" -> station.playTrack(extras!!.getString("id")!!, extras.getFloat("offset"))
+                    "playPlaylist" -> station.playPlaylist(extras!!.getString("id")!!)
+                    "playRadio" -> station.playRadio(extras!!.getString("id")!!)
+                    "playMyVibe" -> station.playMyVibe()
+                    "playFavs" -> station.playFavs()
+                    "likeTrack" -> station.likeTrack()
                 }
             }
         }
@@ -381,6 +385,7 @@ class StationControlService : MediaBrowserServiceCompat() {
         stateBuilder.setActions(
             PlaybackStateCompat.ACTION_PLAY_PAUSE or
             PlaybackStateCompat.ACTION_STOP or
+            PlaybackStateCompat.ACTION_SET_SHUFFLE_MODE or
             (if (data.playing) PlaybackStateCompat.ACTION_PAUSE else PlaybackStateCompat.ACTION_PLAY) or
             (if (data.playerState!!.hasPrev) PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS else 0) or
             (if (data.playerState.hasNext) PlaybackStateCompat.ACTION_SKIP_TO_NEXT else 0) or
@@ -442,6 +447,26 @@ class StationControlService : MediaBrowserServiceCompat() {
                 }
                 coverURL = curImageURL
                 updateMeta = true
+            }
+        }
+
+        // Shuffling mode
+        val shuffleMode = controller.shuffleMode
+        when (data.playerState.entityInfo.shuffled) {
+            null -> {
+                if (shuffleMode != PlaybackStateCompat.SHUFFLE_MODE_INVALID) {
+                    mediaSession.setShuffleMode(PlaybackStateCompat.SHUFFLE_MODE_INVALID)
+                }
+            }
+            true -> {
+                if (shuffleMode != PlaybackStateCompat.SHUFFLE_MODE_ALL) {
+                    mediaSession.setShuffleMode(PlaybackStateCompat.SHUFFLE_MODE_ALL)
+                }
+            }
+            false -> {
+                if (shuffleMode != PlaybackStateCompat.SHUFFLE_MODE_NONE) {
+                    mediaSession.setShuffleMode(PlaybackStateCompat.SHUFFLE_MODE_NONE)
+                }
             }
         }
 

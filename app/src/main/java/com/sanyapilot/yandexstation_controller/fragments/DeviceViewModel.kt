@@ -25,11 +25,9 @@ class DeviceViewModel : ViewModel() {
     val hasNext: MutableLiveData<Boolean> by lazy { MutableLiveData<Boolean>() }
     val hasPrev: MutableLiveData<Boolean> by lazy { MutableLiveData<Boolean>() }
     val playlistId: MutableLiveData<String> by lazy { MutableLiveData<String>() }
+    val shuffleSupported: MutableLiveData<Boolean> by lazy { MutableLiveData<Boolean>(false)}
 
     val seekTime = MutableLiveData<Int?>(null)
-
-    // Station object
-    //val station: MutableLiveData<YandexStation> by lazy { MutableLiveData<YandexStation>() }
 
     fun update(data: StationState) {
         isPlaying.value = data.playing

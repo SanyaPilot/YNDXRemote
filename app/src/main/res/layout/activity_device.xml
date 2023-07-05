@@ -27,7 +27,8 @@
         app:layout_constraintBottom_toTopOf="@+id/controlsSelector"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/deviceAppBar" />
+        app:layout_constraintTop_toBottomOf="@+id/deviceAppBar"
+        tools:layout="@layout/fragment_device_playback" />
 
     <com.google.android.material.button.MaterialButtonToggleGroup
         android:id="@+id/controlsSelector"

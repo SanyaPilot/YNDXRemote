@@ -151,16 +151,51 @@ class YandexStationService(val speaker: Speaker, val client: GlagolClient, val l
     }
     fun navBack() {
         // Workaround via sendText command
-        client.send(GlagolPayload(
-            command = "sendText",
-            text = "назад"
-        ))
+        sendCommand("назад")
     }
     fun navHome() {
         // Another workaround
+        sendCommand("домой")
+    }
+
+    // Music
+    fun playTrack(id: String, offset: Float?) {
+        val payload = GlagolPayload(
+            command = "playMusic",
+            type = "track",
+            id = id
+        )
+        if (offset != null)
+            payload.offset = offset
+
+        client.send(payload)
+    }
+    fun playPlaylist(id: String) {
         client.send(GlagolPayload(
-            command = "sendText",
-            text = "домой"
+            command = "playMusic",
+            type = "playlist",
+            id = id
         ))
+    }
+    fun playRadio(id: String) {
+        client.send(GlagolPayload(
+            command = "playMusic",
+            type = "radio",
+            id = id
+        ))
+    }
+    // Shortcut for "my vibe"
+    fun playMyVibe() {
+        playRadio("user:onyourwave")
+    }
+    fun playFavs() {
+        // Workaround
+        sendCommand("включи мои любимые")
+    }
+    fun shuffle() {
+        sendCommand("играй вперемешку")
+    }
+    fun likeTrack() {
+        sendCommand("лайк")
     }
 }

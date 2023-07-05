@@ -1,23 +1,20 @@
 package com.sanyapilot.yandexstation_controller.fragments.devices
 
 import android.content.res.Configuration
-import android.os.Build
 import android.os.Bundle
+import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.PlaybackStateCompat
-import android.util.DisplayMetrics
 import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.WindowInsets
+import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.cardview.widget.CardView
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.slider.Slider
-import com.sanyapilot.yandexstation_controller.DeviceActivity
 import com.sanyapilot.yandexstation_controller.R
 import com.sanyapilot.yandexstation_controller.TAG
 import com.sanyapilot.yandexstation_controller.fragments.DeviceViewModel
@@ -45,24 +42,6 @@ class DevicePlaybackFragment : Fragment() {
         progressBar.setLabelFormatter { value: Float ->
             getMinutesSeconds(value.toInt())
         }
-
-        // Picture card scaling
-        if (orientation == Configuration.ORIENTATION_PORTRAIT) {
-            @Suppress("DEPRECATION") val screenHeight = if (Build.VERSION.SDK_INT > Build.VERSION_CODES.R) {
-                val windowMetrics = requireActivity().windowManager.currentWindowMetrics
-                val insets = windowMetrics.windowInsets.getInsetsIgnoringVisibility(WindowInsets.Type.systemBars())
-                windowMetrics.bounds.height() - insets.top - insets.bottom
-            } else {
-                val screenMetrics = DisplayMetrics()
-                requireActivity().windowManager.defaultDisplay.getMetrics(screenMetrics)
-                screenMetrics.heightPixels
-            }
-
-            val imageCard = requireView().findViewById<CardView>(R.id.imageCard)
-            val sideLength = screenHeight / 2.3
-            imageCard.layoutParams.height = sideLength.toInt()
-            imageCard.layoutParams.width = sideLength.toInt()
-        }
     }
 
     override fun onResume() {
@@ -77,6 +56,10 @@ class DevicePlaybackFragment : Fragment() {
         val coverImage = requireView().findViewById<ImageView>(R.id.cover)
         val trackName = requireView().findViewById<TextView>(R.id.trackName)
         val trackArtist = requireView().findViewById<TextView>(R.id.trackArtist)
+        val myVibeButton = requireView().findViewById<Button>(R.id.myVibeButton)
+        val myFavsButton = requireView().findViewById<Button>(R.id.myFavsButton)
+        val shuffleButton = requireView().findViewById<Button>(R.id.shuffleButton)
+        val likeButton = requireView().findViewById<Button>(R.id.likeButton)
 
         // ViewModel observers here
         viewModel.isPlaying.observe(viewLifecycleOwner) {
@@ -139,10 +122,14 @@ class DevicePlaybackFragment : Fragment() {
             viewModel.coverBitmap.observe(this) { observers.coverObserver(coverImage, it, viewModel.coverURL.value) }
         }
 
+        viewModel.shuffleSupported.observe(viewLifecycleOwner) {
+            shuffleButton.isEnabled = it
+        }
+
         // MediaController is ready
         viewModel.isReady.observe(viewLifecycleOwner) {
             if (it) {
-                val mediaController = (activity as DeviceActivity).mediaController
+                val mediaController = MediaControllerCompat.getMediaController(requireActivity())
                 playButton.setOnClickListener {
                     if (mediaController.playbackState!!.state == PlaybackStateCompat.STATE_PLAYING)
                         mediaController.transportControls.pause()
@@ -157,6 +144,23 @@ class DevicePlaybackFragment : Fragment() {
                 nextButton.setOnClickListener {
                     mediaController.transportControls.skipToNext()
                 }
+
+                myVibeButton.setOnClickListener {
+                    mediaController.sendCommand("playMyVibe", null, null)
+                }
+
+                myFavsButton.setOnClickListener {
+                    mediaController.sendCommand("playFavs", null, null)
+                }
+
+                shuffleButton.setOnClickListener {
+                    mediaController.transportControls.setShuffleMode(PlaybackStateCompat.SHUFFLE_MODE_ALL)
+                }
+
+                likeButton.setOnClickListener {
+                    mediaController.sendCommand("likeTrack", null, null)
+                }
+
                 progressBar.addOnSliderTouchListener(object : Slider.OnSliderTouchListener {
                     override fun onStartTrackingTouch(slider: Slider) {
                         allowSliderChange = false

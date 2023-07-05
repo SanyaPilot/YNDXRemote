@@ -52,6 +52,7 @@ class DeviceActivity : AppCompatActivity() {
             viewModel.coverURL.value = metadata.getString(MediaMetadataCompat.METADATA_KEY_ALBUM_ART_URI)
             viewModel.coverBitmap.value = metadata.getBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART)
             viewModel.isPlaying.value = (mediaController.playbackState.state == PlaybackStateCompat.STATE_PLAYING)
+            viewModel.shuffleSupported.value = mediaController.shuffleMode == PlaybackStateCompat.SHUFFLE_MODE_NONE
 
             // Update progress bar
             thread(start = true) {
@@ -84,6 +85,10 @@ class DeviceActivity : AppCompatActivity() {
             viewModel.progressMax.value = (metadata.getLong(MediaMetadataCompat.METADATA_KEY_DURATION) / 1000).toInt()
             viewModel.coverURL.value = metadata.getString(MediaMetadataCompat.METADATA_KEY_ALBUM_ART_URI)
             viewModel.coverBitmap.value = metadata.getBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART)
+        }
+
+        override fun onShuffleModeChanged(shuffleMode: Int) {
+            viewModel.shuffleSupported.value = shuffleMode == PlaybackStateCompat.SHUFFLE_MODE_NONE
         }
 
         override fun onPlaybackStateChanged(state: PlaybackStateCompat?) {
