@@ -74,7 +74,7 @@ object Session {
 
     fun login(code: Int): LoginResponse {
         val request = Request.Builder()
-            .url("https://testing.yndxfuck.ru/submit_auth_code")
+            .url("$FQ_BACKEND_URL/submit_auth_code")
             .post("{\"code\": \"$code\"}".toRequestBody(JSON_MEDIA_TYPE))
             .build()
 
