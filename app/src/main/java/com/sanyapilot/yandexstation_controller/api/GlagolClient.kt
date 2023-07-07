@@ -66,6 +66,7 @@ data class PlayerState(
     val playlistId: String,
     val playlistType: String,
     val progress: Float,
+    val showPlayer: Boolean? = null,
     val subtitle: String,
     val title: String,
     val type: String

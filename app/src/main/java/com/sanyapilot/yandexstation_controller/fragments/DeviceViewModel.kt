@@ -26,6 +26,7 @@ class DeviceViewModel : ViewModel() {
     val hasPrev: MutableLiveData<Boolean> by lazy { MutableLiveData<Boolean>() }
     val playlistId: MutableLiveData<String> by lazy { MutableLiveData<String>() }
     val shuffleSupported: MutableLiveData<Boolean> by lazy { MutableLiveData<Boolean>(false)}
+    val likeSupported: MutableLiveData<Boolean> by lazy { MutableLiveData<Boolean>(false) }
 
     val seekTime = MutableLiveData<Int?>(null)
 

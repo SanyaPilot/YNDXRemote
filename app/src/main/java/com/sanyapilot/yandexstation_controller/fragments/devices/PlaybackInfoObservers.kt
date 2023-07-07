@@ -48,6 +48,8 @@ class PlaybackInfoObservers (
                 })
                 image.startAnimation(fadeOut)
             }
+        } else {
+            image.setImageResource(R.drawable.ic_round_pause_on_surface_24)
         }
     }
 

@@ -46,10 +46,8 @@ class DeviceActivity : AppCompatActivity() {
 
             // Fill UI initially
             val metadata = mediaController.metadata
-            viewModel.trackName.value = metadata.getString(MediaMetadataCompat.METADATA_KEY_TITLE)
-            viewModel.trackArtist.value = metadata.getString(MediaMetadataCompat.METADATA_KEY_ARTIST)
-            viewModel.progressMax.value = (metadata.getLong(MediaMetadataCompat.METADATA_KEY_DURATION) / 1000).toInt()
-            viewModel.coverURL.value = metadata.getString(MediaMetadataCompat.METADATA_KEY_ALBUM_ART_URI)
+            updateUIonMetadataChange(metadata)
+
             viewModel.coverBitmap.value = metadata.getBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART)
             viewModel.isPlaying.value = (mediaController.playbackState.state == PlaybackStateCompat.STATE_PLAYING)
             viewModel.shuffleSupported.value = mediaController.shuffleMode == PlaybackStateCompat.SHUFFLE_MODE_NONE
@@ -80,11 +78,7 @@ class DeviceActivity : AppCompatActivity() {
 
     private var controllerCallback = object : MediaControllerCompat.Callback() {
         override fun onMetadataChanged(metadata: MediaMetadataCompat?) {
-            viewModel.trackName.value = metadata!!.getString(MediaMetadataCompat.METADATA_KEY_TITLE)
-            viewModel.trackArtist.value = metadata.getString(MediaMetadataCompat.METADATA_KEY_ARTIST)
-            viewModel.progressMax.value = (metadata.getLong(MediaMetadataCompat.METADATA_KEY_DURATION) / 1000).toInt()
-            viewModel.coverURL.value = metadata.getString(MediaMetadataCompat.METADATA_KEY_ALBUM_ART_URI)
-            viewModel.coverBitmap.value = metadata.getBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART)
+            updateUIonMetadataChange(metadata!!)
         }
 
         override fun onShuffleModeChanged(shuffleMode: Int) {
@@ -93,12 +87,36 @@ class DeviceActivity : AppCompatActivity() {
 
         override fun onPlaybackStateChanged(state: PlaybackStateCompat?) {
             viewModel.isPlaying.value = (state!!.state == PlaybackStateCompat.STATE_PLAYING)
+            viewModel.hasNext.value = PlaybackStateCompat.ACTION_SKIP_TO_NEXT and state.actions == PlaybackStateCompat.ACTION_SKIP_TO_NEXT
+            viewModel.hasPrev.value = PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS and state.actions == PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS
         }
 
         override fun onSessionDestroyed() {
             mediaBrowser.disconnect()
             finish()
         }
+    }
+
+    private fun updateUIonMetadataChange(metadata: MediaMetadataCompat) {
+        // Bad way to detect idle state
+        val title = metadata.getString(MediaMetadataCompat.METADATA_KEY_TITLE)
+        val subtitle = metadata.getString(MediaMetadataCompat.METADATA_KEY_ARTIST)
+        val idle = (title == "Idle" && subtitle == intent.getStringExtra("deviceName"))
+        viewModel.playerActive.value = !idle
+        if (idle) {
+            viewModel.shuffleSupported.value = false
+            viewModel.likeSupported.value = false
+        } else {
+            val mediaController = MediaControllerCompat.getMediaController(this)
+            viewModel.shuffleSupported.value = mediaController.shuffleMode == PlaybackStateCompat.SHUFFLE_MODE_NONE
+            viewModel.likeSupported.value = true
+        }
+
+        viewModel.trackName.value = title
+        viewModel.trackArtist.value = subtitle
+        viewModel.progressMax.value = (metadata.getLong(MediaMetadataCompat.METADATA_KEY_DURATION) / 1000).toInt()
+        viewModel.coverURL.value = metadata.getString(MediaMetadataCompat.METADATA_KEY_ALBUM_ART_URI)
+        viewModel.coverBitmap.value = metadata.getBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

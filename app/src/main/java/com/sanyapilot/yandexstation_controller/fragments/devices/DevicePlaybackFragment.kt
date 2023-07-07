@@ -86,9 +86,6 @@ class DevicePlaybackFragment : Fragment() {
                 progressBar.visibility = TextView.GONE
                 curProgress.visibility = TextView.GONE
                 maxProgress.visibility = TextView.GONE
-
-                if (orientation == Configuration.ORIENTATION_PORTRAIT)
-                    coverImage.setImageResource(R.drawable.ic_round_pause_on_surface_24)
             }
         }
 
@@ -124,6 +121,10 @@ class DevicePlaybackFragment : Fragment() {
 
         viewModel.shuffleSupported.observe(viewLifecycleOwner) {
             shuffleButton.isEnabled = it
+        }
+
+        viewModel.likeSupported.observe(viewLifecycleOwner) {
+            likeButton.isEnabled = it
         }
 
         // MediaController is ready
