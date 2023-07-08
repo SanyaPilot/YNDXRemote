@@ -134,6 +134,8 @@ class MainActivity : AppCompatActivity() {
         Log.e(TAG, viewModel.isLoggedIn()!!.toString())
         if (!viewModel.isLoggedIn()!!) {
             doNetwork()
+        } else {
+            viewModel.setLoggedIn(true)
         }
     }
     private fun doNetwork() {

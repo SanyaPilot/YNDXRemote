@@ -13,6 +13,7 @@ import kotlinx.serialization.json.Json
 import okhttp3.Response
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
+import org.json.JSONObject
 import java.util.*
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.thread
@@ -208,8 +209,8 @@ class GlagolClient(private val speaker: Speaker) : WebSocketListener() {
     }
 
     override fun onMessage(webSocket: WebSocket, text: String) {
-        //Log.d(TAG, "RECEIVED MESSAGE")
-        //Log.d(TAG, JSONObject(text).getJSONObject("state").toString())
+        Log.d(TAG, "RECEIVED MESSAGE")
+        Log.d(TAG, JSONObject(text).getJSONObject("state").toString())
         try {
             listener(json.decodeFromString<StationResponse>(text).state)
         } catch (e: SerializationException) {
@@ -330,6 +331,7 @@ class StationSearcher constructor(
         // When the network service is no longer available.
         // Internal bookkeeping code goes here.
         Log.e(TAG, "service lost: $service")
+        mDNSWorker.removeDevice(service.serviceName.split('-')[1])
     }
 
     override fun onDiscoveryStopped(serviceType: String) {
@@ -350,23 +352,36 @@ class StationSearcher constructor(
 object mDNSWorker {
     private val devices = mutableListOf<LocalDevice>()
     private val listeners = mutableMapOf<String, () -> Unit>()
+    private val lostListeners = mutableMapOf<String, () -> Unit>()
+    private lateinit var helper: StationSearcher
 
     fun init(context: Context) {
         Log.d(TAG, "Registering listener")
-        val helper = StationSearcher(context)
+        helper = StationSearcher(context)
+        helper.beginSearch()
+    }
+    fun stop() {
+        helper.stopSearch()
+    }
+    fun start() {
         helper.beginSearch()
     }
     fun addListener(uuid: String, listener: () -> Unit) {
         listeners[uuid] = listener
     }
+    fun addOnLostListener(uuid: String, listener: () -> Unit) {
+        lostListeners[uuid] = listener
+    }
     fun addDevice(device: LocalDevice) {
         devices.add(device)
         listeners[device.uuid]?.let { it() }
     }
-    fun removeDevice(uuid: String) {
+    fun removeDevice(uuid: String, callListener: Boolean = true) {
         for (device in devices) {
             if (device.uuid == uuid) {
                 devices.remove(device)
+                if (callListener)
+                    lostListeners[uuid]?.let { it() }
                 return
             }
         }

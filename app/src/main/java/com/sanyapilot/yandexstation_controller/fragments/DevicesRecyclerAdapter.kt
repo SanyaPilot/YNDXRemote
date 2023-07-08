@@ -16,6 +16,7 @@ import com.google.android.material.card.MaterialCardView
 import com.sanyapilot.yandexstation_controller.DeviceActivity
 import com.sanyapilot.yandexstation_controller.R
 import com.sanyapilot.yandexstation_controller.api.Speaker
+import com.sanyapilot.yandexstation_controller.api.mDNSWorker
 
 class DevicesRecyclerAdapter(private val dataSet: List<Any>) :
     RecyclerView.Adapter<RecyclerView.ViewHolder>() {
@@ -30,6 +31,7 @@ class DevicesRecyclerAdapter(private val dataSet: List<Any>) :
         val udid: TextView
         val image: ImageView
         val card: MaterialCardView
+        val offlineImage: ImageView
 
         init {
             // Define click listener for the ViewHolder's View.
@@ -38,6 +40,27 @@ class DevicesRecyclerAdapter(private val dataSet: List<Any>) :
             udid = view.findViewById(R.id.deviceUDID)
             image = view.findViewById(R.id.deviceImage)
             card = view.findViewById(R.id.deviceCard)
+            offlineImage = view.findViewById(R.id.offlineImage)
+        }
+        fun goOffline() {
+            offlineImage.visibility = View.VISIBLE
+            card.setOnClickListener {
+                Toast(it.context).apply {
+                    duration = Toast.LENGTH_SHORT
+                    setText(it.context.getString(R.string.deviceOffline))
+                    show()
+                }
+            }
+        }
+        fun goOnline(udid: String, name: String) {
+            offlineImage.visibility = View.INVISIBLE
+            card.setOnClickListener {
+                val intent = Intent(it.context, DeviceActivity::class.java).apply {
+                    putExtra("deviceId", udid)
+                    putExtra("deviceName", name)
+                }
+                it.context.startActivity(intent)
+            }
         }
     }
     private inner class TitleHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -73,13 +96,21 @@ class DevicesRecyclerAdapter(private val dataSet: List<Any>) :
                 curViewHolder.name.text = curDevice.name
                 curViewHolder.type.text = curDevice.platform
                 curViewHolder.udid.text = curDevice.id
-                curViewHolder.card.setOnClickListener {
-                    val intent = Intent(it.context, DeviceActivity::class.java).apply {
-                        putExtra("deviceId", curDevice.id)
-                        putExtra("deviceName", curDevice.name)
-                    }
-                    it.context.startActivity(intent)
+
+                // Device became online
+                mDNSWorker.addListener(curDevice.id) {
+                    curViewHolder.goOnline(curDevice.id, curDevice.name)
                 }
+                // Device is offline again
+                mDNSWorker.addOnLostListener(curDevice.id) {
+                    curViewHolder.goOffline()
+                }
+
+                if (mDNSWorker.deviceExists(curDevice.id))
+                    curViewHolder.goOnline(curDevice.id, curDevice.name)
+                else
+                    curViewHolder.goOffline()
+
                 curViewHolder.card.setOnLongClickListener {
                     val clipboard: ClipboardManager = it.context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                     val clip = ClipData.newPlainText("UDID", curDevice.id)

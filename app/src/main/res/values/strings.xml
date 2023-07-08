@@ -31,6 +31,7 @@ t.me/yndxfuck_chat</string>
     <string name="account">Аккаунт</string>
 
     <string name="deviceList">Список устройств</string>
+    <string name="deviceOffline">Устройство не в сети!</string>
 
     <string name="deviceActivityHeader">Управление станцией</string>
     <string name="enterText">Введите текст</string>

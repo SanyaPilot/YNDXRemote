@@ -58,6 +58,14 @@
                 android:text="TextView"
                 app:layout_constraintStart_toStartOf="@+id/deviceType"
                 app:layout_constraintTop_toBottomOf="@+id/deviceType" />
+
+            <ImageView
+                android:id="@+id/offlineImage"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:srcCompat="@drawable/round_link_off_24" />
         </androidx.constraintlayout.widget.ConstraintLayout>
     </com.google.android.material.card.MaterialCardView>
 
