@@ -9,11 +9,14 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.sanyapilot.yandexstation_controller.MainActivity
 import com.sanyapilot.yandexstation_controller.R
 import com.sanyapilot.yandexstation_controller.api.FuckedQuasarClient
 import kotlin.concurrent.thread
 
 class DevicesFragment : Fragment() {
+    private lateinit var recycler: RecyclerView
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -25,23 +28,33 @@ class DevicesFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         val appBarTitle = requireActivity().findViewById<TextView>(R.id.mainAppBarTitle)
         appBarTitle.text = getString(R.string.deviceList)
+        recycler = requireView().findViewById(R.id.devicesRecycler)
 
-        val recycler = view.findViewById<RecyclerView>(R.id.devicesRecycler)
+        val swipeRefresh = view.findViewById<SwipeRefreshLayout>(R.id.swiperefresh)
+        swipeRefresh.setOnRefreshListener {
+            updateDeviceList(true)
+            swipeRefresh.isRefreshing = false
+        }
+
+        updateDeviceList(false)
+    }
+    private fun updateDeviceList(fetch: Boolean) {
+        val activity = requireActivity() as MainActivity
+
+        if (fetch)
+            thread(start = true) { activity.fetchDevices() }
+
         val devices = FuckedQuasarClient.getDevices()
         if (devices.isEmpty()) {
-            val noDevicesImage = view.findViewById<ImageView>(R.id.noDevicesImage)
-            val noDevicesText = view.findViewById<TextView>(R.id.noDevicesText)
+            val noDevicesImage = requireView().findViewById<ImageView>(R.id.noDevicesImage)
+            val noDevicesText = requireView().findViewById<TextView>(R.id.noDevicesText)
 
             noDevicesImage.visibility = View.VISIBLE
             noDevicesText.visibility = View.VISIBLE
             recycler.visibility = View.GONE
         } else {
-            thread(start = true) {
-                requireActivity().runOnUiThread {
-                    recycler.layoutManager = LinearLayoutManager(view.context)
-                    recycler.adapter = DevicesRecyclerAdapter(devices)
-                }
-            }
+            recycler.layoutManager = LinearLayoutManager(requireView().context)
+            recycler.adapter = DevicesRecyclerAdapter(devices)
         }
     }
 }

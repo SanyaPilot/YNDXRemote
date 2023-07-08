@@ -149,42 +149,44 @@ class MainActivity : AppCompatActivity() {
         if (mDNSWorker.isReady())
             thread(start = true) { mDNSWorker.start() }
     }
+    fun fetchDevices() {
+        val result = FuckedQuasarClient.fetchDevices()
+        if (!result.ok) {
+            if (result.errorId == Errors.TIMEOUT) {
+                Log.e(TAG, "timeout")
+                runOnUiThread {
+                    Snackbar.make(
+                        findViewById(R.id.mainLayout), getString(R.string.errorNoInternet),
+                        Snackbar.LENGTH_INDEFINITE
+                    ).show()
+                }
+            } else if (result.errorId == Errors.INVALID_TOKEN) {
+                Log.e(TAG, "token auth fail")
+                runOnUiThread {
+                    with (sharedPrefs.edit()) {
+                        remove("access-token")
+                        commit()
+                    }
+                    startActivity(
+                        Intent(this, LoginActivity::class.java)
+                            .putExtra(TOKEN_INVALID, true)
+                    )
+                }
+            } else if (result.errorId == Errors.INTERNAL_SERVER_ERROR) {
+                Log.e(TAG, "Internal server error!")
+                runOnUiThread {
+                    Snackbar.make(
+                        findViewById(R.id.mainLayout), getString(R.string.serverDead),
+                        Snackbar.LENGTH_LONG
+                    ).show()
+                }
+            }
+        }
+    }
     private fun doNetwork() {
         // Prepare speakers
         thread(start = true) {
-            val result = FuckedQuasarClient.fetchDevices()
-            if (!result.ok) {
-                if (result.errorId == Errors.TIMEOUT) {
-                    Log.e(TAG, "timeout")
-                    runOnUiThread {
-                        Snackbar.make(
-                            findViewById(R.id.mainLayout), getString(R.string.errorNoInternet),
-                            Snackbar.LENGTH_INDEFINITE
-                        ).show()
-                    }
-                } else if (result.errorId == Errors.INVALID_TOKEN) {
-                    Log.e(TAG, "token auth fail")
-                    runOnUiThread {
-                        with (sharedPrefs.edit()) {
-                            remove("access-token")
-                            commit()
-                        }
-                        startActivity(
-                            Intent(this, LoginActivity::class.java)
-                                .putExtra(TOKEN_INVALID, true)
-                        )
-                    }
-                } else if (result.errorId == Errors.INTERNAL_SERVER_ERROR) {
-                    Log.e(TAG, "Internal server error!")
-                    runOnUiThread {
-                        Snackbar.make(
-                            findViewById(R.id.mainLayout), getString(R.string.serverDead),
-                            Snackbar.LENGTH_LONG
-                        ).show()
-                    }
-                }
-            }
-
+            fetchDevices()
             runOnUiThread {
                 viewModel.setLoggedIn(true)
                 val fadeOut = AlphaAnimation(1f, 0f)
