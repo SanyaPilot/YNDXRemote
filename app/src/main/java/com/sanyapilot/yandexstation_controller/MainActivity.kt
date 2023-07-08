@@ -138,6 +138,17 @@ class MainActivity : AppCompatActivity() {
             viewModel.setLoggedIn(true)
         }
     }
+
+    override fun onPause() {
+        super.onPause()
+        thread(start = true) { mDNSWorker.stop() }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (mDNSWorker.isReady())
+            thread(start = true) { mDNSWorker.start() }
+    }
     private fun doNetwork() {
         // Prepare speakers
         thread(start = true) {
@@ -230,12 +241,10 @@ class MainActivity : AppCompatActivity() {
     }
     fun logOut(view: View) {
         // Logout action, starting LoginActivity
-        Log.e(TAG, "TOKEN B4 CLEARING: ${sharedPrefs.getString("access-token", null)}")
         with (sharedPrefs.edit()) {
             remove("access-token")
             commit()
         }
-        Log.e(TAG, "TOKEN AFTER CLEARING: ${sharedPrefs.getString("access-token", null)}")
         startActivity(Intent(this, LoginActivity::class.java))
         finish()
     }

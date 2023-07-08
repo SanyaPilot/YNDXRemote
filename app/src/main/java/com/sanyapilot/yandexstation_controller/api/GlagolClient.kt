@@ -356,7 +356,6 @@ object mDNSWorker {
     private lateinit var helper: StationSearcher
 
     fun init(context: Context) {
-        Log.d(TAG, "Registering listener")
         helper = StationSearcher(context)
         helper.beginSearch()
     }
@@ -365,6 +364,9 @@ object mDNSWorker {
     }
     fun start() {
         helper.beginSearch()
+    }
+    fun isReady(): Boolean {
+        return this::helper.isInitialized
     }
     fun addListener(uuid: String, listener: () -> Unit) {
         listeners[uuid] = listener
