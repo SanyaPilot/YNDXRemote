@@ -5,6 +5,9 @@ import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import android.net.wifi.WifiManager
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -17,7 +20,9 @@ import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts.RequestPermission
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.fragment.app.*
+import androidx.fragment.app.FragmentContainerView
+import androidx.fragment.app.commit
+import androidx.fragment.app.replace
 import com.google.android.material.navigation.NavigationBarView
 import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.google.android.material.snackbar.Snackbar
@@ -25,6 +30,7 @@ import com.sanyapilot.yandexstation_controller.api.Errors
 import com.sanyapilot.yandexstation_controller.api.FuckedQuasarClient
 import com.sanyapilot.yandexstation_controller.api.mDNSWorker
 import com.sanyapilot.yandexstation_controller.fragments.DevicesFragment
+import com.sanyapilot.yandexstation_controller.fragments.NoWiFiFragment
 import com.sanyapilot.yandexstation_controller.fragments.UserFragment
 import kotlin.concurrent.thread
 
@@ -41,6 +47,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var title: TextView
     private lateinit var sharedPrefs: SharedPreferences
 
+    private lateinit var wifiManager: WifiManager
+    private lateinit var connectivityManager: ConnectivityManager
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -50,6 +59,11 @@ class MainActivity : AppCompatActivity() {
         // Register notification channel
         createNotificationChannel()
 
+        wifiManager = getSystemService(Context.WIFI_SERVICE) as WifiManager
+        connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+
+        sharedPrefs = getSharedPreferences("auth", Context.MODE_PRIVATE)
+
         // Initialize views
         progressBar = findViewById(R.id.mainLoadingBar)
         bottomNavigation = findViewById(R.id.bottomNavigation)
@@ -57,7 +71,27 @@ class MainActivity : AppCompatActivity() {
         container = findViewById(R.id.mainFragmentContainer)
         title = findViewById(R.id.mainAppBarTitle)
 
-        if (viewModel.isLoggedIn() == true) {
+        val netCaps = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
+        if (wifiManager.isWifiEnabled && netCaps != null && netCaps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
+            initUI()
+        } else {
+            supportFragmentManager.commit {
+                setReorderingAllowed(true)
+                replace<NoWiFiFragment>(R.id.mainFragmentContainer)
+            }
+        }
+    }
+
+    private fun initUI() {
+        Log.d(TAG, "Init UI")
+        // Check if we need auth
+        if (!sharedPrefs.contains("access-token")) {
+            startActivity(Intent(this, LoginActivity::class.java))
+            finish()
+            return
+        }
+
+        if (viewModel.isLoggedIn()) {
             progressBar.visibility = View.GONE
             loadingImage.visibility = View.GONE
             bottomNavigation.visibility = View.VISIBLE
@@ -80,6 +114,7 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 override fun onAnimationEnd(p0: Animation?) {
+                    Log.d(TAG, "Replacing frag!")
                     when (item.itemId) {
                         R.id.devicesPage -> {
                             supportFragmentManager.commit {
@@ -115,24 +150,45 @@ class MainActivity : AppCompatActivity() {
         }
         bottomNavigation.setOnItemReselectedListener {}
 
-        // Check if we need auth
-        sharedPrefs = getSharedPreferences("auth", Context.MODE_PRIVATE)
-        if (!sharedPrefs.contains("access-token")) {
-            startActivity(Intent(this, LoginActivity::class.java))
-            finish()
-            return
-        }
         // Authorize with saved access token
-        if (savedInstanceState == null) doNetwork()
-        else viewModel.setLoggedIn(true)
+        if (!viewModel.isLoggedIn()) doNetwork()
+    }
+
+    fun retryInitUI(view: View) {
+        Log.d(TAG, "Retrying UI init!")
+        val netCaps = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
+        if (wifiManager.isWifiEnabled && netCaps != null && netCaps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
+            // Fade out fragments container
+            val fadeOutContainer = AlphaAnimation(1f, 0f)
+            fadeOutContainer.interpolator = AccelerateInterpolator()
+            fadeOutContainer.duration = 200
+            fadeOutContainer.setAnimationListener(object : Animation.AnimationListener {
+                override fun onAnimationStart(p0: Animation?) {
+                }
+
+                override fun onAnimationEnd(p0: Animation?) {
+                    container.visibility = View.INVISIBLE
+                    initUI()
+                }
+
+                override fun onAnimationRepeat(p0: Animation?) {
+                }
+            })
+            container.startAnimation(fadeOutContainer)
+        } else {
+            Snackbar.make(
+                findViewById(R.id.mainLayout), getString(R.string.noWiFi),
+                Snackbar.LENGTH_SHORT
+            ).show()
+        }
     }
 
     override fun onRestart() {
         // Handle cookie update after returning from LoginActivity
         super.onRestart()
         Log.e(TAG, "onRestart()")
-        Log.e(TAG, viewModel.isLoggedIn()!!.toString())
-        if (!viewModel.isLoggedIn()!!) {
+        Log.e(TAG, viewModel.isLoggedIn().toString())
+        if (!viewModel.isLoggedIn()) {
             doNetwork()
         } else {
             viewModel.setLoggedIn(true)
@@ -141,7 +197,8 @@ class MainActivity : AppCompatActivity() {
 
     override fun onPause() {
         super.onPause()
-        thread(start = true) { mDNSWorker.stop() }
+        if (viewModel.isLoggedIn())
+            thread(start = true) { mDNSWorker.stop() }
     }
 
     override fun onResume() {
@@ -184,6 +241,9 @@ class MainActivity : AppCompatActivity() {
         }
     }
     private fun doNetwork() {
+        title.text = getString(R.string.loading)
+        progressBar.visibility = View.VISIBLE
+        loadingImage.visibility = View.VISIBLE
         // Prepare speakers
         thread(start = true) {
             fetchDevices()
@@ -203,7 +263,7 @@ class MainActivity : AppCompatActivity() {
 
                         supportFragmentManager.commit {
                             setReorderingAllowed(true)
-                            add<DevicesFragment>(R.id.mainFragmentContainer)
+                            replace<DevicesFragment>(R.id.mainFragmentContainer)
                         }
 
                         // Start fade in animations for elements
@@ -211,6 +271,7 @@ class MainActivity : AppCompatActivity() {
                         fadeIn.interpolator = AccelerateInterpolator()
                         fadeIn.duration = 200
 
+                        container.visibility = View.VISIBLE
                         container.startAnimation(fadeIn)
                         bottomNavigation.visibility = View.VISIBLE
                         bottomNavigation.startAnimation(fadeIn)

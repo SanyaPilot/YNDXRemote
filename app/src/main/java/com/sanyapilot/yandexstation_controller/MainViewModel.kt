@@ -19,8 +19,8 @@ class MainViewModel : ViewModel() {
     fun getUserData(): LiveData<UserDataObj> {
         return userData
     }
-    fun isLoggedIn(): Boolean? {
-        return loggedIn.value
+    fun isLoggedIn(): Boolean {
+        return if (loggedIn.value != null) loggedIn.value!! else false
     }
     fun setLoggedIn(value: Boolean) {
         loggedIn.value = value

@@ -30,6 +30,11 @@ t.me/yndxfuck_chat</string>
     <string name="devices">Устройства</string>
     <string name="account">Аккаунт</string>
 
+    <string name="noWiFi">Нет соединения!</string>
+    <string name="noWiFiDescription">Для работы необходимо\nподключиться к сети WiFi!</string>
+    <string name="updateBtn">Обновить</string>
+    <string name="loading">Загрузка…</string>
+
     <string name="deviceList">Список устройств</string>
     <string name="deviceOffline">Устройство не в сети!</string>
     <string name="noDevices">Сейчас здесь нет устройств.\nПривяжите колонку в Telegram боте\nt.me/yndxfuck_bot</string>
