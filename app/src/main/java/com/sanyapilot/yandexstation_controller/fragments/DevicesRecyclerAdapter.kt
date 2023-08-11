@@ -17,6 +17,7 @@ import com.sanyapilot.yandexstation_controller.DeviceActivity
 import com.sanyapilot.yandexstation_controller.R
 import com.sanyapilot.yandexstation_controller.api.Speaker
 import com.sanyapilot.yandexstation_controller.api.mDNSWorker
+import com.sanyapilot.yandexstation_controller.stationIcons
 
 class DevicesRecyclerAdapter(private val dataSet: List<Any>) :
     RecyclerView.Adapter<RecyclerView.ViewHolder>() {
@@ -92,7 +93,7 @@ class DevicesRecyclerAdapter(private val dataSet: List<Any>) :
             val curViewHolder = viewHolder as ViewHolder
             val curDevice = dataSet[position]
             if (curDevice is Speaker) {
-                curViewHolder.image.setImageResource(R.drawable.station_icon)
+                curViewHolder.image.setImageResource(stationIcons.getOrDefault(curDevice.platform, R.drawable.station_icon))
                 curViewHolder.name.text = curDevice.name
                 curViewHolder.type.text = curDevice.platform
                 curViewHolder.udid.text = curDevice.id

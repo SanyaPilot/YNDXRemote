@@ -266,7 +266,7 @@ class StationControlService : MediaBrowserServiceCompat() {
 
             // Add an app icon and set its accent color
             // Be careful about the color
-            setSmallIcon(R.drawable.station_icon)
+            setSmallIcon(stationIcons.getOrDefault(station.speaker.platform, R.drawable.station_icon))
             color = ContextCompat.getColor(baseContext, R.color.md_theme_dark_primary)
 
             // Skip prev button
