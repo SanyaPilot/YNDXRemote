@@ -3,16 +3,16 @@ package com.sanyapilot.yandexstation_controller.api
 import kotlin.concurrent.thread
 
 // Wrapper class
-class YandexStationService(val speaker: Speaker, val client: GlagolClient, val listener: (data: StationState) -> Unit) {
+class YandexStationService(val speaker: Speaker, val client: GlagolClient, val listener: (data: StationState) -> Unit, val closedListener: () -> Unit) {
     var localMode = false
     var localTTS = true
 
     init {
         localMode = mDNSWorker.deviceExists(speaker.id)
         if (localMode) {
-            startLocal(false)
+            startLocal()
         } else {
-            mDNSWorker.addListener(speaker.id) { startLocal(true) }
+            mDNSWorker.addListener(speaker.id) { startLocal() }
         }
     }
 
@@ -23,17 +23,17 @@ class YandexStationService(val speaker: Speaker, val client: GlagolClient, val l
         }
     }
 
-    fun startLocal(showSnack: Boolean) {
+    fun startLocal() {
         thread(start = true) {
-            client.start { listener(it) }
             client.setOnSocketClosedListener {
-                localMode = false
+                closedListener()
             }
             client.setOnFailureListener {
-                localMode = false
-                mDNSWorker.removeDevice(speaker.id)
-                mDNSWorker.addListener(speaker.id) { startLocal(true) }
+                // Try to restart connection
+                Thread.sleep(1000)
+                startLocal()
             }
+            client.start { listener(it) }
         }
         localMode = true
     }

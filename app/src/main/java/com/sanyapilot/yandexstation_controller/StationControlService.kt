@@ -209,8 +209,17 @@ class StationControlService : MediaBrowserServiceCompat() {
 
             station = YandexStationService(
                 speaker = speaker,
-                client = GlagolClient(speaker)
-            ) { observer(it) }
+                client = GlagolClient(speaker),
+                listener = { observer(it) },
+                closedListener = {
+                    // Close session
+                    stopSelf()
+                    mediaSession.isActive = false
+                    mediaSession.release()
+                    stopForeground(Service.STOP_FOREGROUND_REMOVE)
+                    isForeground = false
+                }
+            )
 
             // Start MediaSession and go foreground
             val sessionActivityIntent = Intent(this, DeviceActivity::class.java).apply {

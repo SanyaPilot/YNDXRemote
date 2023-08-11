@@ -14,6 +14,7 @@ import okhttp3.Response
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 import org.json.JSONObject
+import java.net.SocketException
 import java.util.*
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.thread
@@ -156,7 +157,11 @@ class GlagolClient(private val speaker: Speaker) : WebSocketListener() {
         token = parsed.token
         Log.d(TAG, "Got token $token")
 
-        Session.wsConnect("wss://${localDevice!!.host}:${localDevice!!.port}", this)
+        try {
+            Session.wsConnect("wss://${localDevice!!.host}:${localDevice!!.port}", this)
+        } catch (e: SocketException) {
+            failureListener?.let { it() }
+        }
 
         listener = func
 
