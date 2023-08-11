@@ -17,6 +17,8 @@ import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
+import androidx.core.content.res.ResourcesCompat
+import androidx.core.graphics.drawable.toBitmap
 import androidx.media.MediaBrowserServiceCompat
 import androidx.media.VolumeProviderCompat
 import androidx.media.app.NotificationCompat.MediaStyle
@@ -477,17 +479,26 @@ class StationControlService : MediaBrowserServiceCompat() {
                     MediaMetadataCompat.METADATA_KEY_ALBUM_ART_URI,
                     curImageURL
                 )
-                val request = Request.Builder()
-                    .url(curImageURL)
-                    .build()
+                if (curImageURL == "dummy") {
+                    val image = ResourcesCompat.getDrawable(resources, R.drawable.round_smart_display_200, null)!!.toBitmap()
+                    Log.e(TAG, "IMAGE: $image")
+                    mediaMetadataBuilder.putBitmap(
+                        MediaMetadataCompat.METADATA_KEY_ALBUM_ART,
+                        image
+                    )
+                } else {
+                    val request = Request.Builder()
+                        .url(curImageURL)
+                        .build()
 
-                Session.client.newCall(request).execute().use { resp ->
-                    if (resp.isSuccessful) {
-                        val image = BitmapFactory.decodeStream(resp.body.byteStream())
-                        mediaMetadataBuilder.putBitmap(
-                            MediaMetadataCompat.METADATA_KEY_ALBUM_ART,
-                            image
-                        )
+                    Session.client.newCall(request).execute().use { resp ->
+                        if (resp.isSuccessful) {
+                            val image = BitmapFactory.decodeStream(resp.body.byteStream())
+                            mediaMetadataBuilder.putBitmap(
+                                MediaMetadataCompat.METADATA_KEY_ALBUM_ART,
+                                image
+                            )
+                        }
                     }
                 }
                 coverURL = curImageURL
