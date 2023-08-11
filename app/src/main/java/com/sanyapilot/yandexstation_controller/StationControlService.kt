@@ -92,7 +92,7 @@ class StationControlService : MediaBrowserServiceCompat() {
                 stopSelf()
                 mediaSession.isActive = false
                 mediaSession.release()
-                stopForeground(Service.STOP_FOREGROUND_DETACH)
+                stopForeground(Service.STOP_FOREGROUND_REMOVE)
                 isForeground = false
             }
 
@@ -142,6 +142,13 @@ class StationControlService : MediaBrowserServiceCompat() {
                     "likeTrack" -> station.likeTrack()
                 }
             }
+
+            override fun onCustomAction(action: String?, extras: Bundle?) {
+                when (action) {
+                    "likeTrack" -> station.likeTrack()
+                    "stop" -> onStop()
+                }
+            }
         }
 
         // Volume management
@@ -170,6 +177,7 @@ class StationControlService : MediaBrowserServiceCompat() {
                 .setActions(
                     PlaybackStateCompat.ACTION_PLAY or PlaybackStateCompat.ACTION_PLAY_PAUSE or PlaybackStateCompat.ACTION_STOP
                 )
+            addCustomActions()
             setPlaybackState(stateBuilder.build())
 
             mediaMetadataBuilder = MediaMetadataCompat.Builder()
@@ -306,10 +314,26 @@ class StationControlService : MediaBrowserServiceCompat() {
                 )
             )
 
+            addAction(
+                NotificationCompat.Action(
+                    R.drawable.round_close_24,
+                    "Stop",
+                    MediaButtonReceiver.buildMediaButtonPendingIntent(
+                        this@StationControlService,
+                        PlaybackStateCompat.ACTION_STOP
+                    )
+                )
+            )
+
             setOnlyAlertOnce(true)
             setOngoing(controller.playbackState.state == PlaybackStateCompat.STATE_PLAYING)
         }
         return builder.build()
+    }
+
+    private fun addCustomActions() {
+        stateBuilder.addCustomAction("likeTrack", "Like this track", R.drawable.round_favorite_24)
+        stateBuilder.addCustomAction("stop", "Stop", R.drawable.round_close_24)
     }
 
     override fun onGetRoot(
@@ -340,6 +364,7 @@ class StationControlService : MediaBrowserServiceCompat() {
             stateBuilder = PlaybackStateCompat.Builder()
 
             stateBuilder.setActions(PlaybackStateCompat.ACTION_PLAY or PlaybackStateCompat.ACTION_STOP)
+            addCustomActions()
             mediaMetadataBuilder
                 .putString(MediaMetadataCompat.METADATA_KEY_TITLE, "Idle")
                 .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, station.speaker.name)
