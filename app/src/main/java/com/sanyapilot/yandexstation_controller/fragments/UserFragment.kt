@@ -1,6 +1,7 @@
 package com.sanyapilot.yandexstation_controller.fragments
 
 import android.os.Bundle
+import android.text.method.LinkMovementMethod
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -40,6 +41,11 @@ class UserFragment : Fragment() {
         val appBarTitle = requireActivity().findViewById<TextView>(R.id.mainAppBarTitle)
         appBarTitle.text = getString(R.string.aboutAccount)
 
+        val withLoveText = requireActivity().findViewById<TextView>(R.id.withLove)
+        val credits = requireActivity().findViewById<TextView>(R.id.creditsText)
+        withLoveText.movementMethod = LinkMovementMethod.getInstance()
+        credits.movementMethod = LinkMovementMethod.getInstance()
+
         // Register observer
         viewModel.getUserData().observe(viewLifecycleOwner) { userData ->
             val avatar = view.findViewById<ImageView>(R.id.userAvatar)
@@ -64,7 +70,7 @@ class UserFragment : Fragment() {
 
         //requireActivity().findViewById<Button>(R.id.logOutButton).setOnClickListener { logOut() }
         //val progressBar = findViewById<ProgressBar>(R.id.progressBar)
-        Log.e(TAG, viewModel.isLoggedIn()!!.toString())
+        Log.e(TAG, viewModel.isLoggedIn().toString())
         if (viewModel.getUserData().value == null) {
             Log.e(TAG, "REFRESHING")
             thread(start = true) {

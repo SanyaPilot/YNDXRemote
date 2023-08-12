@@ -1,6 +1,5 @@
 <resources>
-    <string name="app_name">Yandex.Station Controller</string>
-
+    <string name="app_name">YNDXFuck Remote</string>
     <!-- User account strings -->
     <string name="register_screen_name">Вход в аккаунт</string>
     <string name="login">Логин</string>
@@ -56,4 +55,10 @@ t.me/yndxfuck_chat</string>
 
     <string name="myWave">Моя волна</string>
     <string name="myFavourites">Мне нравится</string>
+
+    <string name="codedWithLove">Создано проектом YNDXFuck с ❤️</string>
+    <string name="credits"><b>Разработка:</b> <a href="https://github.com/SanyaPilot">SanyaPilot</a>\n
+        <b>Спасибо проекту</b>\n
+        <a href="https://github.com/AlexxIT/YandexStation">Яндекс.Станция для Home Assistant</a>\n
+        за исследование протокола Glagol</string>
 </resources>

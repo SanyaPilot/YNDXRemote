@@ -442,7 +442,8 @@ class StationControlService : MediaBrowserServiceCompat() {
         hasPrev = data.playerState.hasPrev
         hasNext = data.playerState.hasNext
 
-        if (description.title != data.playerState.title || controller.metadata.getString(MediaMetadataCompat.METADATA_KEY_ARTIST) != data.playerState.subtitle) {
+        val prevArtist = controller.metadata.getString(MediaMetadataCompat.METADATA_KEY_ARTIST)
+        if (description.title != data.playerState.title || prevArtist != data.playerState.subtitle) {
             mediaMetadataBuilder
                 .putString(MediaMetadataCompat.METADATA_KEY_TITLE, data.playerState.title)
                 .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, data.playerState.subtitle)
@@ -540,7 +541,8 @@ class StationControlService : MediaBrowserServiceCompat() {
         if (updateMeta) mediaSession.setMetadata(mediaMetadataBuilder.build())
 
         if (updateMeta || updateState) {
-            if (isForeground && !data.playing) {
+            if (isForeground && !data.playing && description.title == data.playerState.title && prevArtist == data.playerState.subtitle) {
+                // Do not stop foreground if track is changed
                 Log.d(TAG, "Stop FG")
                 stopForeground(Service.STOP_FOREGROUND_DETACH)
                 isForeground = false
