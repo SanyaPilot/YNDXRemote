@@ -1,6 +1,6 @@
 package com.sanyapilot.yandexstation_controller.api
 import android.util.Log
-import com.sanyapilot.yandexstation_controller.TAG
+import com.sanyapilot.yandexstation_controller.main_screen.TAG
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType

@@ -1,4 +1,4 @@
-package com.sanyapilot.yandexstation_controller
+package com.sanyapilot.yandexstation_controller.main_screen
 
 import android.content.Context
 import android.content.Intent
@@ -10,6 +10,7 @@ import android.view.View
 import android.widget.EditText
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.TextInputLayout
+import com.sanyapilot.yandexstation_controller.R
 import com.sanyapilot.yandexstation_controller.api.Errors
 import com.sanyapilot.yandexstation_controller.api.Session
 import kotlin.concurrent.thread

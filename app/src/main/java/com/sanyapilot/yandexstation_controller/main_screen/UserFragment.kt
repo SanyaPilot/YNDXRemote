@@ -1,4 +1,4 @@
-package com.sanyapilot.yandexstation_controller.fragments
+package com.sanyapilot.yandexstation_controller.main_screen
 
 import android.os.Bundle
 import android.text.method.LinkMovementMethod
@@ -12,10 +12,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import coil.load
 import coil.transform.CircleCropTransformation
-import com.sanyapilot.yandexstation_controller.MainViewModel
 import com.sanyapilot.yandexstation_controller.R
-import com.sanyapilot.yandexstation_controller.TAG
-import com.sanyapilot.yandexstation_controller.UserDataObj
 import com.sanyapilot.yandexstation_controller.api.UserData
 import kotlin.concurrent.thread
 

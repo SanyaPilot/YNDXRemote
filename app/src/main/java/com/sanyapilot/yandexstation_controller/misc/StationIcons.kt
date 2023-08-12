@@ -1,4 +1,6 @@
-package com.sanyapilot.yandexstation_controller
+package com.sanyapilot.yandexstation_controller.misc
+
+import com.sanyapilot.yandexstation_controller.R
 
 val stationIcons = mapOf(
     "yandexstation" to R.drawable.station_icon,

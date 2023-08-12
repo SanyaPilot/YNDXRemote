@@ -1,4 +1,4 @@
-package com.sanyapilot.yandexstation_controller
+package com.sanyapilot.yandexstation_controller.main_screen
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData

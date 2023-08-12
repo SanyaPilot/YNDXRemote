@@ -1,4 +1,4 @@
-package com.sanyapilot.yandexstation_controller.fragments
+package com.sanyapilot.yandexstation_controller.main_screen
 
 import android.os.Bundle
 import androidx.fragment.app.Fragment
@@ -10,7 +10,6 @@ import android.widget.TextView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import com.sanyapilot.yandexstation_controller.MainActivity
 import com.sanyapilot.yandexstation_controller.R
 import com.sanyapilot.yandexstation_controller.api.FuckedQuasarClient
 import kotlin.concurrent.thread

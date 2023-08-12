@@ -1,7 +1,5 @@
 package com.sanyapilot.yandexstation_controller.api
 
-import android.util.Log
-import com.sanyapilot.yandexstation_controller.TAG
 import org.json.JSONObject
 
 class DataMissingException(message: String): Exception(message)

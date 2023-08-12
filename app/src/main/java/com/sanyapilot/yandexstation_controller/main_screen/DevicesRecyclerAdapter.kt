@@ -1,4 +1,4 @@
-package com.sanyapilot.yandexstation_controller.fragments
+package com.sanyapilot.yandexstation_controller.main_screen
 
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -13,11 +13,11 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.card.MaterialCardView
-import com.sanyapilot.yandexstation_controller.DeviceActivity
+import com.sanyapilot.yandexstation_controller.device.DeviceActivity
 import com.sanyapilot.yandexstation_controller.R
 import com.sanyapilot.yandexstation_controller.api.Speaker
 import com.sanyapilot.yandexstation_controller.api.mDNSWorker
-import com.sanyapilot.yandexstation_controller.stationIcons
+import com.sanyapilot.yandexstation_controller.misc.stationIcons
 
 class DevicesRecyclerAdapter(private val dataSet: List<Any>) :
     RecyclerView.Adapter<RecyclerView.ViewHolder>() {

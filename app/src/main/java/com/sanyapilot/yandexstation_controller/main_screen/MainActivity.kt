@@ -1,4 +1,4 @@
-package com.sanyapilot.yandexstation_controller
+package com.sanyapilot.yandexstation_controller.main_screen
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -26,12 +26,10 @@ import androidx.fragment.app.replace
 import com.google.android.material.navigation.NavigationBarView
 import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.google.android.material.snackbar.Snackbar
+import com.sanyapilot.yandexstation_controller.R
 import com.sanyapilot.yandexstation_controller.api.Errors
 import com.sanyapilot.yandexstation_controller.api.FuckedQuasarClient
 import com.sanyapilot.yandexstation_controller.api.mDNSWorker
-import com.sanyapilot.yandexstation_controller.fragments.DevicesFragment
-import com.sanyapilot.yandexstation_controller.fragments.NoWiFiFragment
-import com.sanyapilot.yandexstation_controller.fragments.UserFragment
 import kotlin.concurrent.thread
 
 const val TOKEN_INVALID = "com.sanyapilot.yandexstation_controller.tokenInvalid"

@@ -1,4 +1,4 @@
-package com.sanyapilot.yandexstation_controller.fragments.devices
+package com.sanyapilot.yandexstation_controller.device
 
 import android.content.res.Configuration
 import android.os.Bundle
@@ -16,8 +16,7 @@ import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.slider.Slider
 import com.sanyapilot.yandexstation_controller.R
-import com.sanyapilot.yandexstation_controller.TAG
-import com.sanyapilot.yandexstation_controller.fragments.DeviceViewModel
+import com.sanyapilot.yandexstation_controller.main_screen.TAG
 
 
 class DevicePlaybackFragment : Fragment() {

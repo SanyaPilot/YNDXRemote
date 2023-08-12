@@ -1,4 +1,4 @@
-package com.sanyapilot.yandexstation_controller.fragments.devices
+package com.sanyapilot.yandexstation_controller.device
 
 import android.content.Context
 import android.graphics.Bitmap
@@ -10,12 +10,11 @@ import android.view.animation.DecelerateInterpolator
 import android.widget.ImageView
 import android.widget.TextView
 import com.sanyapilot.yandexstation_controller.R
-import com.sanyapilot.yandexstation_controller.TAG
-import com.sanyapilot.yandexstation_controller.fragments.DeviceViewModel
+import com.sanyapilot.yandexstation_controller.main_screen.TAG
 
 class PlaybackInfoObservers (
-        private val viewModel: DeviceViewModel,
-        private val context: Context
+    private val viewModel: DeviceViewModel,
+    private val context: Context
     ) {
     fun coverObserver(image: ImageView, bitmap: Bitmap?, curImageURL: String?) {
         if (bitmap != null) {

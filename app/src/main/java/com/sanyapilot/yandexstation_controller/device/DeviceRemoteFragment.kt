@@ -1,4 +1,4 @@
-package com.sanyapilot.yandexstation_controller.fragments.devices
+package com.sanyapilot.yandexstation_controller.device
 
 import android.os.Bundle
 import android.support.v4.media.session.MediaControllerCompat

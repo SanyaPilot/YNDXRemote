@@ -1,5 +1,10 @@
-package com.sanyapilot.yandexstation_controller.api
+package com.sanyapilot.yandexstation_controller.service
 
+import com.sanyapilot.yandexstation_controller.api.GlagolClient
+import com.sanyapilot.yandexstation_controller.api.GlagolPayload
+import com.sanyapilot.yandexstation_controller.api.Speaker
+import com.sanyapilot.yandexstation_controller.api.StationState
+import com.sanyapilot.yandexstation_controller.api.mDNSWorker
 import kotlin.concurrent.thread
 
 // Wrapper class
@@ -83,20 +88,24 @@ class YandexStationService(val speaker: Speaker, val client: GlagolClient, val l
     }
     fun setVolume(value: Float) {
         if (localMode) {
-            client.send(GlagolPayload(
+            client.send(
+                GlagolPayload(
                 command = "setVolume",
                 volume = value / 10
-            ))
+            )
+            )
         } else {
             //QuasarClient.send(speaker, "громкость ${value * 10} процентов", false)
         }
     }
     fun seek(value: Int) {
         //viewModel.seekTime.value = value
-        client.send(GlagolPayload(
+        client.send(
+            GlagolPayload(
             command = "rewind",
             position = value
-        ))
+        )
+        )
     }
     // Yandex unreleased navigation over Glagol
     fun navUp(steps: Int?) {
@@ -144,10 +153,12 @@ class YandexStationService(val speaker: Speaker, val client: GlagolClient, val l
         client.send(payload)
     }
     fun click() {
-        client.send(GlagolPayload(
+        client.send(
+            GlagolPayload(
             command = "control",
             action = "click_action"
-        ))
+        )
+        )
     }
     fun navBack() {
         // Workaround via sendText command
@@ -171,18 +182,22 @@ class YandexStationService(val speaker: Speaker, val client: GlagolClient, val l
         client.send(payload)
     }
     fun playPlaylist(id: String) {
-        client.send(GlagolPayload(
+        client.send(
+            GlagolPayload(
             command = "playMusic",
             type = "playlist",
             id = id
-        ))
+        )
+        )
     }
     fun playRadio(id: String) {
-        client.send(GlagolPayload(
+        client.send(
+            GlagolPayload(
             command = "playMusic",
             type = "radio",
             id = id
-        ))
+        )
+        )
     }
     // Shortcut for "my vibe"
     fun playMyVibe() {

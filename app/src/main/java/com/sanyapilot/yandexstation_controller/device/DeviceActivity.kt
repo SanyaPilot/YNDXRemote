@@ -1,4 +1,4 @@
-package com.sanyapilot.yandexstation_controller
+package com.sanyapilot.yandexstation_controller.device
 
 import android.content.ComponentName
 import android.content.Intent
@@ -18,11 +18,11 @@ import androidx.fragment.app.commit
 import androidx.fragment.app.replace
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.button.MaterialButtonToggleGroup
-import com.sanyapilot.yandexstation_controller.fragments.DeviceViewModel
-import com.sanyapilot.yandexstation_controller.fragments.devices.DevicePlaybackFragment
-import com.sanyapilot.yandexstation_controller.fragments.devices.DeviceRemoteFragment
-import com.sanyapilot.yandexstation_controller.fragments.devices.DeviceTTSFragment
-import com.sanyapilot.yandexstation_controller.fragments.devices.PlaybackInfoObservers
+import com.sanyapilot.yandexstation_controller.service.DEVICE_ID
+import com.sanyapilot.yandexstation_controller.service.DEVICE_NAME
+import com.sanyapilot.yandexstation_controller.R
+import com.sanyapilot.yandexstation_controller.service.StationControlService
+import com.sanyapilot.yandexstation_controller.main_screen.TAG
 import kotlin.concurrent.thread
 
 class DeviceActivity : AppCompatActivity() {

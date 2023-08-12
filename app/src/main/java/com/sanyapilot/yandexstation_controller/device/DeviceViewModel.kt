@@ -1,4 +1,4 @@
-package com.sanyapilot.yandexstation_controller.fragments
+package com.sanyapilot.yandexstation_controller.device
 
 import android.graphics.Bitmap
 import androidx.lifecycle.LifecycleOwner
