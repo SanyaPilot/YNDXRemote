@@ -21,7 +21,7 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
@@ -53,7 +53,6 @@ dependencies {
     implementation 'androidx.mediarouter:mediarouter:1.4.0'
 
     def lifecycle_version = '2.6.1'
-    def arch_version = "2.1.0"
 
     // ViewModel and LiveData dependencies
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_version"
