@@ -97,7 +97,7 @@ class StationControlService : MediaBrowserServiceCompat() {
             }
 
             override fun onStop() {
-                Log.d(TAG, "onStop callback")
+                Log.d(TAG, "mediaSession onStop callback")
                 station.endLocal()
                 stopSelf()
                 mediaSession.isActive = false
@@ -206,53 +206,7 @@ class StationControlService : MediaBrowserServiceCompat() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        val curDeviceId = intent!!.getStringExtra(DEVICE_ID)
-        val curDeviceName = intent.getStringExtra(DEVICE_NAME)
-        if (curDeviceId != deviceId) {
-            if (deviceId != null) {
-                // Switch the device
-                Log.d(TAG, "Switching device!")
-                station.endLocal()
-                mediaSession.isActive = false
-                stopForeground(Service.STOP_FOREGROUND_DETACH)
-            }
-            Log.d(TAG, "DeviceID: $curDeviceId")
-            val speaker = FuckedQuasarClient.getDeviceById(curDeviceId!!)!!
-
-            station = YandexStationService(
-                speaker = speaker,
-                client = GlagolClient(speaker),
-                listener = { observer(it) },
-                closedListener = {
-                    // Close session
-                    stopSelf()
-                    mediaSession.isActive = false
-                    mediaSession.release()
-                    stopForeground(STOP_FOREGROUND_REMOVE)
-                    isForeground = false
-                }
-            )
-
-            // Start MediaSession and go foreground
-            val sessionActivityIntent = Intent(this, DeviceActivity::class.java).apply {
-                putExtra("deviceId", curDeviceId)
-                putExtra("deviceName", curDeviceName)
-            }
-            val sessionActivityPendingIntent = PendingIntent.getActivity(
-                this, 0, sessionActivityIntent, PendingIntent.FLAG_IMMUTABLE
-            )
-            mediaSession.setSessionActivity(sessionActivityPendingIntent)
-
-            mediaMetadataBuilder
-                .putString(MediaMetadataCompat.METADATA_KEY_TITLE, "Fetching data...")
-                .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, station.speaker.name)
-            mediaSession.setMetadata(mediaMetadataBuilder.build())
-            mediaSession.isActive = true
-            updateNotification()
-
-            deviceId = curDeviceId
-        }
-
+        Log.d(TAG, "SERVICE START COMMAND")
         return super.onStartCommand(intent, flags, startId)
     }
 
@@ -365,6 +319,53 @@ class StationControlService : MediaBrowserServiceCompat() {
         clientUid: Int,
         rootHints: Bundle?
     ): BrowserRoot {
+        val curDeviceId = rootHints!!.getString(DEVICE_ID)
+        val curDeviceName = rootHints.getString(DEVICE_NAME)
+        if (curDeviceId != deviceId) {
+            if (deviceId != null) {
+                // Switch the device
+                Log.d(TAG, "Switching device!")
+                station.endLocal()
+                mediaSession.isActive = false
+                stopForeground(Service.STOP_FOREGROUND_DETACH)
+            }
+            Log.d(TAG, "DeviceID: $curDeviceId")
+            val speaker = FuckedQuasarClient.getDeviceById(curDeviceId!!)!!
+
+            station = YandexStationService(
+                speaker = speaker,
+                client = GlagolClient(speaker),
+                listener = { observer(it) },
+                closedListener = {
+                    // Close session
+                    stopSelf()
+                    mediaSession.isActive = false
+                    mediaSession.release()
+                    stopForeground(STOP_FOREGROUND_REMOVE)
+                    isForeground = false
+                }
+            )
+
+            // Start MediaSession and go foreground
+            val sessionActivityIntent = Intent(this, DeviceActivity::class.java).apply {
+                putExtra("deviceId", curDeviceId)
+                putExtra("deviceName", curDeviceName)
+            }
+            val sessionActivityPendingIntent = PendingIntent.getActivity(
+                this, 0, sessionActivityIntent, PendingIntent.FLAG_IMMUTABLE
+            )
+            mediaSession.setSessionActivity(sessionActivityPendingIntent)
+
+            mediaMetadataBuilder
+                .putString(MediaMetadataCompat.METADATA_KEY_TITLE, "Fetching data...")
+                .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, station.speaker.name)
+            mediaSession.setMetadata(mediaMetadataBuilder.build())
+            mediaSession.isActive = true
+            updateNotification()
+
+            deviceId = curDeviceId
+        }
+
         return BrowserRoot(MY_EMPTY_MEDIA_ROOT_ID, null)
     }
 
@@ -571,5 +572,10 @@ class StationControlService : MediaBrowserServiceCompat() {
                 updateNotification()
             }
         }
+    }
+
+    override fun onDestroy() {
+        Log.e(TAG, "Service is being destroyed")
+        super.onDestroy()
     }
 }

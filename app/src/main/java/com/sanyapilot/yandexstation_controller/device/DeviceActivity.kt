@@ -127,17 +127,19 @@ class DeviceActivity : AppCompatActivity() {
         setContentView(R.layout.activity_device)
 
         // Start StationControlService
-        startService(
-            Intent(this, StationControlService::class.java).apply {
-                putExtra(DEVICE_ID, intent.getStringExtra("deviceId"))
-                putExtra(DEVICE_NAME, intent.getStringExtra("deviceName"))
-            }
-        )
+        startService(Intent(this, StationControlService::class.java))
+
+        // Supply device ID and device name to the service
+        val hints = Bundle()
+        hints.apply {
+            putString(DEVICE_ID, intent.getStringExtra("deviceId"))
+            putString(DEVICE_NAME, intent.getStringExtra("deviceName"))
+        }
         mediaBrowser = MediaBrowserCompat(
             this,
             ComponentName(this, StationControlService::class.java),
             connectionCallbacks,
-            null
+            hints
         )
 
         val appBar = findViewById<MaterialToolbar>(R.id.deviceAppBar)
