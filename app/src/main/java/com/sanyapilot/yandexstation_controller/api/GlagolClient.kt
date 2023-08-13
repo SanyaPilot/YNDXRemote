@@ -5,7 +5,6 @@ import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
 import android.net.wifi.WifiManager
 import android.util.Log
-import com.sanyapilot.yandexstation_controller.main_screen.TAG
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.encodeToString
@@ -138,6 +137,10 @@ data class FormSlot(
 
 // Glagol local communication protocol
 class GlagolClient(private val speaker: Speaker) : WebSocketListener() {
+    companion object {
+        private const val TAG = "GlagolClient"
+    }
+
     private var localDevice: LocalDevice? = null
     private var token: String? = null
     private val json = Json { ignoreUnknownKeys = true }
@@ -335,7 +338,7 @@ class StationSearcher constructor(
     override fun onServiceLost(service: NsdServiceInfo) {
         // When the network service is no longer available.
         // Internal bookkeeping code goes here.
-        Log.e(TAG, "service lost: $service")
+        Log.i(TAG, "service lost: $service")
         mDNSWorker.removeDevice(service.serviceName.split('-')[1])
     }
 

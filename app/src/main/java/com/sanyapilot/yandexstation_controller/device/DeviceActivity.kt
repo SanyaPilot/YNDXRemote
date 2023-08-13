@@ -22,10 +22,13 @@ import com.sanyapilot.yandexstation_controller.service.DEVICE_ID
 import com.sanyapilot.yandexstation_controller.service.DEVICE_NAME
 import com.sanyapilot.yandexstation_controller.R
 import com.sanyapilot.yandexstation_controller.service.StationControlService
-import com.sanyapilot.yandexstation_controller.main_screen.TAG
 import kotlin.concurrent.thread
 
 class DeviceActivity : AppCompatActivity() {
+    companion object {
+        private const val TAG = "DeviceActivity"
+    }
+
     private val viewModel: DeviceViewModel by viewModels()
     private lateinit var mediaBrowser: MediaBrowserCompat
 

@@ -4,7 +4,6 @@ import android.content.res.Configuration
 import android.os.Bundle
 import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.PlaybackStateCompat
-import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -16,7 +15,6 @@ import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.slider.Slider
 import com.sanyapilot.yandexstation_controller.R
-import com.sanyapilot.yandexstation_controller.main_screen.TAG
 
 
 class DevicePlaybackFragment : Fragment() {
@@ -91,7 +89,6 @@ class DevicePlaybackFragment : Fragment() {
         viewModel.progressMax.observe(viewLifecycleOwner) {
             if (it > 0) {
                 if (progressBar.value >= it) {
-                    Log.d(TAG, "Resetting slider to 0")
                     curProgress.text = getMinutesSeconds(0)
                     progressBar.value = 0F
                 }

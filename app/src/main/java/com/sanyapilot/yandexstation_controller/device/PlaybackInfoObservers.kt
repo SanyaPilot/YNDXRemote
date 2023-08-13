@@ -2,7 +2,6 @@ package com.sanyapilot.yandexstation_controller.device
 
 import android.content.Context
 import android.graphics.Bitmap
-import android.util.Log
 import android.view.animation.AccelerateInterpolator
 import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
@@ -10,7 +9,6 @@ import android.view.animation.DecelerateInterpolator
 import android.widget.ImageView
 import android.widget.TextView
 import com.sanyapilot.yandexstation_controller.R
-import com.sanyapilot.yandexstation_controller.main_screen.TAG
 
 class PlaybackInfoObservers (
     private val viewModel: DeviceViewModel,
@@ -19,7 +17,6 @@ class PlaybackInfoObservers (
     fun coverObserver(image: ImageView, bitmap: Bitmap?, curImageURL: String?) {
         if (bitmap != null) {
             if (curImageURL != viewModel.prevCoverURL.value) {
-                Log.d(TAG, "Update cover!")
                 viewModel.prevCoverURL.value = curImageURL
 
                 val fadeIn = AlphaAnimation(0f, 1f)

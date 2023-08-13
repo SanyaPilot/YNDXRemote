@@ -1,6 +1,4 @@
 package com.sanyapilot.yandexstation_controller.api
-import android.util.Log
-import com.sanyapilot.yandexstation_controller.main_screen.TAG
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
@@ -39,13 +37,9 @@ object FuckedQuasarClient {
             return result
         }
         val body = result.response!!.body.string()
-        Log.d(TAG, body)
         val parsed = json.decodeFromString<DevicesResponse>(body)
         result.response.close()
-
-        Log.e(TAG, parsed.toString())
         devices = parsed.devices
-
         return result
     }
     fun getDevices(): List<Speaker> = devices

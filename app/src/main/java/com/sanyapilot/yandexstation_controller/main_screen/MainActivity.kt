@@ -37,6 +37,10 @@ const val SWITCH_ANIM_DURATION: Long = 150
 const val PLAYER_CHANNEL_ID = "yast_control"
 
 class MainActivity : AppCompatActivity() {
+    companion object {
+        private const val TAG = "MainActivity"
+    }
+
     private val viewModel: MainViewModel by viewModels()
     private lateinit var progressBar: LinearProgressIndicator
     private lateinit var bottomNavigation: NavigationBarView
@@ -51,8 +55,6 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
-        Log.e(TAG, "STARTED MAIN")
 
         // Register notification channel
         createNotificationChannel()
@@ -184,8 +186,6 @@ class MainActivity : AppCompatActivity() {
     override fun onRestart() {
         // Handle cookie update after returning from LoginActivity
         super.onRestart()
-        Log.e(TAG, "onRestart()")
-        Log.e(TAG, viewModel.isLoggedIn().toString())
         if (!viewModel.isLoggedIn()) {
             doNetwork()
         } else {
@@ -208,7 +208,7 @@ class MainActivity : AppCompatActivity() {
         val result = FuckedQuasarClient.fetchDevices()
         if (!result.ok) {
             if (result.errorId == Errors.TIMEOUT) {
-                Log.e(TAG, "timeout")
+                Log.d(TAG, "timeout")
                 runOnUiThread {
                     Snackbar.make(
                         findViewById(R.id.mainLayout), getString(R.string.errorNoInternet),
@@ -216,7 +216,7 @@ class MainActivity : AppCompatActivity() {
                     ).show()
                 }
             } else if (result.errorId == Errors.INVALID_TOKEN) {
-                Log.e(TAG, "token auth fail")
+                Log.d(TAG, "token auth fail")
                 runOnUiThread {
                     with (sharedPrefs.edit()) {
                         remove("access-token")
@@ -228,7 +228,7 @@ class MainActivity : AppCompatActivity() {
                     )
                 }
             } else if (result.errorId == Errors.INTERNAL_SERVER_ERROR) {
-                Log.e(TAG, "Internal server error!")
+                Log.d(TAG, "Internal server error!")
                 runOnUiThread {
                     Snackbar.make(
                         findViewById(R.id.mainLayout), getString(R.string.serverDead),

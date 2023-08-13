@@ -37,6 +37,10 @@ const val DEVICE_ID = "com.sanyapilot.yandexstation_controller.deviceId"
 const val DEVICE_NAME = "com.sanyapilot.yandexstation_controller.deviceName"
 
 class StationControlService : MediaBrowserServiceCompat() {
+    companion object {
+        private const val TAG = "StationControlService"
+    }
+
     private lateinit var mediaSession: MediaSessionCompat
     private lateinit var stateBuilder: PlaybackStateCompat.Builder
     private lateinit var mediaMetadataBuilder: MediaMetadataCompat.Builder
@@ -57,7 +61,7 @@ class StationControlService : MediaBrowserServiceCompat() {
 
     override fun onCreate() {
         super.onCreate()
-        Log.e(com.sanyapilot.yandexstation_controller.main_screen.TAG, "Service started!")
+        Log.d(TAG, "Service started!")
 
         notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
@@ -93,7 +97,7 @@ class StationControlService : MediaBrowserServiceCompat() {
             }
 
             override fun onStop() {
-                Log.d(com.sanyapilot.yandexstation_controller.main_screen.TAG, "onStop callback")
+                Log.d(TAG, "onStop callback")
                 station.endLocal()
                 stopSelf()
                 mediaSession.isActive = false
@@ -124,7 +128,7 @@ class StationControlService : MediaBrowserServiceCompat() {
             }
 
             override fun onSetShuffleMode(shuffleMode: Int) {
-                Log.d(com.sanyapilot.yandexstation_controller.main_screen.TAG, "Set shuffle!")
+                Log.d(TAG, "Set shuffle!")
                 if (shuffleMode == PlaybackStateCompat.SHUFFLE_MODE_ALL)
                     station.shuffle()
             }
@@ -178,7 +182,7 @@ class StationControlService : MediaBrowserServiceCompat() {
         }
 
         mediaSession = MediaSessionCompat(baseContext,
-            com.sanyapilot.yandexstation_controller.main_screen.TAG
+            TAG
         ).apply {
             // Set an initial PlaybackState with ACTION_PLAY, so media buttons can start the player
             stateBuilder = PlaybackStateCompat.Builder()
@@ -207,12 +211,12 @@ class StationControlService : MediaBrowserServiceCompat() {
         if (curDeviceId != deviceId) {
             if (deviceId != null) {
                 // Switch the device
-                Log.d(com.sanyapilot.yandexstation_controller.main_screen.TAG, "Switching device!")
+                Log.d(TAG, "Switching device!")
                 station.endLocal()
                 mediaSession.isActive = false
                 stopForeground(Service.STOP_FOREGROUND_DETACH)
             }
-            Log.d(com.sanyapilot.yandexstation_controller.main_screen.TAG, "DeviceID: $curDeviceId")
+            Log.d(TAG, "DeviceID: $curDeviceId")
             val speaker = FuckedQuasarClient.getDeviceById(curDeviceId!!)!!
 
             station = YandexStationService(
@@ -253,7 +257,7 @@ class StationControlService : MediaBrowserServiceCompat() {
     }
 
     private fun updateNotification() {
-        Log.d(com.sanyapilot.yandexstation_controller.main_screen.TAG, "Update notification")
+        Log.d(TAG, "Update notification")
         notificationManager.notify(PLAYER_NOTIFICATION_ID, buildMediaNotification())
     }
 
@@ -492,7 +496,6 @@ class StationControlService : MediaBrowserServiceCompat() {
                 if (curImageURL == "dummy") {
                     val image = ResourcesCompat.getDrawable(resources,
                         R.drawable.round_smart_display_200, null)!!.toBitmap()
-                    Log.e(com.sanyapilot.yandexstation_controller.main_screen.TAG, "IMAGE: $image")
                     mediaMetadataBuilder.putBitmap(
                         MediaMetadataCompat.METADATA_KEY_ALBUM_ART,
                         image
@@ -553,13 +556,13 @@ class StationControlService : MediaBrowserServiceCompat() {
         if (updateMeta || updateState) {
             if (isForeground && !data.playing && description.title == data.playerState.title && prevArtist == data.playerState.subtitle) {
                 // Do not stop foreground if track is changed
-                Log.d(com.sanyapilot.yandexstation_controller.main_screen.TAG, "Stop FG")
+                Log.d(TAG, "Stop FG")
                 stopForeground(Service.STOP_FOREGROUND_DETACH)
                 isForeground = false
 
                 updateNotification()
             } else if (!isForeground && data.playing) {
-                Log.d(com.sanyapilot.yandexstation_controller.main_screen.TAG, "Go FG")
+                Log.d(TAG, "Go FG")
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
                     startForeground(PLAYER_NOTIFICATION_ID, buildMediaNotification(), ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK)
                 else startForeground(PLAYER_NOTIFICATION_ID, buildMediaNotification())

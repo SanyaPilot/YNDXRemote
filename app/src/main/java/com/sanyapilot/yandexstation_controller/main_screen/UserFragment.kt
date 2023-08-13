@@ -2,7 +2,6 @@ package com.sanyapilot.yandexstation_controller.main_screen
 
 import android.os.Bundle
 import android.text.method.LinkMovementMethod
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -17,13 +16,6 @@ import com.sanyapilot.yandexstation_controller.api.UserData
 import kotlin.concurrent.thread
 
 class UserFragment : Fragment() {
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        //enterTransition = Fade(Fade.MODE_IN)
-        //exitTransition = Fade(Fade.MODE_OUT)
-    }
-
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -65,11 +57,7 @@ class UserFragment : Fragment() {
             displayNickname.visibility = if (displayNickname != null) TextView.VISIBLE else TextView.GONE
         }
 
-        //requireActivity().findViewById<Button>(R.id.logOutButton).setOnClickListener { logOut() }
-        //val progressBar = findViewById<ProgressBar>(R.id.progressBar)
-        Log.e(TAG, viewModel.isLoggedIn().toString())
         if (viewModel.getUserData().value == null) {
-            Log.e(TAG, "REFRESHING")
             thread(start = true) {
                 // Get data about user
                 UserData.updateUserData()

@@ -22,10 +22,6 @@ import com.sanyapilot.yandexstation_controller.misc.stationIcons
 class DevicesRecyclerAdapter(private val dataSet: List<Any>) :
     RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
-    /**
-     * Provide a reference to the type of views that you are using
-     * (custom ViewHolder).
-     */
     private inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val name: TextView
         val type: TextView
@@ -70,8 +66,6 @@ class DevicesRecyclerAdapter(private val dataSet: List<Any>) :
             textView = view.findViewById(R.id.deviceTitle)
         }
     }
-
-    // Create new views (invoked by the layout manager)
     override fun onCreateViewHolder(viewGroup: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         // Create a new view, which defines the UI of the list item
         if (viewType == 0) {
@@ -86,7 +80,6 @@ class DevicesRecyclerAdapter(private val dataSet: List<Any>) :
             return TitleHolder(view)
         }
     }
-    // Replace the contents of a view (invoked by the layout manager)
     override fun onBindViewHolder(viewHolder: RecyclerView.ViewHolder, position: Int) {
 
         if (viewHolder.itemViewType == 0) {

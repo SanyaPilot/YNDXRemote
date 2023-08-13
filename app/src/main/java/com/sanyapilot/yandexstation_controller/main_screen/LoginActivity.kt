@@ -5,7 +5,6 @@ import android.content.Intent
 import android.content.SharedPreferences
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.widget.EditText
 import com.google.android.material.snackbar.Snackbar
@@ -14,8 +13,6 @@ import com.sanyapilot.yandexstation_controller.R
 import com.sanyapilot.yandexstation_controller.api.Errors
 import com.sanyapilot.yandexstation_controller.api.Session
 import kotlin.concurrent.thread
-
-const val TAG = "YaStationController"
 
 class LoginActivity : AppCompatActivity() {
     private lateinit var codeField: EditText
@@ -54,12 +51,10 @@ class LoginActivity : AppCompatActivity() {
                 }
                 return@thread
             }
-            Log.e(TAG, "TOKEN AT LOGIN: ${sharedPrefs.getString("access-token", null)}")
             with(sharedPrefs.edit()) {
                 putString("access-token", Session.accessToken)
                 apply()
             }
-            Log.e(TAG, "TOKEN AFTER LOGIN: ${sharedPrefs.getString("access-token", null)}")
             runOnUiThread {
                 startActivity(Intent(this, MainActivity::class.java))
                 finish()
