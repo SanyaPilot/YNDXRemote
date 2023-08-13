@@ -14,13 +14,7 @@
     <string name="aboutAccount">Об аккаунте</string>
     <string name="logOut">Выйти</string>
     <string name="loginHello">Привет!</string>
-    <string name="loginDescription">Это приложение для управления вашей прошитой станцией.\n
-Для начала, зарегистрируйтесь в нашем Telegram боте:\n
-t.me/yndxfuck_bot\n
-Получите у бота код для приложения, и введите его в поле ниже\n\n
-
-По всем вопросам обращайтесь в наш чат:\n
-t.me/yndxfuck_chat</string>
+    <string name="loginDescription">Это приложение для управления вашей прошитой станцией.\nДля начала, зарегистрируйтесь в нашем Telegram боте:\nt.me/yndxfuck_bot\nПолучите у бота код для приложения, и введите его в поле ниже\n\nПо всем вопросам обращайтесь в наш чат:\nt.me/yndxfuck_chat</string>
     <string name="authCode">Код из бота</string>
 
     <string name="serverDead">Упс… С сервером что-то не так!</string>
