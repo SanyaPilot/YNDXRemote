@@ -126,9 +126,6 @@ class DeviceActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_device)
 
-        // Start StationControlService
-        startService(Intent(this, StationControlService::class.java))
-
         // Supply device ID and device name to the service
         val hints = Bundle()
         hints.apply {
@@ -188,6 +185,9 @@ class DeviceActivity : AppCompatActivity() {
     }
 
     override fun onStart() {
+        // Start StationControlService
+        startService(Intent(this, StationControlService::class.java))
+
         super.onStart()
         mediaBrowser.connect()
     }
