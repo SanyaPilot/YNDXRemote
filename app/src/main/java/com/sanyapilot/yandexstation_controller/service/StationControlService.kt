@@ -58,6 +58,7 @@ class StationControlService : MediaBrowserServiceCompat() {
     private var isForeground = false
     private var waitForVolumeChange = false
     private var wasIdle = false
+    private var prevWasInvalidDuration = false
 
     override fun onCreate() {
         super.onCreate()
@@ -476,10 +477,16 @@ class StationControlService : MediaBrowserServiceCompat() {
 
         // Sometimes duration can be suddenly 0 while playing typical tracks. Station bug?
         if (data.playerState.duration > 0 || data.playerState.type != "Track") {
-            mediaMetadataBuilder.putLong(
-                MediaMetadataCompat.METADATA_KEY_DURATION,
-                (data.playerState.duration * 1000).toLong()
-            )
+            if (updateMeta || prevWasInvalidDuration) {
+                mediaMetadataBuilder.putLong(
+                    MediaMetadataCompat.METADATA_KEY_DURATION,
+                    (data.playerState.duration * 1000).toLong()
+                )
+                prevWasInvalidDuration = false
+                updateMeta = true  // Force metadata update in case of previous 0 duration
+            }
+        } else {
+            prevWasInvalidDuration = true
         }
 
         // Remove seek bar if needs
