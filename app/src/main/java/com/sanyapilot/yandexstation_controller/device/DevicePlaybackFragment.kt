@@ -19,7 +19,6 @@ import com.sanyapilot.yandexstation_controller.R
 
 class DevicePlaybackFragment : Fragment() {
     private lateinit var viewModel: DeviceViewModel
-    private var orientation: Int = 0
     private var allowSliderChange = true
 
     override fun onCreateView(
@@ -32,7 +31,6 @@ class DevicePlaybackFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         viewModel = ViewModelProvider(requireActivity())[DeviceViewModel::class.java]
-        orientation = resources.configuration.orientation
 
         val progressBar = requireView().findViewById<Slider>(R.id.progressBar)
 
@@ -107,7 +105,7 @@ class DevicePlaybackFragment : Fragment() {
         }
 
         // Observers for cover in portrait
-        if (orientation == Configuration.ORIENTATION_PORTRAIT) {
+        if (resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
             val observers = PlaybackInfoObservers(viewModel, requireContext())
             viewModel.playerActive.observe(this) { observers.playerActiveObserver(coverImage, it) }
             viewModel.trackName.observe(this) { observers.trackNameObserver(trackName, it) }
@@ -174,11 +172,9 @@ class DevicePlaybackFragment : Fragment() {
 
     override fun onStop() {
         super.onStop()
-        if (orientation == Configuration.ORIENTATION_PORTRAIT) {
-            viewModel.prevCoverURL.value = null
-            viewModel.prevTrackName.value = null
-            viewModel.prevTrackArtist.value = null
-        }
+        viewModel.prevCoverURL.value = null
+        viewModel.prevTrackName.value = null
+        viewModel.prevTrackArtist.value = null
         viewModel.removeObservers(viewLifecycleOwner)
     }
 
