@@ -562,7 +562,7 @@ class StationControlService : MediaBrowserServiceCompat() {
         if (updateMeta) mediaSession.setMetadata(mediaMetadataBuilder.build())
 
         if (updateMeta || updateState) {
-            if (isForeground && !data.playing && description.title == data.playerState.title && prevArtist == data.playerState.subtitle) {
+            if (isForeground && !data.playing && (data.playerState.hasPlay || data.playerState.hasPause)) {
                 // Do not stop foreground if track is changed
                 Log.d(TAG, "Stop FG")
                 stopForeground(Service.STOP_FOREGROUND_DETACH)
