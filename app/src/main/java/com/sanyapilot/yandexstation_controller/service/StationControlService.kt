@@ -322,7 +322,7 @@ class StationControlService : MediaBrowserServiceCompat() {
     ): BrowserRoot {
         val curDeviceId = rootHints!!.getString(DEVICE_ID)
         val curDeviceName = rootHints.getString(DEVICE_NAME)
-        if (curDeviceId != deviceId) {
+        if (curDeviceId != deviceId && curDeviceId != null) {
             if (deviceId != null) {
                 // Switch the device
                 Log.d(TAG, "Switching device!")
@@ -331,7 +331,7 @@ class StationControlService : MediaBrowserServiceCompat() {
                 stopForeground(Service.STOP_FOREGROUND_DETACH)
             }
             Log.d(TAG, "DeviceID: $curDeviceId")
-            val speaker = FuckedQuasarClient.getDeviceById(curDeviceId!!)!!
+            val speaker = FuckedQuasarClient.getDeviceById(curDeviceId)!!
 
             station = YandexStationService(
                 speaker = speaker,
