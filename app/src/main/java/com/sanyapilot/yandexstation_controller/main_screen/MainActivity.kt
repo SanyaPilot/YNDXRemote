@@ -23,6 +23,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.FragmentContainerView
 import androidx.fragment.app.commit
 import androidx.fragment.app.replace
+import com.google.android.material.elevation.SurfaceColors
 import com.google.android.material.navigation.NavigationBarView
 import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.google.android.material.snackbar.Snackbar
@@ -273,6 +274,7 @@ class MainActivity : AppCompatActivity() {
                         container.startAnimation(fadeIn)
                         bottomNavigation.visibility = View.VISIBLE
                         bottomNavigation.startAnimation(fadeIn)
+                        window.navigationBarColor = SurfaceColors.SURFACE_2.getColor(this@MainActivity)
                     }
 
                     override fun onAnimationRepeat(p0: Animation?) {
