@@ -15,7 +15,14 @@ Android приложение, позволяющее управлять ваше
 
 ## Скриншоты
 
-*TODO: докинуть скриншоты*
+![Логин](screenshots/login_screen.png)
+![Главный экран](screenshots/main_screen.png)
+![Аккаунт](screenshots/account.png)
+![Плеер](screenshots/player.png)
+![Пульт](screenshots/remote.png)
+![TTS](screenshots/tts.png)
+![Нет WiFi](screenshots/no_wifi.png)
+![Уведомление](screenshots/notification.png)
 
 ## Авторы
 
