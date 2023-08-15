@@ -37,4 +37,8 @@
         <item name="android:minWidth">48dp</item>
         <item name="android:minHeight">48dp</item>
     </style>
+
+    <style name="IconButtonWithTextOutline" parent="Widget.Material3.Button.IconButton.Outlined">
+        <item name="iconPadding">6dp</item>
+    </style>
 </resources>
