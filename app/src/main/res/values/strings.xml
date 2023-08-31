@@ -57,4 +57,20 @@
         <b>Спасибо проекту</b>\n
         <a href="https://github.com/AlexxIT/YandexStation">Яндекс.Станция для Home Assistant</a>\n
         за исследование протокола Glagol</string>
+
+    <string name="linkButton">Привязать</string>
+    <string name="linkDevice">Привязка колонки</string>
+    <string name="linkDescription">Здесь вы можете привязать колонку к вашему аккаунту</string>
+    <string name="whereUDID">Где найти UDID колонки?</string>
+    <string name="howToUDID">Узнать его можно, открыв IP адрес Станции в браузере, или посмотрев на наклейке на дне корпуса</string>
+    <string name="UDID">UDID колонки</string>
+    <string name="linkCode">Код привязки</string>
+    <string name="codePlays">Сейчас колонка говорит код</string>
+    <string name="missedCode">Не услышали код? Нажмите на кнопку \"повторить\"</string>
+    <string name="replayCode">Повторить код</string>
+    <string name="invalidUDID">Неверный UDID!</string>
+    <string name="unauthorizedError">Проблемы с авторизацией!</string>
+    <string name="deviceAlreadyLinked">Устройство уже привязано!</string>
+    <string name="alreadyRunningError">Колонка уже говорит код!</string>
+    <string name="unknownError">Произошла неизвестная ошибка! Свяжитесь с нами</string>
 </resources>

@@ -31,6 +31,7 @@ import com.sanyapilot.yandexstation_controller.R
 import com.sanyapilot.yandexstation_controller.api.Errors
 import com.sanyapilot.yandexstation_controller.api.FuckedQuasarClient
 import com.sanyapilot.yandexstation_controller.api.mDNSWorker
+import com.sanyapilot.yandexstation_controller.device_register.DeviceRegisterActivity
 import kotlin.concurrent.thread
 
 const val TOKEN_INVALID = "com.sanyapilot.yandexstation_controller.tokenInvalid"
@@ -310,6 +311,9 @@ class MainActivity : AppCompatActivity() {
         }
         startActivity(Intent(this, LoginActivity::class.java))
         finish()
+    }
+    fun linkDevice(view: View) {
+        startActivity(Intent(this, DeviceRegisterActivity::class.java))
     }
     private fun createNotificationChannel() {
         val name = "Station player"

@@ -18,7 +18,7 @@ data class LoginResponse(
 data class RequestResponse(
     val ok: Boolean,
     val errorId: Errors? = null,
-    val response: Response? = null
+    val response: Response?
 )
 
 enum class Errors {
@@ -123,19 +123,19 @@ object Session {
             return when (resp.code) {
                 400 -> {
                     // Invalid device?
-                    RequestResponse(false, Errors.BAD_REQUEST)
+                    RequestResponse(false, Errors.BAD_REQUEST, resp)
                 }
                 401 -> {
                     // Token is dead, no refresh flow for now
-                    RequestResponse(false, Errors.INVALID_TOKEN)
+                    RequestResponse(false, Errors.INVALID_TOKEN, resp)
                 }
                 500 -> {
-                    RequestResponse(false, Errors.INTERNAL_SERVER_ERROR)
+                    RequestResponse(false, Errors.INTERNAL_SERVER_ERROR, resp)
                 }
                 else -> RequestResponse(true, response = resp)
             }
         } catch (e: IOException) {
-            return RequestResponse(false, Errors.TIMEOUT)
+            return RequestResponse(false, Errors.TIMEOUT, null)
         }
     }
 }

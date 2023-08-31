@@ -4,6 +4,7 @@ plugins {
     id 'kotlin-kapt'
     //id 'org.jetbrains.kotlin.multiplatform'
     id 'org.jetbrains.kotlin.plugin.serialization' version '1.9.0'
+    id 'androidx.navigation.safeargs.kotlin'
 }
 
 android {
@@ -14,7 +15,7 @@ android {
         minSdk 26
         targetSdk 33
         versionCode 1
-        versionName "1.0"
+        versionName "1.0.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -65,8 +66,22 @@ dependencies {
     implementation 'androidx.fragment:fragment-ktx:1.6.1'
 
     def activity_version = "1.7.2"
-    // Java language implementation
-    implementation "androidx.activity:activity:$activity_version"
     // Kotlin
     implementation "androidx.activity:activity-ktx:$activity_version"
+
+    // Navigation
+    def nav_version = "2.6.0"
+
+    // Kotlin
+    implementation "androidx.navigation:navigation-fragment-ktx:$nav_version"
+    implementation "androidx.navigation:navigation-ui-ktx:$nav_version"
+
+    // Feature module Support
+    implementation "androidx.navigation:navigation-dynamic-features-fragment:$nav_version"
+
+    // Testing Navigation
+    androidTestImplementation "androidx.navigation:navigation-testing:$nav_version"
+
+    // Jetpack Compose Integration
+    // implementation "androidx.navigation:navigation-compose:$nav_version"
 }

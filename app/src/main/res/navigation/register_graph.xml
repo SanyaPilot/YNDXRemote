@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/register_graph"
+    app:startDestination="@id/askUdidFragment">
+    <fragment
+        android:id="@+id/askUdidFragment"
+        android:name="com.sanyapilot.yandexstation_controller.device_register.AskUdidFragment"
+        android:label="fragment_ask_udid"
+        tools:layout="@layout/fragment_ask_udid" >
+        <action
+            android:id="@+id/toAskCode"
+            app:destination="@id/askCodeFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/askCodeFragment"
+        android:name="com.sanyapilot.yandexstation_controller.device_register.AskCodeFragment"
+        android:label="AskCodeFragment" >
+        <argument
+            android:name="deviceId"
+            app:argType="string" />
+    </fragment>
+</navigation>
