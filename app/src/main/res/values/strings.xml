@@ -89,4 +89,7 @@
     <string name="unlinkDescription">После отвязки вы потеряете возможность менять настройки и управлять устройством</string>
     <string name="deviceAlreadyUnlinked">Устройство уже отвязано!</string>
 
+    <!-- Station service -->
+    <string name="fetchingData">Подключаемся…</string>
+    <string name="idle">Сейчас ничего не играет</string>
 </resources>

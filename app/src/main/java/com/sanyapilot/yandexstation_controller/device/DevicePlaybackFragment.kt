@@ -78,9 +78,9 @@ class DevicePlaybackFragment : Fragment() {
                 curProgress.visibility = TextView.VISIBLE
                 maxProgress.visibility = TextView.VISIBLE
             } else {
-                progressBar.visibility = TextView.GONE
-                curProgress.visibility = TextView.GONE
-                maxProgress.visibility = TextView.GONE
+                progressBar.visibility = TextView.INVISIBLE
+                curProgress.visibility = TextView.INVISIBLE
+                maxProgress.visibility = TextView.INVISIBLE
             }
         }
 

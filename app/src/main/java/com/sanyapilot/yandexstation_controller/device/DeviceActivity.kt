@@ -58,9 +58,7 @@ class DeviceActivity : AppCompatActivity() {
             val metadata = mediaController.metadata
             updateUIonMetadataChange(metadata)
 
-            viewModel.coverBitmap.value = metadata.getBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART)
             viewModel.isPlaying.value = (mediaController.playbackState.state == PlaybackStateCompat.STATE_PLAYING)
-            viewModel.shuffleSupported.value = mediaController.shuffleMode == PlaybackStateCompat.SHUFFLE_MODE_NONE
 
             // Update progress bar
             thread(start = true) {
@@ -111,11 +109,13 @@ class DeviceActivity : AppCompatActivity() {
         // Bad way to detect idle state
         val title = metadata.getString(MediaMetadataCompat.METADATA_KEY_TITLE)
         val subtitle = metadata.getString(MediaMetadataCompat.METADATA_KEY_ARTIST)
-        val idle = (title == "Idle" && subtitle == intent.getStringExtra("deviceName"))
+        val idle = ((title == getString(R.string.fetchingData) || title == getString(R.string.idle)) && subtitle == intent.getStringExtra("deviceName"))
         viewModel.playerActive.value = !idle
         if (idle) {
             viewModel.shuffleSupported.value = false
             viewModel.likeSupported.value = false
+            viewModel.hasNext.value = false
+            viewModel.hasPrev.value = false
         } else {
             val mediaController = MediaControllerCompat.getMediaController(this)
             viewModel.shuffleSupported.value = mediaController.shuffleMode == PlaybackStateCompat.SHUFFLE_MODE_NONE

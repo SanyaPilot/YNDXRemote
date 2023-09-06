@@ -358,8 +358,8 @@ class StationControlService : MediaBrowserServiceCompat() {
             mediaSession.setSessionActivity(sessionActivityPendingIntent)
 
             mediaMetadataBuilder
-                .putString(MediaMetadataCompat.METADATA_KEY_TITLE, "Fetching data...")
-                .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, station.speaker.name)
+                .putString(MediaMetadataCompat.METADATA_KEY_TITLE, getString(R.string.fetchingData))
+                .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, station.speaker.name)
             mediaSession.setMetadata(mediaMetadataBuilder.build())
             mediaSession.isActive = true
             updateNotification()
@@ -392,7 +392,7 @@ class StationControlService : MediaBrowserServiceCompat() {
             stateBuilder.setActions(PlaybackStateCompat.ACTION_PLAY or PlaybackStateCompat.ACTION_STOP)
             addCustomActions()
             mediaMetadataBuilder
-                .putString(MediaMetadataCompat.METADATA_KEY_TITLE, "Idle")
+                .putString(MediaMetadataCompat.METADATA_KEY_TITLE, getString(R.string.idle))
                 .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, station.speaker.name)
             mediaSession.setPlaybackState(stateBuilder.build())
             mediaSession.setMetadata(mediaMetadataBuilder.build())
