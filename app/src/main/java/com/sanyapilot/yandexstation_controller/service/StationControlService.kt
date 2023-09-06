@@ -104,6 +104,7 @@ class StationControlService : MediaBrowserServiceCompat() {
                 mediaSession.isActive = false
                 mediaSession.release()
                 stopForeground(Service.STOP_FOREGROUND_REMOVE)
+                notificationManager.cancel(PLAYER_NOTIFICATION_ID)
                 isForeground = false
             }
 
@@ -331,7 +332,8 @@ class StationControlService : MediaBrowserServiceCompat() {
                 stopForeground(Service.STOP_FOREGROUND_DETACH)
             }
             Log.d(TAG, "DeviceID: $curDeviceId")
-            val speaker = FuckedQuasarClient.getDeviceById(curDeviceId)!!
+            val speaker = FuckedQuasarClient.getDeviceById(curDeviceId)
+                ?: return BrowserRoot(MY_EMPTY_MEDIA_ROOT_ID, null)
 
             station = YandexStationService(
                 speaker = speaker,
