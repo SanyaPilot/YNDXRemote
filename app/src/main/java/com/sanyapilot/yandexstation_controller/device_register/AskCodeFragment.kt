@@ -41,16 +41,46 @@ class AskCodeFragment : Fragment() {
             }
             thread {
                 val result = FuckedQuasarClient.linkDeviceStage2(args.deviceId, trimmedText.toInt())
-                requireActivity().runOnUiThread {
-                    if (result.ok) {
-                        // Finish activity
-                        requireActivity().finish()
-                    } else {
+                if (result.ok) {
+                    // Fetch devices again
+                    FuckedQuasarClient.fetchDevices()
+                    // Finish activity
+                    requireActivity().finish()
+                } else {
+                    requireActivity().runOnUiThread {
                         Snackbar.make(
                             layout,
                             when (result.error!!) {
                                 LinkDeviceErrors.INVALID_CODE -> getString(R.string.loginInvalidCode)
                                 LinkDeviceErrors.DEVICE_OFFLINE -> getString(R.string.deviceOffline)
+                                LinkDeviceErrors.UNAUTHORIZED -> getString(R.string.unauthorizedError)
+                                LinkDeviceErrors.UNKNOWN -> getString(R.string.unknownError)
+                                LinkDeviceErrors.TIMEOUT -> getString(R.string.serverDead)
+                                else -> getString(R.string.wtf)
+                            },
+                            Snackbar.LENGTH_LONG
+                        ).show()
+                    }
+                }
+            }
+        }
+
+        val replayButton = view.findViewById<Button>(R.id.replayButton)
+        replayButton.setOnClickListener {
+            thread {
+                val result = FuckedQuasarClient.linkDeviceStage1(args.deviceId)
+                requireActivity().runOnUiThread {
+                    if (result.ok) {
+                        Snackbar.make(
+                            layout, getString(R.string.startedCodeReplay), Snackbar.LENGTH_SHORT
+                        ).show()
+                    } else {
+                        Snackbar.make(
+                            layout,
+                            when (result.error!!) {
+                                LinkDeviceErrors.REGISTERED_ALREADY -> getString(R.string.deviceAlreadyLinked)
+                                LinkDeviceErrors.DEVICE_OFFLINE -> getString(R.string.deviceOffline)
+                                LinkDeviceErrors.ALREADY_RUNNING -> getString(R.string.alreadyRunningError)
                                 LinkDeviceErrors.UNAUTHORIZED -> getString(R.string.unauthorizedError)
                                 LinkDeviceErrors.UNKNOWN -> getString(R.string.unknownError)
                                 LinkDeviceErrors.TIMEOUT -> getString(R.string.serverDead)

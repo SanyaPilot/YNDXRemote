@@ -1,5 +1,6 @@
 package com.sanyapilot.yandexstation_controller.main_screen
 
+import android.app.Activity
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -19,9 +20,10 @@ import com.sanyapilot.yandexstation_controller.api.Speaker
 import com.sanyapilot.yandexstation_controller.api.mDNSWorker
 import com.sanyapilot.yandexstation_controller.misc.stationIcons
 
-class DevicesRecyclerAdapter(private val dataSet: List<Any>) :
-    RecyclerView.Adapter<RecyclerView.ViewHolder>() {
-
+class DevicesRecyclerAdapter(
+    private val activity: Activity,
+    private val dataSet: List<Any>
+) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     private inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val name: TextView
         val type: TextView
@@ -91,13 +93,14 @@ class DevicesRecyclerAdapter(private val dataSet: List<Any>) :
                 curViewHolder.type.text = curDevice.platform
                 curViewHolder.udid.text = curDevice.id
 
+
                 // Device became online
                 mDNSWorker.addListener(curDevice.id) {
-                    curViewHolder.goOnline(curDevice.id, curDevice.name)
+                    activity.runOnUiThread { curViewHolder.goOnline(curDevice.id, curDevice.name) }
                 }
                 // Device is offline again
                 mDNSWorker.addOnLostListener(curDevice.id) {
-                    curViewHolder.goOffline()
+                    activity.runOnUiThread { curViewHolder.goOffline() }
                 }
 
                 if (mDNSWorker.deviceExists(curDevice.id))

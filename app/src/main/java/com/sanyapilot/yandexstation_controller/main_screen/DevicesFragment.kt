@@ -34,7 +34,9 @@ class DevicesFragment : Fragment() {
             updateDeviceList(true)
             swipeRefresh.isRefreshing = false
         }
-
+    }
+    override fun onStart() {
+        super.onStart()
         updateDeviceList(false)
     }
     private fun updateDeviceList(fetch: Boolean) {
@@ -53,7 +55,7 @@ class DevicesFragment : Fragment() {
             recycler.visibility = View.GONE
         } else {
             recycler.layoutManager = LinearLayoutManager(requireView().context)
-            recycler.adapter = DevicesRecyclerAdapter(devices)
+            recycler.adapter = DevicesRecyclerAdapter(requireActivity(), devices)
         }
     }
 }

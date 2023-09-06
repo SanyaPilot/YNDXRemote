@@ -66,8 +66,9 @@
     <string name="UDID">UDID колонки</string>
     <string name="linkCode">Код привязки</string>
     <string name="codePlays">Сейчас колонка говорит код</string>
-    <string name="missedCode">Не услышали код? Нажмите на кнопку \"повторить\"</string>
+    <string name="missedCode">Не услышали код?\nНажмите на кнопку \"Повторить код\"</string>
     <string name="replayCode">Повторить код</string>
+    <string name="startedCodeReplay">Колонка говорит код повторно!</string>
     <string name="invalidUDID">Неверный UDID!</string>
     <string name="unauthorizedError">Проблемы с авторизацией!</string>
     <string name="deviceAlreadyLinked">Устройство уже привязано!</string>

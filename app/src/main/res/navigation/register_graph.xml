@@ -11,7 +11,11 @@
         tools:layout="@layout/fragment_ask_udid" >
         <action
             android:id="@+id/toAskCode"
-            app:destination="@id/askCodeFragment" />
+            app:destination="@id/askCodeFragment"
+            app:enterAnim="@anim/nav_default_enter_anim"
+            app:exitAnim="@anim/nav_default_exit_anim"
+            app:popEnterAnim="@anim/nav_default_pop_enter_anim"
+            app:popExitAnim="@anim/nav_default_pop_exit_anim" />
     </fragment>
     <fragment
         android:id="@+id/askCodeFragment"
