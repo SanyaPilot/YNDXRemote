@@ -133,20 +133,22 @@ class DeviceActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_device)
 
-        val appBar = findViewById<MaterialToolbar>(R.id.deviceAppBar)
-        setSupportActionBar(appBar)
-        supportActionBar!!.setDisplayHomeAsUpEnabled(true)
-        supportActionBar!!.setDisplayShowHomeEnabled(true)
-
-        appBar?.let { appBar.subtitle = intent.getStringExtra("deviceName") }
-
         deviceId = intent.getStringExtra("deviceId")!!
+        val deviceName = intent.getStringExtra("deviceName")
+
+        val appBar = findViewById<MaterialToolbar>(R.id.deviceAppBar)
+        appBar?.let {
+            setSupportActionBar(appBar)
+            supportActionBar!!.setDisplayHomeAsUpEnabled(true)
+            supportActionBar!!.setDisplayShowHomeEnabled(true)
+            appBar.subtitle = deviceName
+        }
 
         // Supply device ID and device name to the service
         val hints = Bundle()
         hints.apply {
             putString(DEVICE_ID, deviceId)
-            putString(DEVICE_NAME, intent.getStringExtra("deviceName"))
+            putString(DEVICE_NAME, deviceName)
         }
         mediaBrowser = MediaBrowserCompat(
             this,
