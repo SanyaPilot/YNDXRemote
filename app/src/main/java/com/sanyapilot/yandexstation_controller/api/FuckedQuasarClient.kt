@@ -47,6 +47,15 @@ data class LinkDeviceResult(
     val error: LinkDeviceErrors? = null
 )
 
+enum class UnlinkDeviceErrors {
+    NOT_LINKED, UNAUTHORIZED, TIMEOUT, UNKNOWN
+}
+
+data class UnlinkDeviceResult(
+    val ok: Boolean,
+    val error: UnlinkDeviceErrors? = null
+)
+
 const val FQ_BACKEND_URL = "https://yndxfuck.ru"
 val JSON_MEDIA_TYPE = "application/json; charset=utf-8".toMediaType()
 
@@ -117,6 +126,26 @@ object FuckedQuasarClient {
                     "invalid_code" -> LinkDeviceErrors.INVALID_CODE
                     "timeout" -> LinkDeviceErrors.DEVICE_OFFLINE
                     else -> LinkDeviceErrors.UNKNOWN
+                }
+            )
+        }
+    }
+    fun unlinkDevice(deviceId: String): UnlinkDeviceResult {
+        val body = json.encodeToString(LinkDeviceBody(device_id = deviceId, code = null))
+        val res = Session.post("$FQ_BACKEND_URL/unlink_device", body.toRequestBody(JSON_MEDIA_TYPE))
+        if (res.errorId == Errors.TIMEOUT) {
+            return UnlinkDeviceResult(false, UnlinkDeviceErrors.TIMEOUT)
+        }
+        val code = res.response!!.code
+        return if (code == 200) {
+            UnlinkDeviceResult(true)
+        } else {
+            UnlinkDeviceResult(
+                false,
+                when (code) {
+                    400 -> UnlinkDeviceErrors.NOT_LINKED
+                    401 -> UnlinkDeviceErrors.UNAUTHORIZED
+                    else -> UnlinkDeviceErrors.UNKNOWN
                 }
             )
         }

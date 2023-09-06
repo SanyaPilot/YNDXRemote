@@ -11,6 +11,8 @@ import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.activity.viewModels
@@ -18,9 +20,13 @@ import androidx.fragment.app.commit
 import androidx.fragment.app.replace
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.button.MaterialButtonToggleGroup
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.snackbar.Snackbar
 import com.sanyapilot.yandexstation_controller.service.DEVICE_ID
 import com.sanyapilot.yandexstation_controller.service.DEVICE_NAME
 import com.sanyapilot.yandexstation_controller.R
+import com.sanyapilot.yandexstation_controller.api.FuckedQuasarClient
+import com.sanyapilot.yandexstation_controller.api.UnlinkDeviceErrors
 import com.sanyapilot.yandexstation_controller.service.StationControlService
 import kotlin.concurrent.thread
 
@@ -31,6 +37,7 @@ class DeviceActivity : AppCompatActivity() {
 
     private val viewModel: DeviceViewModel by viewModels()
     private lateinit var mediaBrowser: MediaBrowserCompat
+    private lateinit var deviceId: String
 
     private val connectionCallbacks = object : MediaBrowserCompat.ConnectionCallback() {
         override fun onConnected() {
@@ -126,10 +133,16 @@ class DeviceActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_device)
 
+        val appBar = findViewById<MaterialToolbar>(R.id.deviceAppBar)
+        setSupportActionBar(appBar)
+        appBar?.let { appBar.subtitle = intent.getStringExtra("deviceName") }
+
+        deviceId = intent.getStringExtra("deviceId")!!
+
         // Supply device ID and device name to the service
         val hints = Bundle()
         hints.apply {
-            putString(DEVICE_ID, intent.getStringExtra("deviceId"))
+            putString(DEVICE_ID, deviceId)
             putString(DEVICE_NAME, intent.getStringExtra("deviceName"))
         }
         mediaBrowser = MediaBrowserCompat(
@@ -138,9 +151,6 @@ class DeviceActivity : AppCompatActivity() {
             connectionCallbacks,
             hints
         )
-
-        val appBar = findViewById<MaterialToolbar>(R.id.deviceAppBar)
-        appBar?.let { appBar.subtitle = intent.getStringExtra("deviceName") }
 
         if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
             val coverImage = findViewById<ImageView>(R.id.cover)
@@ -201,5 +211,44 @@ class DeviceActivity : AppCompatActivity() {
         super.onStop()
         MediaControllerCompat.getMediaController(this)?.unregisterCallback(controllerCallback)
         mediaBrowser.disconnect()
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.device_actions, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean = when (item.itemId) {
+        R.id.unlinkDeviceItem -> {  // Show unlink dialog
+            MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.unlinkQuestion)
+                .setMessage(R.string.unlinkDescription)
+                .setNegativeButton(R.string.no, null)
+                .setPositiveButton(R.string.yes) { _, _ ->
+                    thread {
+                        val res = FuckedQuasarClient.unlinkDevice(deviceId)
+                        if (res.ok) {
+                            // Stop service and finish activity
+                            FuckedQuasarClient.fetchDevices()
+                            mediaController.transportControls.stop()
+                        } else {
+                            Snackbar.make(
+                                findViewById(R.id.deviceLayout),
+                                getString(when (res.error) {
+                                    UnlinkDeviceErrors.NOT_LINKED -> R.string.deviceAlreadyUnlinked
+                                    UnlinkDeviceErrors.UNAUTHORIZED -> R.string.unauthorizedError
+                                    UnlinkDeviceErrors.TIMEOUT -> R.string.unknownError
+                                    UnlinkDeviceErrors.UNKNOWN -> R.string.unknownError
+                                    else -> R.string.wtf
+                                }),
+                                Snackbar.LENGTH_LONG
+                            ).show()
+                        }
+                    }
+                }
+                .show()
+            true
+        }
+        else -> super.onOptionsItemSelected(item)
     }
 }

@@ -1,6 +1,10 @@
 <resources>
     <string name="app_name">YNDXFuck Remote</string>
-    <!-- User account strings -->
+    <!-- Common -->
+    <string name="yes">Да</string>
+    <string name="no">Нет</string>
+
+    <!-- Login activity -->
     <string name="register_screen_name">Вход в аккаунт</string>
     <string name="login">Логин</string>
     <string name="password">Пароль</string>
@@ -22,6 +26,7 @@
     <string name="serverDead">Упс… С сервером что-то не так!</string>
     <string name="wtf">WTF</string>
 
+    <!-- Main screen -->
     <string name="devices">Устройства</string>
     <string name="account">Аккаунт</string>
 
@@ -34,6 +39,7 @@
     <string name="deviceOffline">Устройство не в сети!</string>
     <string name="noDevices">Сейчас здесь нет устройств.\nПривяжите колонку в Telegram боте\nt.me/yndxfuck_bot</string>
 
+    <!-- Device activity -->
     <string name="deviceActivityHeader">Управление станцией</string>
     <string name="enterText">Введите текст</string>
     <string name="enterTextSnackbar">Нельзя отправить пустой текст!</string>
@@ -52,12 +58,14 @@
     <string name="myWave">Моя волна</string>
     <string name="myFavourites">Мне нравится</string>
 
+    <!-- User screen -->
     <string name="codedWithLove">Создано проектом YNDXFuck с ❤️</string>
     <string name="credits"><b>Разработка:</b> <a href="https://github.com/SanyaPilot">SanyaPilot</a>\n
         <b>Спасибо проекту</b>\n
         <a href="https://github.com/AlexxIT/YandexStation">Яндекс.Станция для Home Assistant</a>\n
         за исследование протокола Glagol</string>
 
+    <!-- Device link screen -->
     <string name="linkButton">Привязать</string>
     <string name="linkDevice">Привязка колонки</string>
     <string name="linkDescription">Здесь вы можете привязать колонку к вашему аккаунту</string>
@@ -74,4 +82,11 @@
     <string name="deviceAlreadyLinked">Устройство уже привязано!</string>
     <string name="alreadyRunningError">Колонка уже говорит код!</string>
     <string name="unknownError">Произошла неизвестная ошибка! Свяжитесь с нами</string>
+
+    <!-- Device unlink dialog -->
+    <string name="unlinkTooltip">Отвязать</string>
+    <string name="unlinkQuestion">Отвязать устройство?</string>
+    <string name="unlinkDescription">После отвязки вы потеряете возможность менять настройки и управлять устройством</string>
+    <string name="deviceAlreadyUnlinked">Устройство уже отвязано!</string>
+
 </resources>
