@@ -13,7 +13,6 @@ import okhttp3.Response
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 import org.json.JSONObject
-import java.net.SocketException
 import java.util.*
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.thread
@@ -162,7 +161,8 @@ class GlagolClient(private val speaker: Speaker) : WebSocketListener() {
 
         try {
             Session.wsConnect("wss://${localDevice!!.host}:${localDevice!!.port}", this)
-        } catch (e: SocketException) {
+        } catch (e: Exception) {
+            Log.e(TAG, "Error at connecting to the websocket!", e)
             failureListener?.let { it() }
         }
 
