@@ -23,17 +23,17 @@
             android:name=".device_register.DeviceRegisterActivity"
             android:exported="false" />
         <activity
-            android:name=".device.DeviceActivity"
-            android:exported="false" />
-        <activity
             android:name=".main_screen.MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".device.DeviceActivity"
+            android:exported="false"
+            android:parentActivityName=".main_screen.MainActivity" />
         <activity
             android:name=".main_screen.LoginActivity"
             android:exported="false"

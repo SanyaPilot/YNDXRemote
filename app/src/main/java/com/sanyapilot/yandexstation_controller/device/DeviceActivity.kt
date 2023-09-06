@@ -135,6 +135,9 @@ class DeviceActivity : AppCompatActivity() {
 
         val appBar = findViewById<MaterialToolbar>(R.id.deviceAppBar)
         setSupportActionBar(appBar)
+        supportActionBar!!.setDisplayHomeAsUpEnabled(true)
+        supportActionBar!!.setDisplayShowHomeEnabled(true)
+
         appBar?.let { appBar.subtitle = intent.getStringExtra("deviceName") }
 
         deviceId = intent.getStringExtra("deviceId")!!
@@ -250,5 +253,10 @@ class DeviceActivity : AppCompatActivity() {
             true
         }
         else -> super.onOptionsItemSelected(item)
+    }
+
+    override fun onSupportNavigateUp(): Boolean {
+        onBackPressed()
+        return true
     }
 }
