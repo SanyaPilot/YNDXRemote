@@ -19,8 +19,9 @@ import androidx.activity.viewModels
 import androidx.fragment.app.commit
 import androidx.fragment.app.replace
 import com.google.android.material.appbar.MaterialToolbar
-import com.google.android.material.button.MaterialButtonToggleGroup
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.elevation.SurfaceColors
 import com.google.android.material.snackbar.Snackbar
 import com.sanyapilot.yandexstation_controller.service.DEVICE_ID
 import com.sanyapilot.yandexstation_controller.service.DEVICE_NAME
@@ -144,6 +145,9 @@ class DeviceActivity : AppCompatActivity() {
             appBar.subtitle = deviceName
         }
 
+        // Color navbar
+        window.navigationBarColor = SurfaceColors.SURFACE_2.getColor(this)
+
         // Supply device ID and device name to the service
         val hints = Bundle()
         hints.apply {
@@ -170,32 +174,31 @@ class DeviceActivity : AppCompatActivity() {
             viewModel.coverBitmap.observe(this) { observers.coverObserver(coverImage, it, viewModel.coverURL.value) }
         }
 
-        val controlSelector = findViewById<MaterialButtonToggleGroup>(R.id.controlsSelector)
+        val bottomNav = findViewById<BottomNavigationView>(R.id.deviceNavigation)
 
         // Bottom selector listener
-        controlSelector.addOnButtonCheckedListener { _, checkedId, isChecked ->
-            if (isChecked) {
-                when (checkedId) {
-                    R.id.playbackButton -> {
-                        supportFragmentManager.commit {
-                            setReorderingAllowed(true)
-                            replace<DevicePlaybackFragment>(R.id.controlsContainer)
-                        }
+        bottomNav.setOnItemSelectedListener { item ->
+            when (item.itemId) {
+                R.id.playbackPage -> {
+                    supportFragmentManager.commit {
+                        setReorderingAllowed(true)
+                        replace<DevicePlaybackFragment>(R.id.controlsContainer)
                     }
-                    R.id.TTSButton -> {
-                        supportFragmentManager.commit {
-                            setReorderingAllowed(true)
-                            replace<DeviceTTSFragment>(R.id.controlsContainer)
-                        }
+                }
+                R.id.rcPage -> {
+                    supportFragmentManager.commit {
+                        setReorderingAllowed(true)
+                        replace<DeviceRemoteFragment>(R.id.controlsContainer)
                     }
-                    R.id.remoteButton -> {
-                        supportFragmentManager.commit {
-                            setReorderingAllowed(true)
-                            replace<DeviceRemoteFragment>(R.id.controlsContainer)
-                        }
+                }
+                R.id.TTSPage -> {
+                    supportFragmentManager.commit {
+                        setReorderingAllowed(true)
+                        replace<DeviceTTSFragment>(R.id.controlsContainer)
                     }
                 }
             }
+            true
         }
     }
 

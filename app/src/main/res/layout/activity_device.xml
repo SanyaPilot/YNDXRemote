@@ -23,49 +23,19 @@
         android:name="com.sanyapilot.yandexstation_controller.device.DevicePlaybackFragment"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginBottom="8dp"
-        app:layout_constraintBottom_toTopOf="@+id/controlsSelector"
+        app:layout_constraintBottom_toTopOf="@+id/deviceNavigation"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/deviceAppBar"
         tools:layout="@layout/fragment_device_playback" />
 
-    <com.google.android.material.button.MaterialButtonToggleGroup
-        android:id="@+id/controlsSelector"
-        android:layout_width="wrap_content"
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/deviceNavigation"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
-        app:checkedButton="@id/playbackButton"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:selectionRequired="true"
-        app:singleSelection="true">
-
-        <Button
-            android:id="@+id/playbackButton"
-            style="@style/ToggleIconButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            app:icon="@drawable/round_library_music_24" />
-
-        <Button
-            android:id="@+id/remoteButton"
-            style="@style/ToggleIconButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            app:icon="@drawable/round_control_camera_24" />
-
-        <Button
-            android:id="@+id/TTSButton"
-            style="@style/ToggleIconButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            app:icon="@drawable/round_message_24" />
-
-    </com.google.android.material.button.MaterialButtonToggleGroup>
+        app:menu="@menu/device_bottom_navigation_menu" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

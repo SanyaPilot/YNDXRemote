@@ -3,8 +3,13 @@
     <item
         android:id="@+id/playbackPage"
         android:enabled="true"
-        android:icon="@drawable/ic_baseline_cast_24"
+        android:icon="@drawable/round_library_music_24"
         android:title="@string/playback" />
+    <item
+        android:id="@+id/rcPage"
+        android:enabled="true"
+        android:icon="@drawable/round_control_camera_24"
+        android:title="@string/rc" />
     <item
         android:id="@+id/TTSPage"
         android:enabled="true"
