@@ -8,14 +8,14 @@ plugins {
 }
 
 android {
-    compileSdk 33
+    compileSdk 34
 
     defaultConfig {
         applicationId "com.sanyapilot.yandexstation_controller"
         minSdk 26
-        targetSdk 33
-        versionCode 1
-        versionName "1.0.0"
+        targetSdk 34
+        versionCode 2
+        versionName "1.1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -38,7 +38,7 @@ android {
 
 dependencies {
 
-    implementation 'androidx.core:core-ktx:1.10.1'
+    implementation 'androidx.core:core-ktx:1.12.0'
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'androidx.media:media:1.6.0'
     implementation 'com.google.android.material:material:1.9.0'
@@ -49,11 +49,11 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
     implementation 'com.squareup.okhttp3:okhttp:5.0.0-alpha.11'
-    implementation 'org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1'
+    implementation 'org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0'
     implementation 'io.coil-kt:coil:2.4.0'
-    implementation 'androidx.mediarouter:mediarouter:1.4.0'
+    implementation 'androidx.mediarouter:mediarouter:1.6.0'
 
-    def lifecycle_version = '2.6.1'
+    def lifecycle_version = '2.6.2'
 
     // ViewModel and LiveData dependencies
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_version"
@@ -70,7 +70,7 @@ dependencies {
     implementation "androidx.activity:activity-ktx:$activity_version"
 
     // Navigation
-    def nav_version = "2.6.0"
+    def nav_version = "2.7.3"
 
     // Kotlin
     implementation "androidx.navigation:navigation-fragment-ktx:$nav_version"
