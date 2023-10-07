@@ -45,8 +45,8 @@
     <string name="enterTextSnackbar">Нельзя отправить пустой текст!</string>
     <string name="containsProhibitedSyms">Текст содержит недопустимые символы!</string>
     <string name="tooLong">Текст длиннее 100 символов!</string>
-    <string name="doAsTTS">Воспроизвести текст?</string>
-    <string name="send">Отправить</string>
+    <string name="sendTTS">Воспроизвести</string>
+    <string name="sendCmd">Отправить</string>
     <string name="sent">Отправлено!</string>
 
     <string name="playback">Плеер</string>

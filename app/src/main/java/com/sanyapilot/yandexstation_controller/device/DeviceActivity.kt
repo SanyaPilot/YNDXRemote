@@ -194,13 +194,6 @@ class DeviceActivity : AppCompatActivity() {
                     }
                 }
 
-                R.id.TTSPage -> {
-                    supportFragmentManager.commit {
-                        setReorderingAllowed(true)
-                        replace<DeviceTTSFragment>(R.id.controlsContainer)
-                    }
-                }
-
                 R.id.settingsPage -> {
                     supportFragmentManager.commit {
                         setReorderingAllowed(true)
@@ -219,13 +212,6 @@ class DeviceActivity : AppCompatActivity() {
                         supportFragmentManager.commit {
                             setReorderingAllowed(true)
                             replace<DevicePlaybackFragment>(R.id.controlsContainer)
-                        }
-                    }
-
-                    R.id.TTSButton -> {
-                        supportFragmentManager.commit {
-                            setReorderingAllowed(true)
-                            replace<DeviceTTSFragment>(R.id.controlsContainer)
                         }
                     }
 

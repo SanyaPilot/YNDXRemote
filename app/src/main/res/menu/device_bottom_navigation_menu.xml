@@ -11,11 +11,6 @@
         android:icon="@drawable/round_control_camera_24"
         android:title="@string/rc" />
     <item
-        android:id="@+id/TTSPage"
-        android:enabled="true"
-        android:icon="@drawable/ic_baseline_message_24"
-        android:title="@string/commands" />
-    <item
         android:id="@+id/settingsPage"
         android:enabled="true"
         android:icon="@drawable/round_settings_24"
