@@ -222,6 +222,13 @@ class DeviceActivity : AppCompatActivity() {
                         }
                     }
 
+                    R.id.ttsButton -> {
+                        supportFragmentManager.commit {
+                            setReorderingAllowed(true)
+                            replace<DeviceTTSFragment>(R.id.controlsContainer)
+                        }
+                    }
+
                     R.id.settingsButton -> {
                         supportFragmentManager.commit {
                             setReorderingAllowed(true)

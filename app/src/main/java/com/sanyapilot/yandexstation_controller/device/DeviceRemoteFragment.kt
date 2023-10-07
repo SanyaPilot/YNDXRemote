@@ -1,5 +1,6 @@
 package com.sanyapilot.yandexstation_controller.device
 
+import android.content.res.Configuration
 import android.os.Bundle
 import android.support.v4.media.session.MediaControllerCompat
 import androidx.fragment.app.Fragment
@@ -7,12 +8,15 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
-import com.google.android.material.snackbar.Snackbar
+import android.widget.LinearLayout
+import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.textfield.TextInputLayout
 import com.sanyapilot.yandexstation_controller.R
+import com.sanyapilot.yandexstation_controller.device.TTSHelper.sendCommand
 
 class DeviceRemoteFragment : Fragment() {
-    private lateinit var mediaController: MediaControllerCompat
+    private var mediaController: MediaControllerCompat? = null
+    private lateinit var viewModel: DeviceViewModel
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -23,7 +27,7 @@ class DeviceRemoteFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        mediaController = MediaControllerCompat.getMediaController(requireActivity())
+        super.onViewCreated(view, savedInstanceState)
 
         // Navigation
         val upButton = view.findViewById<Button>(R.id.navUpButton)
@@ -34,70 +38,71 @@ class DeviceRemoteFragment : Fragment() {
         val backButton = view.findViewById<Button>(R.id.navBackButton)
         val homeButton = view.findViewById<Button>(R.id.navHomeButton)
 
-        upButton.setOnClickListener {
-            mediaController.sendCommand("navUp", null, null)
-        }
-        downButton.setOnClickListener {
-            mediaController.sendCommand("navDown", null, null)
-        }
-        leftButton.setOnClickListener {
-            mediaController.sendCommand("navLeft", null, null)
-        }
-        rightButton.setOnClickListener {
-            mediaController.sendCommand("navRight", null, null)
-        }
-        clickButton.setOnClickListener {
-            mediaController.sendCommand("click", null, null)
-        }
-        backButton.setOnClickListener {
-            mediaController.sendCommand("navBack", null, null)
-        }
-        homeButton.setOnClickListener {
-            mediaController.sendCommand("navHome", null, null)
-        }
-
         // TTS and commands
         val textField = view.findViewById<TextInputLayout>(R.id.ttsField).editText!!
         val sendCmdButton = view.findViewById<Button>(R.id.sendCmdButton)
         val sendTTSButton = view.findViewById<Button>(R.id.sendTTSButton)
 
-        sendCmdButton.setOnClickListener { sendCommand(view, textField.text.toString(), false) }
-        sendTTSButton.setOnClickListener { sendCommand(view, textField.text.toString(), true) }
+        // Hide TTS in landscape
+        if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            val ttsLayout = view.findViewById<LinearLayout>(R.id.ttsLayout)
+            ttsLayout.visibility = View.GONE
+        }
+
+        viewModel = ViewModelProvider(requireActivity())[DeviceViewModel::class.java]
+
+        viewModel.isReady.observe(viewLifecycleOwner) {
+            if (it) {
+                mediaController = MediaControllerCompat.getMediaController(requireActivity())
+
+                upButton.setOnClickListener {
+                    mediaController?.sendCommand("navUp", null, null)
+                }
+                downButton.setOnClickListener {
+                    mediaController?.sendCommand("navDown", null, null)
+                }
+                leftButton.setOnClickListener {
+                    mediaController?.sendCommand("navLeft", null, null)
+                }
+                rightButton.setOnClickListener {
+                    mediaController?.sendCommand("navRight", null, null)
+                }
+                clickButton.setOnClickListener {
+                    mediaController?.sendCommand("click", null, null)
+                }
+                backButton.setOnClickListener {
+                    mediaController?.sendCommand("navBack", null, null)
+                }
+                homeButton.setOnClickListener {
+                    mediaController?.sendCommand("navHome", null, null)
+                }
+
+                if (resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
+                    sendCmdButton.setOnClickListener {
+                        sendCommand(
+                            view,
+                            requireContext(),
+                            mediaController,
+                            textField.text.toString(),
+                            false
+                        )
+                    }
+                    sendTTSButton.setOnClickListener {
+                        sendCommand(
+                            view,
+                            requireContext(),
+                            mediaController,
+                            textField.text.toString(),
+                            true
+                        )
+                    }
+                }
+            }
+        }
     }
 
-    private fun sendCommand(view: View, text: String, tts: Boolean) {
-        if (text == "") {
-            Snackbar.make(
-                view.findViewById(R.id.rcMainLayout), getString(R.string.enterTextSnackbar),
-                Snackbar.LENGTH_SHORT
-            ).show()
-            return
-        }
-
-        if (text.length > 100) {
-            Snackbar.make(
-                view.findViewById(R.id.rcMainLayout), getString(R.string.tooLong),
-                Snackbar.LENGTH_SHORT
-            ).show()
-            return
-        }
-
-        val reSyms = Regex("(<.+?>|[^А-Яа-яЁёA-Za-z0-9-,!.:=? ]+)")
-        val reSpaces = Regex("  +")
-
-        if (reSyms.containsMatchIn(text) || reSpaces.containsMatchIn(text)) {
-            Snackbar.make(
-                view.findViewById(R.id.rcMainLayout), getString(R.string.containsProhibitedSyms),
-                Snackbar.LENGTH_SHORT
-            ).show()
-            return
-        }
-
-        val commandParams = Bundle()
-        commandParams.putString("text", text)
-        if (tts)
-            mediaController.sendCommand("sendTTS", commandParams, null)
-        else
-            mediaController.sendCommand("sendCommand", commandParams, null)
+    override fun onStop() {
+        super.onStop()
+        viewModel.removeObservers(viewLifecycleOwner)
     }
 }
