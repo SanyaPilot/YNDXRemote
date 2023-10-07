@@ -105,12 +105,12 @@
             app:icon="@drawable/round_control_camera_24" />
 
         <Button
-            android:id="@+id/TTSButton"
+            android:id="@+id/settingsButton"
             style="@style/ToggleIconButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            app:icon="@drawable/round_message_24" />
+            app:icon="@drawable/round_settings_24" />
 
     </com.google.android.material.button.MaterialButtonToggleGroup>
 

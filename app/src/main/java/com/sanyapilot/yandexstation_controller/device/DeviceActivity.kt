@@ -221,6 +221,13 @@ class DeviceActivity : AppCompatActivity() {
                             replace<DeviceRemoteFragment>(R.id.controlsContainer)
                         }
                     }
+
+                    R.id.settingsButton -> {
+                        supportFragmentManager.commit {
+                            setReorderingAllowed(true)
+                            replace(R.id.controlsContainer, SettingsFragment.instance(deviceId))
+                        }
+                    }
                 }
             }
         }
