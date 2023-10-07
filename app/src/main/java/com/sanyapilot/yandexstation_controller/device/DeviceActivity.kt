@@ -12,7 +12,6 @@ import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
 import android.view.Menu
-import android.view.MenuItem
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.activity.viewModels
@@ -20,14 +19,12 @@ import androidx.fragment.app.commit
 import androidx.fragment.app.replace
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.bottomnavigation.BottomNavigationView
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.button.MaterialButtonToggleGroup
 import com.google.android.material.elevation.SurfaceColors
-import com.google.android.material.snackbar.Snackbar
 import com.sanyapilot.yandexstation_controller.service.DEVICE_ID
 import com.sanyapilot.yandexstation_controller.service.DEVICE_NAME
 import com.sanyapilot.yandexstation_controller.R
-import com.sanyapilot.yandexstation_controller.api.FuckedQuasarClient
-import com.sanyapilot.yandexstation_controller.api.UnlinkDeviceErrors
+import com.sanyapilot.yandexstation_controller.device.settings.SettingsFragment
 import com.sanyapilot.yandexstation_controller.service.StationControlService
 import kotlin.concurrent.thread
 
@@ -171,13 +168,17 @@ class DeviceActivity : AppCompatActivity() {
             viewModel.playerActive.observe(this) { observers.playerActiveObserver(coverImage, it) }
             viewModel.trackName.observe(this) { observers.trackNameObserver(trackName, it) }
             viewModel.trackArtist.observe(this) { observers.trackArtistObserver(trackArtist, it) }
-            viewModel.coverBitmap.observe(this) { observers.coverObserver(coverImage, it, viewModel.coverURL.value) }
+            viewModel.coverBitmap.observe(this) {
+                observers.coverObserver(
+                    coverImage,
+                    it,
+                    viewModel.coverURL.value
+                )
+            }
         }
 
-        val bottomNav = findViewById<BottomNavigationView>(R.id.deviceNavigation)
-
-        // Bottom selector listener
-        bottomNav.setOnItemSelectedListener { item ->
+        // Portrait
+        findViewById<BottomNavigationView?>(R.id.deviceNavigation)?.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.playbackPage -> {
                     supportFragmentManager.commit {
@@ -185,20 +186,57 @@ class DeviceActivity : AppCompatActivity() {
                         replace<DevicePlaybackFragment>(R.id.controlsContainer)
                     }
                 }
+
                 R.id.rcPage -> {
                     supportFragmentManager.commit {
                         setReorderingAllowed(true)
                         replace<DeviceRemoteFragment>(R.id.controlsContainer)
                     }
                 }
+
                 R.id.TTSPage -> {
                     supportFragmentManager.commit {
                         setReorderingAllowed(true)
                         replace<DeviceTTSFragment>(R.id.controlsContainer)
                     }
                 }
+
+                R.id.settingsPage -> {
+                    supportFragmentManager.commit {
+                        setReorderingAllowed(true)
+                        replace(R.id.controlsContainer, SettingsFragment.instance(deviceId))
+                    }
+                }
             }
             true
+        }
+
+        // Landscape
+        findViewById<MaterialButtonToggleGroup?>(R.id.controlsSelector)?.addOnButtonCheckedListener { _, checkedId, isChecked ->
+            if (isChecked) {
+                when (checkedId) {
+                    R.id.playbackButton -> {
+                        supportFragmentManager.commit {
+                            setReorderingAllowed(true)
+                            replace<DevicePlaybackFragment>(R.id.controlsContainer)
+                        }
+                    }
+
+                    R.id.TTSButton -> {
+                        supportFragmentManager.commit {
+                            setReorderingAllowed(true)
+                            replace<DeviceTTSFragment>(R.id.controlsContainer)
+                        }
+                    }
+
+                    R.id.remoteButton -> {
+                        supportFragmentManager.commit {
+                            setReorderingAllowed(true)
+                            replace<DeviceRemoteFragment>(R.id.controlsContainer)
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -224,40 +262,6 @@ class DeviceActivity : AppCompatActivity() {
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.device_actions, menu)
         return true
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean = when (item.itemId) {
-        R.id.unlinkDeviceItem -> {  // Show unlink dialog
-            MaterialAlertDialogBuilder(this)
-                .setTitle(R.string.unlinkQuestion)
-                .setMessage(R.string.unlinkDescription)
-                .setNegativeButton(R.string.no, null)
-                .setPositiveButton(R.string.yes) { _, _ ->
-                    thread {
-                        val res = FuckedQuasarClient.unlinkDevice(deviceId)
-                        if (res.ok) {
-                            // Stop service and finish activity
-                            FuckedQuasarClient.fetchDevices()
-                            mediaController.transportControls.stop()
-                        } else {
-                            Snackbar.make(
-                                findViewById(R.id.deviceLayout),
-                                getString(when (res.error) {
-                                    UnlinkDeviceErrors.NOT_LINKED -> R.string.deviceAlreadyUnlinked
-                                    UnlinkDeviceErrors.UNAUTHORIZED -> R.string.unauthorizedError
-                                    UnlinkDeviceErrors.TIMEOUT -> R.string.unknownError
-                                    UnlinkDeviceErrors.UNKNOWN -> R.string.unknownError
-                                    else -> R.string.wtf
-                                }),
-                                Snackbar.LENGTH_LONG
-                            ).show()
-                        }
-                    }
-                }
-                .show()
-            true
-        }
-        else -> super.onOptionsItemSelected(item)
     }
 
     override fun onSupportNavigateUp(): Boolean {

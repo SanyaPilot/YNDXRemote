@@ -47,16 +47,49 @@ data class LinkDeviceResult(
     val error: LinkDeviceErrors? = null
 )
 
-enum class UnlinkDeviceErrors {
-    NOT_LINKED, UNAUTHORIZED, TIMEOUT, UNKNOWN
+enum class SettingsErrors {
+    UNAUTHORIZED, NOT_LINKED, TIMEOUT, UNKNOWN
 }
+
+@Serializable
+data class SettingsResponse(
+    val status: String,
+    val enabled: Boolean? = null,
+    val type: String? = null
+)
 
 data class UnlinkDeviceResult(
     val ok: Boolean,
-    val error: UnlinkDeviceErrors? = null
+    val error: SettingsErrors? = null
 )
 
-const val FQ_BACKEND_URL = "https://yndxfuck.ru"
+@Serializable
+data class BoolSettingBody(
+    val device_id: String,
+    val realtime_update: Boolean,
+    val state: Boolean
+)
+
+data class BoolSettingResult(
+    val ok: Boolean,
+    val enabled: Boolean? = null,
+    val error: SettingsErrors? = null
+)
+
+@Serializable
+data class TypeSettingBody(
+    val device_id: String,
+    val realtime_update: Boolean,
+    val state: String
+)
+
+data class TypeSettingResult(
+    val ok: Boolean,
+    val type: String? = null,
+    val error: SettingsErrors? = null
+)
+
+const val FQ_BACKEND_URL = "https://testing.yndxfuck.ru"
 val JSON_MEDIA_TYPE = "application/json; charset=utf-8".toMediaType()
 
 object FuckedQuasarClient {
@@ -86,6 +119,7 @@ object FuckedQuasarClient {
         }
         return null
     }
+
     fun linkDeviceStage1(deviceId: String): LinkDeviceResult {
         val body = json.encodeToString(LinkDeviceBody(device_id = deviceId, code = null))
         val res = Session.post("$FQ_BACKEND_URL/reg_device", body.toRequestBody(JSON_MEDIA_TYPE))
@@ -109,6 +143,7 @@ object FuckedQuasarClient {
             )
         }
     }
+
     fun linkDeviceStage2(deviceId: String, code: Int): LinkDeviceResult {
         val body = json.encodeToString(LinkDeviceBody(device_id = deviceId, code = code))
         val res = Session.post("$FQ_BACKEND_URL/submit_2fa", body.toRequestBody(JSON_MEDIA_TYPE))
@@ -130,11 +165,12 @@ object FuckedQuasarClient {
             )
         }
     }
+
     fun unlinkDevice(deviceId: String): UnlinkDeviceResult {
         val body = json.encodeToString(LinkDeviceBody(device_id = deviceId, code = null))
         val res = Session.post("$FQ_BACKEND_URL/unlink_device", body.toRequestBody(JSON_MEDIA_TYPE))
         if (res.errorId == Errors.TIMEOUT) {
-            return UnlinkDeviceResult(false, UnlinkDeviceErrors.TIMEOUT)
+            return UnlinkDeviceResult(false, SettingsErrors.TIMEOUT)
         }
         val code = res.response!!.code
         return if (code == 200) {
@@ -143,9 +179,95 @@ object FuckedQuasarClient {
             UnlinkDeviceResult(
                 false,
                 when (code) {
-                    400 -> UnlinkDeviceErrors.NOT_LINKED
-                    401 -> UnlinkDeviceErrors.UNAUTHORIZED
-                    else -> UnlinkDeviceErrors.UNKNOWN
+                    400 -> SettingsErrors.NOT_LINKED
+                    401 -> SettingsErrors.UNAUTHORIZED
+                    else -> SettingsErrors.UNKNOWN
+                }
+            )
+        }
+    }
+
+    fun getJingleStatus(deviceId: String): BoolSettingResult {
+        val res = Session.get("$FQ_BACKEND_URL/get_jingle_status?device_id=$deviceId")
+        if (res.errorId == Errors.TIMEOUT) {
+            return BoolSettingResult(false, error = SettingsErrors.TIMEOUT)
+        }
+        val code = res.response!!.code
+        return if (code == 200) {
+            val parsed = json.decodeFromString<SettingsResponse>(res.response.body.string())
+            BoolSettingResult(true, parsed.enabled)
+        } else {
+            BoolSettingResult(
+                ok = false,
+                error = when (code) {
+                    400 -> SettingsErrors.NOT_LINKED
+                    401 -> SettingsErrors.UNAUTHORIZED
+                    else -> SettingsErrors.UNKNOWN
+                }
+            )
+        }
+    }
+    fun setJingleStatus(deviceId: String, enabled: Boolean): BoolSettingResult {
+        val body = json.encodeToString(BoolSettingBody(
+            device_id = deviceId, realtime_update = true, state = enabled
+        ))
+        val res = Session.post("$FQ_BACKEND_URL/update_jingle", body.toRequestBody(JSON_MEDIA_TYPE))
+        if (res.errorId == Errors.TIMEOUT) {
+            return BoolSettingResult(false, error = SettingsErrors.TIMEOUT)
+        }
+        val code = res.response!!.code
+        return if (code == 200) {
+            BoolSettingResult(true)
+        } else {
+            BoolSettingResult(
+                ok = false,
+                error = when (code) {
+                    400 -> SettingsErrors.NOT_LINKED
+                    401 -> SettingsErrors.UNAUTHORIZED
+                    else -> SettingsErrors.UNKNOWN
+                }
+            )
+        }
+    }
+
+    fun getSSType(deviceId: String): TypeSettingResult {
+        val res = Session.get("$FQ_BACKEND_URL/get_ss_type_status?device_id=$deviceId")
+        if (res.errorId == Errors.TIMEOUT) {
+            return TypeSettingResult(false, error = SettingsErrors.TIMEOUT)
+        }
+        val code = res.response!!.code
+        return if (code == 200) {
+            val parsed = json.decodeFromString<SettingsResponse>(res.response.body.string())
+            TypeSettingResult(true, parsed.type)
+        } else {
+            TypeSettingResult(
+                ok = false,
+                error = when (code) {
+                    400 -> SettingsErrors.NOT_LINKED
+                    401 -> SettingsErrors.UNAUTHORIZED
+                    else -> SettingsErrors.UNKNOWN
+                }
+            )
+        }
+    }
+    fun setSSType(deviceId: String, type: String): TypeSettingResult {
+        val body = json.encodeToString(TypeSettingBody(
+            device_id = deviceId, realtime_update = true, state = type
+        ))
+        val res = Session.post("$FQ_BACKEND_URL/update_ss_type", body.toRequestBody(JSON_MEDIA_TYPE))
+        if (res.errorId == Errors.TIMEOUT) {
+            return TypeSettingResult(false, error = SettingsErrors.TIMEOUT)
+        }
+        val code = res.response!!.code
+        return if (code == 200) {
+            TypeSettingResult(true)
+        } else {
+            TypeSettingResult(
+                ok = false,
+                error = when (code) {
+                    400 -> SettingsErrors.NOT_LINKED
+                    401 -> SettingsErrors.UNAUTHORIZED
+                    else -> SettingsErrors.UNKNOWN
                 }
             )
         }

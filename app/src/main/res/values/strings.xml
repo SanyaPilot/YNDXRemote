@@ -49,7 +49,7 @@
     <string name="send">Отправить</string>
     <string name="sent">Отправлено!</string>
 
-    <string name="playback">Воспроизведение</string>
+    <string name="playback">Плеер</string>
     <string name="commands">Команды</string>
     <string name="rc">Пульт</string>
 
@@ -81,11 +81,12 @@
     <string name="invalidUDID">Неверный UDID!</string>
     <string name="unauthorizedError">Проблемы с авторизацией!</string>
     <string name="deviceAlreadyLinked">Устройство уже привязано!</string>
+    <string name="deviceNotLinked">Устройство не привязано!</string>
     <string name="alreadyRunningError">Колонка уже говорит код!</string>
     <string name="unknownError">Произошла неизвестная ошибка! Свяжитесь с нами</string>
 
     <!-- Device unlink dialog -->
-    <string name="unlinkTooltip">Отвязать</string>
+    <string name="unlinkLabel">Отвязать от аккаунта</string>
     <string name="unlinkQuestion">Отвязать устройство?</string>
     <string name="unlinkDescription">После отвязки вы потеряете возможность менять настройки и управлять устройством</string>
     <string name="deviceAlreadyUnlinked">Устройство уже отвязано!</string>
@@ -93,4 +94,14 @@
     <!-- Station service -->
     <string name="fetchingData">Подключаемся…</string>
     <string name="idle">Сейчас ничего не играет</string>
+
+    <!-- Settings -->
+    <string name="settings">Настройки</string>
+    <string name="settingsTitle">Настройки станции</string>
+    <string name="jingleLabel">Звук активации Алисы</string>
+    <string name="ssLabel">Заставка картинками</string>
+    <string name="ssSupportText">Текущий тип:</string>
+    <string name="video">видео</string>
+    <string name="images">картинки</string>
+    <string name="title_activity_settings">SettingsActivity</string>
 </resources>

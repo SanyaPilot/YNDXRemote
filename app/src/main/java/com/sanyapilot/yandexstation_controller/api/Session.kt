@@ -1,6 +1,7 @@
 package com.sanyapilot.yandexstation_controller.api
 
 import android.annotation.SuppressLint
+import android.util.Log
 import okhttp3.*
 import okhttp3.RequestBody.Companion.toRequestBody
 import okio.IOException
@@ -30,6 +31,7 @@ enum class Methods {
 }
 
 object Session {
+    private const val TAG = "FQSession"
     val client = OkHttpClient.Builder()
         .build()
     private val unsafeClient = getUnsafeOkHttpClient()
@@ -120,6 +122,9 @@ object Session {
 
         try {
             val resp = client.newCall(request.build()).execute()
+            if (resp.code != 200) {
+                Log.e(TAG, "Error while performing request to URL $url!\nBody: ${resp.body.string()}")
+            }
             return when (resp.code) {
                 400 -> {
                     // Invalid device?

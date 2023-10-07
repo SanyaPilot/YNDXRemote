@@ -15,4 +15,9 @@
         android:enabled="true"
         android:icon="@drawable/ic_baseline_message_24"
         android:title="@string/commands" />
+    <item
+        android:id="@+id/settingsPage"
+        android:enabled="true"
+        android:icon="@drawable/round_settings_24"
+        android:title="@string/settings" />
 </menu>
