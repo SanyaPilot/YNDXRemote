@@ -33,7 +33,7 @@ data class LinkDeviceBody(
 )
 
 @Serializable
-data class LinkDeviceResponse(
+data class GenericResponse(
     val status: String,
     val reason: String? = null
 )
@@ -48,7 +48,7 @@ data class LinkDeviceResult(
 )
 
 enum class SettingsErrors {
-    UNAUTHORIZED, NOT_LINKED, TIMEOUT, UNKNOWN
+    UNAUTHORIZED, NOT_LINKED, INVALID_VALUE, TIMEOUT, UNKNOWN
 }
 
 @Serializable
@@ -70,6 +70,11 @@ data class BoolSettingBody(
     val state: Boolean
 )
 
+data class GenericSettingResult(
+    val ok: Boolean,
+    val error: SettingsErrors? = null
+)
+
 data class BoolSettingResult(
     val ok: Boolean,
     val enabled: Boolean? = null,
@@ -87,6 +92,12 @@ data class TypeSettingResult(
     val ok: Boolean,
     val type: String? = null,
     val error: SettingsErrors? = null
+)
+
+@Serializable
+data class NameSettingBody(
+    val device_id: String,
+    val name: String
 )
 
 const val FQ_BACKEND_URL = "https://testing.yndxfuck.ru"
@@ -126,7 +137,7 @@ object FuckedQuasarClient {
         if (res.errorId == Errors.TIMEOUT) {
             return LinkDeviceResult(false, LinkDeviceErrors.TIMEOUT)
         }
-        val parsed = json.decodeFromString<LinkDeviceResponse>(res.response!!.body.string())
+        val parsed = json.decodeFromString<GenericResponse>(res.response!!.body.string())
         return if (parsed.status == "ok") {
             LinkDeviceResult(true)
         } else {
@@ -150,7 +161,7 @@ object FuckedQuasarClient {
         if (res.errorId == Errors.TIMEOUT) {
             return LinkDeviceResult(false, LinkDeviceErrors.TIMEOUT)
         }
-        val parsed = json.decodeFromString<LinkDeviceResponse>(res.response!!.body.string())
+        val parsed = json.decodeFromString<GenericResponse>(res.response!!.body.string())
         return if (parsed.status == "ok") {
             LinkDeviceResult(true)
         } else {
@@ -266,6 +277,33 @@ object FuckedQuasarClient {
                 ok = false,
                 error = when (code) {
                     400 -> SettingsErrors.NOT_LINKED
+                    401 -> SettingsErrors.UNAUTHORIZED
+                    else -> SettingsErrors.UNKNOWN
+                }
+            )
+        }
+    }
+    fun renameDevice(deviceId: String, name: String): GenericSettingResult {
+        val body = json.encodeToString(NameSettingBody(
+            device_id = deviceId, name = name
+        ))
+        val res = Session.post("$FQ_BACKEND_URL/rename_device", body.toRequestBody(JSON_MEDIA_TYPE))
+        if (res.errorId == Errors.TIMEOUT) {
+            return GenericSettingResult(false, error = SettingsErrors.TIMEOUT)
+        }
+        val resp = res.response!!
+        if (resp.code == 200) {
+            return GenericSettingResult(true)
+        } else {
+            val parsed = json.decodeFromString<GenericResponse>(resp.body.string())
+            return GenericSettingResult(
+                ok = false,
+                error = when (resp.code) {
+                    400 -> when (parsed.reason) {
+                        "not_registered" -> SettingsErrors.NOT_LINKED
+                        "invalid_name" -> SettingsErrors.INVALID_VALUE
+                        else -> SettingsErrors.UNKNOWN
+                    }
                     401 -> SettingsErrors.UNAUTHORIZED
                     else -> SettingsErrors.UNKNOWN
                 }

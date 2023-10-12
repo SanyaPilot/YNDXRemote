@@ -21,14 +21,22 @@ class SettingsViewModel(
     private val _jingleEnabled = MutableStateFlow(false)
     private val _ssImages = MutableStateFlow(false)
     private val _netStatus = MutableStateFlow(NetStatus(true))
+    private val _renameError = MutableStateFlow(false)
+    private val _deviceName = MutableStateFlow("")
+
     val jingleEnabled: StateFlow<Boolean>
         get() = _jingleEnabled
     val ssImages: StateFlow<Boolean>
         get() = _ssImages
     val netStatus: StateFlow<NetStatus>
         get() = _netStatus
+    val renameError: StateFlow<Boolean>
+        get() = _renameError
+    val deviceName: StateFlow<String>
+        get() = _deviceName
 
     init {
+        _deviceName.value = FuckedQuasarClient.getDeviceById(deviceId)!!.name
         thread {
             val jingleRes = FuckedQuasarClient.getJingleStatus(deviceId)
             if (!jingleRes.ok) {
@@ -75,6 +83,21 @@ class SettingsViewModel(
                 // Stop service and finish activity
                 FuckedQuasarClient.fetchDevices()
                 mediaController?.transportControls?.stop()
+            } else {
+                _netStatus.value = NetStatus(false, res.error)
+            }
+        }
+    }
+
+    fun updateDeviceName(name: String) {
+        thread {
+            val res = FuckedQuasarClient.renameDevice(deviceId, name)
+            if (res.ok) {
+                _deviceName.value = name
+                _renameError.value = false
+                FuckedQuasarClient.fetchDevices()
+            } else if (res.error == SettingsErrors.INVALID_VALUE) {
+                _renameError.value = true
             } else {
                 _netStatus.value = NetStatus(false, res.error)
             }

@@ -123,7 +123,7 @@ object Session {
         try {
             val resp = client.newCall(request.build()).execute()
             if (resp.code != 200) {
-                Log.e(TAG, "Error while performing request to URL $url!\nBody: ${resp.body.string()}")
+                Log.w(TAG, "Error while performing request to URL $url!\nCode: ${resp.code}")
             }
             return when (resp.code) {
                 400 -> {

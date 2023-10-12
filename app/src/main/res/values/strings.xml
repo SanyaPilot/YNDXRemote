@@ -3,6 +3,7 @@
     <!-- Common -->
     <string name="yes">Да</string>
     <string name="no">Нет</string>
+    <string name="cancel">Отмена</string>
 
     <!-- Login activity -->
     <string name="register_screen_name">Вход в аккаунт</string>
@@ -78,12 +79,15 @@
     <string name="missedCode">Не услышали код?\nНажмите на кнопку \"Повторить код\"</string>
     <string name="replayCode">Повторить код</string>
     <string name="startedCodeReplay">Колонка говорит код повторно!</string>
+
+    <!-- Errors -->
     <string name="invalidUDID">Неверный UDID!</string>
     <string name="unauthorizedError">Проблемы с авторизацией!</string>
     <string name="deviceAlreadyLinked">Устройство уже привязано!</string>
     <string name="deviceNotLinked">Устройство не привязано!</string>
     <string name="alreadyRunningError">Колонка уже говорит код!</string>
     <string name="unknownError">Произошла неизвестная ошибка! Свяжитесь с нами</string>
+    <string name="invalidName">Имя может содержать только буквы, цифры, пробелы, скобки и некоторые специальные символы (.,-_[])!</string>
 
     <!-- Device unlink dialog -->
     <string name="unlinkLabel">Отвязать от аккаунта</string>
@@ -103,5 +107,8 @@
     <string name="ssSupportText">Текущий тип:</string>
     <string name="video">видео</string>
     <string name="images">картинки</string>
-    <string name="title_activity_settings">SettingsActivity</string>
+    <string name="renameLabel">Переименовать</string>
+    <string name="currentName">Текущее название:</string>
+    <string name="renameDialogTitle">Переименование</string>
+    <string name="enterName">Введите название</string>
 </resources>

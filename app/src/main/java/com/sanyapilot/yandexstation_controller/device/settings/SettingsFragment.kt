@@ -6,12 +6,22 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Card
+import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
@@ -34,6 +44,8 @@ import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -42,17 +54,15 @@ import com.sanyapilot.yandexstation_controller.api.SettingsErrors
 import com.sanyapilot.yandexstation_controller.ui.theme.AppTheme
 
 class SettingsFragment : Fragment() {
-    private lateinit var mediaController: MediaControllerCompat
     private lateinit var viewModel: SettingsViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        mediaController = MediaControllerCompat.getMediaController(requireActivity())
         viewModel = ViewModelProvider(
             this,
             SettingsViewModelFactory(
                 requireArguments().getString("deviceId")!!,
-                mediaController
+                MediaControllerCompat.getMediaController(requireActivity())
             )
         )[SettingsViewModel::class.java]
     }
@@ -89,6 +99,8 @@ fun SettingsLayout(viewModel: SettingsViewModel = viewModel()) {
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
 
+    val deviceName by viewModel.deviceName.collectAsState()
+
     // Unlink dialog
     val showUnlinkDialog = remember { mutableStateOf(false) }
     if (showUnlinkDialog.value) {
@@ -109,6 +121,52 @@ fun SettingsLayout(viewModel: SettingsViewModel = viewModel()) {
         )
     }
 
+    // Rename dialog
+    val showRenameDialog = remember { mutableStateOf(false) }
+    if (showRenameDialog.value) {
+        Dialog(onDismissRequest = { showRenameDialog.value = false }) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                shape = RoundedCornerShape(28.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(24.dp)
+                ){
+                    Text(
+                        text = stringResource(id = R.string.renameDialogTitle),
+                        fontSize = 24.sp,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+
+                    val tempName = remember { mutableStateOf(deviceName) }
+                    OutlinedTextField(
+                        value = tempName.value,
+                        onValueChange = { tempName.value = it },
+                        label = { Text(text = stringResource(id = R.string.enterName)) },
+                        singleLine = true,
+                        modifier = Modifier.padding(bottom = 24.dp)
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ){
+                        TextButton(onClick = { showRenameDialog.value = false }) {
+                            Text(text = stringResource(id = R.string.cancel))
+                        }
+                        TextButton(onClick = {
+                            viewModel.updateDeviceName(tempName.value)
+                            showRenameDialog.value = false
+                        }) {
+                            Text(text = stringResource(id = android.R.string.ok))
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { innerPadding ->
@@ -127,10 +185,22 @@ fun SettingsLayout(viewModel: SettingsViewModel = viewModel()) {
                 )
             }
         }
+
+        val renameError = viewModel.renameError.collectAsState()
+        if (renameError.value) {
+            LaunchedEffect(snackbarHostState) {
+                snackbarHostState.showSnackbar(
+                    message = context.resources.getString(R.string.invalidName),
+                    duration = SnackbarDuration.Long
+                )
+            }
+        }
+
         Column(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxHeight()
+                .verticalScroll(rememberScrollState())
         ) {
             Column(
                 modifier = Modifier
@@ -154,6 +224,12 @@ fun SettingsLayout(viewModel: SettingsViewModel = viewModel()) {
                     },
                     trailingContent = { Switch(checked = ssImages, onCheckedChange = { viewModel.toggleSSType() }) },
                     modifier = Modifier.clickable { viewModel.toggleSSType() }
+                )
+
+                ListItem(
+                    headlineContent = { Text(text = stringResource(id = R.string.renameLabel)) },
+                    supportingContent = { Text(text = "${stringResource(id = R.string.currentName)} $deviceName") },
+                    modifier = Modifier.clickable { showRenameDialog.value = true }
                 )
             }
             OutlinedButton(
