@@ -20,7 +20,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
@@ -36,11 +35,11 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -202,44 +201,39 @@ fun SettingsLayout(viewModel: SettingsViewModel = viewModel()) {
                 .fillMaxHeight()
                 .verticalScroll(rememberScrollState())
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .weight(1f)
-            ) {
-                val jingleEnabled by viewModel.jingleEnabled.collectAsState()
-                ListItem(
-                    headlineContent = { Text(stringResource(R.string.jingleLabel)) },
-                    trailingContent = { Switch(checked = jingleEnabled, onCheckedChange = { viewModel.toggleJingle() }) },
-                    modifier = Modifier.clickable { viewModel.toggleJingle() }
-                )
+            val jingleEnabled by viewModel.jingleEnabled.collectAsState()
+            ListItem(
+                leadingContent = { Icon(painter = painterResource(id = R.drawable.ic_round_volume_up_24), contentDescription = null) },
+                headlineContent = { Text(stringResource(R.string.jingleLabel)) },
+                trailingContent = { Switch(checked = jingleEnabled, onCheckedChange = { viewModel.toggleJingle() }) },
+                modifier = Modifier.clickable { viewModel.toggleJingle() }
+            )
 
-                val ssImages by viewModel.ssImages.collectAsState()
-                ListItem(
-                    headlineContent = { Text(stringResource(R.string.ssLabel)) },
-                    supportingContent = {
-                        Text(stringResource(R.string.ssSupportText) + " " +
-                                if (ssImages) stringResource(R.string.images) else stringResource(R.string.video)
-                        )
-                    },
-                    trailingContent = { Switch(checked = ssImages, onCheckedChange = { viewModel.toggleSSType() }) },
-                    modifier = Modifier.clickable { viewModel.toggleSSType() }
-                )
+            val ssImages by viewModel.ssImages.collectAsState()
+            ListItem(
+                leadingContent = { Icon(painter = painterResource(id = R.drawable.round_wallpaper_24), contentDescription = null) },
+                headlineContent = { Text(stringResource(R.string.ssLabel)) },
+                supportingContent = {
+                    Text(stringResource(R.string.ssSupportText) + " " +
+                            if (ssImages) stringResource(R.string.images) else stringResource(R.string.video)
+                    )
+                },
+                trailingContent = { Switch(checked = ssImages, onCheckedChange = { viewModel.toggleSSType() }) },
+                modifier = Modifier.clickable { viewModel.toggleSSType() }
+            )
 
-                ListItem(
-                    headlineContent = { Text(text = stringResource(id = R.string.renameLabel)) },
-                    supportingContent = { Text(text = "${stringResource(id = R.string.currentName)} $deviceName") },
-                    modifier = Modifier.clickable { showRenameDialog.value = true }
-                )
-            }
-            OutlinedButton(
-                modifier = Modifier
-                    .padding(8.dp)
-                    .align(Alignment.CenterHorizontally),
-                onClick = {showUnlinkDialog.value = true}
-            ) {
-                Text(stringResource(R.string.unlinkLabel))
-            }
+            ListItem(
+                leadingContent = { Icon(painter = painterResource(id = R.drawable.round_drive_file_rename_outline_24), contentDescription = null) },
+                headlineContent = { Text(text = stringResource(id = R.string.renameLabel)) },
+                supportingContent = { Text(text = "${stringResource(id = R.string.currentName)} $deviceName") },
+                modifier = Modifier.clickable { showRenameDialog.value = true }
+            )
+
+            ListItem(
+                leadingContent = { Icon(painter = painterResource(id = R.drawable.round_link_off_24), contentDescription = null) },
+                headlineContent = { Text(stringResource(R.string.unlinkLabel)) },
+                modifier = Modifier.clickable { showUnlinkDialog.value = true }
+            )
         }
     }
 }
