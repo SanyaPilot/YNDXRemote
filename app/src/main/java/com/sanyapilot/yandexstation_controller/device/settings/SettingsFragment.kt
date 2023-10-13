@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -20,8 +21,10 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Slider
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -31,17 +34,25 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableFloatState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -51,6 +62,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sanyapilot.yandexstation_controller.R
 import com.sanyapilot.yandexstation_controller.api.SettingsErrors
 import com.sanyapilot.yandexstation_controller.ui.theme.AppTheme
+import kotlin.math.roundToInt
+
+val EQ_NAMES = listOf("60 Hz", "230 Hz", "910 Hz", "3.6 kHz", "14 kHz")
 
 class SettingsFragment : Fragment() {
     private lateinit var viewModel: SettingsViewModel
@@ -92,6 +106,12 @@ class SettingsFragment : Fragment() {
         }
     }
 }
+
+data class EQBand(
+    val id: Int,
+    val state: MutableFloatState,
+    val name: String
+)
 
 @Composable
 fun SettingsLayout(viewModel: SettingsViewModel = viewModel()) {
@@ -222,6 +242,59 @@ fun SettingsLayout(viewModel: SettingsViewModel = viewModel()) {
                 modifier = Modifier.clickable { viewModel.toggleSSType() }
             )
 
+            val eqOpened = rememberSaveable { mutableStateOf(false) }
+            ListItem(
+                leadingContent = { Icon(painter = painterResource(id = R.drawable.round_equalizer_24), contentDescription = null) },
+                headlineContent = { Text(text = stringResource(id = R.string.eqLabel)) },
+                trailingContent = { Icon(
+                    painter = painterResource(id = if (eqOpened.value) R.drawable.round_keyboard_arrow_down_24
+                                                   else R.drawable.round_keyboard_arrow_right_24),
+                    contentDescription = null
+                ) },
+                modifier = Modifier.clickable { eqOpened.value = !eqOpened.value }
+            )
+
+            if (eqOpened.value) {
+                val eqValues by viewModel.eqValues.collectAsState()
+                val eqData = mutableListOf<EQBand>()
+                for (i in 0..4) {
+                    eqData.add(EQBand(i, remember { mutableFloatStateOf(eqValues[i]) }, EQ_NAMES[i]))
+                }
+
+                OutlinedCard(
+                    modifier = Modifier
+                        .padding(16.dp, 8.dp)
+                        .height(300.dp)
+                        .align(Alignment.CenterHorizontally)
+                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        eqData.forEach { item ->
+                            Column(
+                                modifier = Modifier.padding(8.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(text = ((item.state.floatValue * 10).roundToInt() / 10f).toString())
+                                VerticalSlider(
+                                    modifier = Modifier
+                                        .padding(8.dp, 0.dp)
+                                        .weight(1f),
+                                    value = item.state.floatValue,
+                                    onValueChange = { item.state.floatValue = it },
+                                    onValueChangeFinished = {
+                                        item.state.floatValue = (item.state.floatValue * 10).roundToInt() / 10f
+                                        viewModel.updateEQBand(item.id, item.state.floatValue)
+                                    },
+                                    valueRange = -12f..12f
+                                )
+                                Text(text = item.name)
+                            }
+                        }
+                    }
+                }
+            }
+
             ListItem(
                 leadingContent = { Icon(painter = painterResource(id = R.drawable.round_drive_file_rename_outline_24), contentDescription = null) },
                 headlineContent = { Text(text = stringResource(id = R.string.renameLabel)) },
@@ -236,6 +309,43 @@ fun SettingsLayout(viewModel: SettingsViewModel = viewModel()) {
             )
         }
     }
+}
+
+@Composable
+fun VerticalSlider(
+    modifier: Modifier = Modifier,
+    value: Float,
+    onValueChange: (Float) -> Unit,
+    onValueChangeFinished: (() -> Unit)? = null,
+    valueRange: ClosedFloatingPointRange<Float>
+) {
+    val mod = Modifier
+        .graphicsLayer {
+            rotationZ = 270f
+            transformOrigin = TransformOrigin(0f, 0f)
+        }
+        .layout { measurable, constraints ->
+            val placeable = measurable.measure(
+                Constraints(
+                    minWidth = constraints.minHeight,
+                    maxWidth = constraints.maxHeight,
+                    minHeight = constraints.minWidth,
+                    maxHeight = constraints.maxHeight,
+                )
+            )
+            layout(placeable.height, placeable.width) {
+                placeable.place(-placeable.width, 0)
+            }
+        }
+        .then(modifier)
+
+    Slider(
+        modifier = mod,
+        value = value,
+        onValueChange = onValueChange,
+        onValueChangeFinished = onValueChangeFinished,
+        valueRange = valueRange
+    )
 }
 
 @Preview(showBackground = true)

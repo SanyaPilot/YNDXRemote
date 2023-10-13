@@ -111,4 +111,5 @@
     <string name="currentName">Текущее название:</string>
     <string name="renameDialogTitle">Переименование</string>
     <string name="enterName">Введите название</string>
+    <string name="eqLabel">Эквалайзер</string>
 </resources>

@@ -100,6 +100,26 @@ data class NameSettingBody(
     val name: String
 )
 
+@Serializable
+data class EQSettingBody(
+    val device_id: String,
+    val data: List<Float>,
+    val realtime_update: Boolean
+)
+
+@Serializable
+data class EQSettingResponse(
+    val status: String,
+    val reason: String? = null,
+    val data: List<Float>
+)
+
+data class EQSettingResult(
+    val ok: Boolean,
+    val error: SettingsErrors? = null,
+    val data: List<Float>? = null
+)
+
 const val FQ_BACKEND_URL = "https://testing.yndxfuck.ru"
 val JSON_MEDIA_TYPE = "application/json; charset=utf-8".toMediaType()
 
@@ -304,6 +324,48 @@ object FuckedQuasarClient {
                         "invalid_name" -> SettingsErrors.INVALID_VALUE
                         else -> SettingsErrors.UNKNOWN
                     }
+                    401 -> SettingsErrors.UNAUTHORIZED
+                    else -> SettingsErrors.UNKNOWN
+                }
+            )
+        }
+    }
+    fun getEQData(deviceId: String): EQSettingResult {
+        val res = Session.get("$FQ_BACKEND_URL/get_eq_data?device_id=$deviceId")
+        if (res.errorId == Errors.TIMEOUT) {
+            return EQSettingResult(false, error = SettingsErrors.TIMEOUT)
+        }
+        val code = res.response!!.code
+        return if (code == 200) {
+            val parsed = json.decodeFromString<EQSettingResponse>(res.response.body.string())
+            EQSettingResult(true, data = parsed.data)
+        } else {
+            EQSettingResult(
+                ok = false,
+                error = when (code) {
+                    400 -> SettingsErrors.NOT_LINKED
+                    401 -> SettingsErrors.UNAUTHORIZED
+                    else -> SettingsErrors.UNKNOWN
+                }
+            )
+        }
+    }
+    fun setEQData(deviceId: String, data: List<Float>): EQSettingResult {
+        val body = json.encodeToString(EQSettingBody(
+            device_id = deviceId, realtime_update = true, data = data
+        ))
+        val res = Session.post("$FQ_BACKEND_URL/update_eq", body.toRequestBody(JSON_MEDIA_TYPE))
+        if (res.errorId == Errors.TIMEOUT) {
+            return EQSettingResult(false, error = SettingsErrors.TIMEOUT)
+        }
+        val code = res.response!!.code
+        return if (code == 200) {
+            EQSettingResult(true)
+        } else {
+            EQSettingResult(
+                ok = false,
+                error = when (code) {
+                    400 -> SettingsErrors.NOT_LINKED
                     401 -> SettingsErrors.UNAUTHORIZED
                     else -> SettingsErrors.UNKNOWN
                 }

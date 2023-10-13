@@ -23,6 +23,7 @@ class SettingsViewModel(
     private val _netStatus = MutableStateFlow(NetStatus(true))
     private val _renameError = MutableStateFlow(false)
     private val _deviceName = MutableStateFlow("")
+    private val _eqValues = MutableStateFlow(listOf(0f, 0f, 0f, 0f, 0f))
 
     val jingleEnabled: StateFlow<Boolean>
         get() = _jingleEnabled
@@ -34,10 +35,13 @@ class SettingsViewModel(
         get() = _renameError
     val deviceName: StateFlow<String>
         get() = _deviceName
+    val eqValues: StateFlow<List<Float>>
+        get() = _eqValues
 
     init {
         _deviceName.value = FuckedQuasarClient.getDeviceById(deviceId)!!.name
         thread {
+            // Activation sound
             val jingleRes = FuckedQuasarClient.getJingleStatus(deviceId)
             if (!jingleRes.ok) {
                 _netStatus.value = NetStatus(false, jingleRes.error)
@@ -45,12 +49,21 @@ class SettingsViewModel(
             }
             _jingleEnabled.value = jingleRes.enabled!!
 
+            // Screensavers
             val ssRes = FuckedQuasarClient.getSSType(deviceId)
             if (!ssRes.ok) {
                 _netStatus.value = NetStatus(false, ssRes.error)
                 return@thread
             }
             _ssImages.value = ssRes.type == "image"
+
+            // EQ
+            val eqRes = FuckedQuasarClient.getEQData(deviceId)
+            if (!eqRes.ok) {
+                _netStatus.value = NetStatus(false, eqRes.error)
+                return@thread
+            }
+            _eqValues.value = eqRes.data!!
         }
     }
 
@@ -98,6 +111,20 @@ class SettingsViewModel(
                 FuckedQuasarClient.fetchDevices()
             } else if (res.error == SettingsErrors.INVALID_VALUE) {
                 _renameError.value = true
+            } else {
+                _netStatus.value = NetStatus(false, res.error)
+            }
+        }
+    }
+
+    fun updateEQBand(id: Int, value: Float) {
+        thread {
+            val temp = _eqValues.value.toMutableList()
+            temp[id] = value
+            val immutableTemp = temp.toList()
+            val res = FuckedQuasarClient.setEQData(deviceId, immutableTemp)
+            if (res.ok) {
+                _eqValues.value = immutableTemp
             } else {
                 _netStatus.value = NetStatus(false, res.error)
             }
