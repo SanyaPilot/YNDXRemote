@@ -86,8 +86,9 @@ class SettingsViewModel(
         // For preview
         updateEQValues(_rawEQValues)
 
-        _deviceName.value = FuckedQuasarClient.getDeviceById(deviceId)!!.name
         thread {
+            _deviceName.value = FuckedQuasarClient.getDeviceById(deviceId)!!.name
+
             // Activation sound
             val jingleRes = FuckedQuasarClient.getJingleStatus(deviceId)
             if (!jingleRes.ok) {
