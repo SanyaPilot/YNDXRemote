@@ -1,6 +1,8 @@
 package com.sanyapilot.yandexstation_controller.device.settings
 
 import android.support.v4.media.session.MediaControllerCompat
+import androidx.compose.runtime.MutableFloatState
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.sanyapilot.yandexstation_controller.api.FuckedQuasarClient
@@ -14,6 +16,44 @@ data class NetStatus(
     val error: SettingsErrors? = null
 )
 
+data class EQBand(
+    val id: Int,
+    val state: MutableFloatState,
+    val name: String
+)
+
+data class EQPreset(
+    val id: String,
+    val name: String,
+    val data: List<Float>
+)
+
+val EQ_NAMES = listOf("60 Hz", "230 Hz", "910 Hz", "3.6 kHz", "14 kHz")
+val EQ_PRESETS = listOf(
+    EQPreset("flat", "Плоский", listOf(0f, 0f, 0f, 0f, 0f)),
+    EQPreset("low_bass", "Меньше басов", listOf(-6f, 0f, 0f, 0f, 0f)),
+    EQPreset("cinema", "Кино", listOf(-3f, -1f, 0f, 0f, 3f)),
+    EQPreset("voice", "Голос", listOf(0f, 0f, 2f, 2f, 3f)),
+    EQPreset("pop", "Поп", listOf(0f, 1f, 2f, 1f, 0f)),
+    EQPreset("hip_hop", "Хип-хоп", listOf(3f, 2f, 0f, 3f, 3f)),
+    EQPreset("dance", "Танцы", listOf(5f, 3f, 0f, 3f, 0f)),
+    EQPreset("rock", "Рок", listOf(3f, 0f, -1f, 2f, 4f)),
+    EQPreset("electro", "Электроника", listOf(3f, 1f, -1f, 1f, 2f)),
+    EQPreset("metal", "Метал", listOf(4f, -2f, -2f, -2f, 4f)),
+    EQPreset("rnb", "R'n'B", listOf(5f, 2f, -1f, 2f, 4f)),
+    EQPreset("classic", "Классика", listOf(0f, 0f, 0f, 0f, -3f)),
+    EQPreset("acoustics", "Акустика", listOf(3f, 0f, 1f, 1f, 3f)),
+    EQPreset("jazz", "Джаз", listOf(2f, 0f, 1f, 0f, 2f)),
+    EQPreset("concert", "Концерт", listOf(1f, 0f, 0f, 0f, 1f)),
+    EQPreset("party", "Вечеринка", listOf(4f, 1f, -2f, 1f, 4f)),
+    EQPreset("more_bass", "Больше басов", listOf(5f, 0f, 0f, 0f, 0f)),
+    EQPreset("more_high", "Больше высоких", listOf(0f, 0f, 0f, 0f, 5f)),
+    EQPreset("more_bass_high", "Больше басов и высоких", listOf(5f, 0f, 0f, 0f, 5f)),
+    EQPreset("low_high", "Меньше высоких", listOf(0f, 0f, 0f, 0f, -5f))
+)
+
+const val CUSTOM_PRESET_NAME = "Свой пресет"
+
 class SettingsViewModel(
     private val deviceId: String,
     private val mediaController: MediaControllerCompat?
@@ -23,7 +63,9 @@ class SettingsViewModel(
     private val _netStatus = MutableStateFlow(NetStatus(true))
     private val _renameError = MutableStateFlow(false)
     private val _deviceName = MutableStateFlow("")
-    private val _eqValues = MutableStateFlow(listOf(0f, 0f, 0f, 0f, 0f))
+    private var _rawEQValues = mutableListOf(0f, 0f, 0f, 0f, 0f)
+    private val _eqValues = MutableStateFlow(listOf<EQBand>())
+    private val _presetName = MutableStateFlow(CUSTOM_PRESET_NAME)
 
     val jingleEnabled: StateFlow<Boolean>
         get() = _jingleEnabled
@@ -35,10 +77,15 @@ class SettingsViewModel(
         get() = _renameError
     val deviceName: StateFlow<String>
         get() = _deviceName
-    val eqValues: StateFlow<List<Float>>
+    val eqValues: StateFlow<List<EQBand>>
         get() = _eqValues
+    val presetName: StateFlow<String>
+        get() = _presetName
 
     init {
+        // For preview
+        updateEQValues(_rawEQValues)
+
         _deviceName.value = FuckedQuasarClient.getDeviceById(deviceId)!!.name
         thread {
             // Activation sound
@@ -63,7 +110,29 @@ class SettingsViewModel(
                 _netStatus.value = NetStatus(false, eqRes.error)
                 return@thread
             }
-            _eqValues.value = eqRes.data!!
+            _rawEQValues = (eqRes.data!! as MutableList<Float>)
+            updateEQValues(_rawEQValues)
+        }
+    }
+
+    private fun updateEQValues(data: List<Float>) {
+        val tempEQ = mutableListOf<EQBand>()
+        for (i in 0..4) {
+            tempEQ.add(EQBand(i, mutableFloatStateOf(data[i]), EQ_NAMES[i]))
+        }
+        _eqValues.value = tempEQ.toList()
+
+        // Find preset
+        var found = false
+        for (preset in EQ_PRESETS) {
+            if (preset.data == data) {
+                _presetName.value = preset.name
+                found = true
+                break
+            }
+        }
+        if (!found) {
+            _presetName.value = CUSTOM_PRESET_NAME
         }
     }
 
@@ -119,12 +188,22 @@ class SettingsViewModel(
 
     fun updateEQBand(id: Int, value: Float) {
         thread {
-            val temp = _eqValues.value.toMutableList()
-            temp[id] = value
-            val immutableTemp = temp.toList()
-            val res = FuckedQuasarClient.setEQData(deviceId, immutableTemp)
+            _rawEQValues[id] = value
+            val res = FuckedQuasarClient.setEQData(deviceId, _rawEQValues.toList())
             if (res.ok) {
-                _eqValues.value = immutableTemp
+                updateEQValues(_rawEQValues)
+            } else {
+                _netStatus.value = NetStatus(false, res.error)
+            }
+        }
+    }
+
+    fun updateAllEQ(data: List<Float>) {
+        thread {
+            val res = FuckedQuasarClient.setEQData(deviceId, data)
+            if (res.ok) {
+                _rawEQValues = data.toMutableList()
+                updateEQValues(data)
             } else {
                 _netStatus.value = NetStatus(false, res.error)
             }

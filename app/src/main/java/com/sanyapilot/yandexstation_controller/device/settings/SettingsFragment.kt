@@ -18,6 +18,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
@@ -34,10 +38,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableFloatState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -63,8 +65,6 @@ import com.sanyapilot.yandexstation_controller.R
 import com.sanyapilot.yandexstation_controller.api.SettingsErrors
 import com.sanyapilot.yandexstation_controller.ui.theme.AppTheme
 import kotlin.math.roundToInt
-
-val EQ_NAMES = listOf("60 Hz", "230 Hz", "910 Hz", "3.6 kHz", "14 kHz")
 
 class SettingsFragment : Fragment() {
     private lateinit var viewModel: SettingsViewModel
@@ -107,12 +107,7 @@ class SettingsFragment : Fragment() {
     }
 }
 
-data class EQBand(
-    val id: Int,
-    val state: MutableFloatState,
-    val name: String
-)
-
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsLayout(viewModel: SettingsViewModel = viewModel()) {
     val snackbarHostState = remember { SnackbarHostState() }
@@ -256,39 +251,67 @@ fun SettingsLayout(viewModel: SettingsViewModel = viewModel()) {
 
             if (eqOpened.value) {
                 val eqValues by viewModel.eqValues.collectAsState()
-                val eqData = mutableListOf<EQBand>()
-                for (i in 0..4) {
-                    eqData.add(EQBand(i, remember { mutableFloatStateOf(eqValues[i]) }, EQ_NAMES[i]))
-                }
-
+                val curPresetName by viewModel.presetName.collectAsState()
+                val presetMenuOpened = remember { mutableStateOf(false) }
                 OutlinedCard(
                     modifier = Modifier
                         .padding(16.dp, 8.dp)
-                        .height(300.dp)
+                        .height(340.dp)
                         .align(Alignment.CenterHorizontally)
                 ) {
-                    Row(
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        eqData.forEach { item ->
-                            Column(
-                                modifier = Modifier.padding(8.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally
+                    Column {
+                        ExposedDropdownMenuBox(
+                            modifier = Modifier.padding(12.dp),
+                            expanded = presetMenuOpened.value,
+                            onExpandedChange = { presetMenuOpened.value = !presetMenuOpened.value }
+                        ) {
+                            OutlinedTextField(
+                                value = curPresetName,
+                                onValueChange = {},
+                                readOnly = true,
+                                label = { Text(text = stringResource(id = R.string.eqPreset)) },
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = presetMenuOpened.value) },
+                                shape = RoundedCornerShape(24.dp),
+                                modifier = Modifier.menuAnchor()
+                            )
+                            ExposedDropdownMenu(
+                                expanded = presetMenuOpened.value,
+                                onDismissRequest = { presetMenuOpened.value = false }
                             ) {
-                                Text(text = ((item.state.floatValue * 10).roundToInt() / 10f).toString())
-                                VerticalSlider(
-                                    modifier = Modifier
-                                        .padding(8.dp, 0.dp)
-                                        .weight(1f),
-                                    value = item.state.floatValue,
-                                    onValueChange = { item.state.floatValue = it },
-                                    onValueChangeFinished = {
-                                        item.state.floatValue = (item.state.floatValue * 10).roundToInt() / 10f
-                                        viewModel.updateEQBand(item.id, item.state.floatValue)
-                                    },
-                                    valueRange = -12f..12f
-                                )
-                                Text(text = item.name)
+                                EQ_PRESETS.forEach {
+                                    DropdownMenuItem(
+                                        text = { Text(text = it.name) },
+                                        onClick = {
+                                            viewModel.updateAllEQ(it.data)
+                                            presetMenuOpened.value = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                        Row(
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            eqValues.forEach { item ->
+                                Column(
+                                    modifier = Modifier.padding(8.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(text = ((item.state.floatValue * 10).roundToInt() / 10f).toString())
+                                    VerticalSlider(
+                                        modifier = Modifier
+                                            .padding(8.dp, 0.dp)
+                                            .weight(1f),
+                                        value = item.state.floatValue,
+                                        onValueChange = { item.state.floatValue = it },
+                                        onValueChangeFinished = {
+                                            item.state.floatValue = (item.state.floatValue * 10).roundToInt() / 10f
+                                            viewModel.updateEQBand(item.id, item.state.floatValue)
+                                        },
+                                        valueRange = -12f..12f
+                                    )
+                                    Text(text = item.name)
+                                }
                             }
                         }
                     }
