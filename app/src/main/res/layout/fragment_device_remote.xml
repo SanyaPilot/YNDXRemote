@@ -120,7 +120,11 @@
             android:id="@+id/ttsField"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="@string/enterText">
+            android:hint="@string/enterText"
+            app:boxCornerRadiusBottomEnd="24dp"
+            app:boxCornerRadiusBottomStart="24dp"
+            app:boxCornerRadiusTopEnd="24dp"
+            app:boxCornerRadiusTopStart="24dp">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:layout_width="match_parent"

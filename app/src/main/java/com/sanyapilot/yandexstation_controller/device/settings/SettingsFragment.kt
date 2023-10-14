@@ -161,6 +161,7 @@ fun SettingsLayout(viewModel: SettingsViewModel = viewModel()) {
                         onValueChange = { tempName.value = it },
                         label = { Text(text = stringResource(id = R.string.enterName)) },
                         singleLine = true,
+                        shape = RoundedCornerShape(24.dp),
                         modifier = Modifier.padding(bottom = 24.dp)
                     )
                     Row(
@@ -250,82 +251,85 @@ fun SettingsLayout(viewModel: SettingsViewModel = viewModel()) {
                 modifier = Modifier.clickable { eqOpened.value = !eqOpened.value }
             )
 
-            AnimatedVisibility(visible = eqOpened.value) {
+            AnimatedVisibility(
+                visible = eqOpened.value,
+                modifier = Modifier.fillMaxWidth()
+            ) {
                 val eqValues by viewModel.eqValues.collectAsState()
                 val curPresetName by viewModel.presetName.collectAsState()
                 val presetMenuOpened = remember { mutableStateOf(false) }
-                Column(
-                    modifier = Modifier.fillMaxWidth()
+                OutlinedCard(
+                    modifier = Modifier
+                        .padding(16.dp, 8.dp)
+                        .height(340.dp)
+                        .align(Alignment.CenterHorizontally),
+                    shape = RoundedCornerShape(24.dp)
+
                 ) {
-                    OutlinedCard(
-                        modifier = Modifier
-                            .padding(16.dp, 8.dp)
-                            .height(340.dp)
-                            .align(Alignment.CenterHorizontally)
+                    Column(
+                        modifier = Modifier.padding(4.dp)
                     ) {
-                        Column {
-                            ExposedDropdownMenuBox(
-                                modifier = Modifier.padding(12.dp),
+                        ExposedDropdownMenuBox(
+                            modifier = Modifier.padding(8.dp),
+                            expanded = presetMenuOpened.value,
+                            onExpandedChange = {
+                                presetMenuOpened.value = !presetMenuOpened.value
+                            }
+                        ) {
+                            OutlinedTextField(
+                                value = curPresetName,
+                                onValueChange = {},
+                                readOnly = true,
+                                label = { Text(text = stringResource(id = R.string.eqPreset)) },
+                                trailingIcon = {
+                                    ExposedDropdownMenuDefaults.TrailingIcon(
+                                        expanded = presetMenuOpened.value
+                                    )
+                                },
+                                shape = RoundedCornerShape(24.dp),
+                                modifier = Modifier.menuAnchor()
+                            )
+                            ExposedDropdownMenu(
                                 expanded = presetMenuOpened.value,
-                                onExpandedChange = {
-                                    presetMenuOpened.value = !presetMenuOpened.value
-                                }
+                                onDismissRequest = { presetMenuOpened.value = false }
                             ) {
-                                OutlinedTextField(
-                                    value = curPresetName,
-                                    onValueChange = {},
-                                    readOnly = true,
-                                    label = { Text(text = stringResource(id = R.string.eqPreset)) },
-                                    trailingIcon = {
-                                        ExposedDropdownMenuDefaults.TrailingIcon(
-                                            expanded = presetMenuOpened.value
-                                        )
-                                    },
-                                    shape = RoundedCornerShape(24.dp),
-                                    modifier = Modifier.menuAnchor()
-                                )
-                                ExposedDropdownMenu(
-                                    expanded = presetMenuOpened.value,
-                                    onDismissRequest = { presetMenuOpened.value = false }
-                                ) {
-                                    EQ_PRESETS.forEach {
-                                        DropdownMenuItem(
-                                            text = { Text(text = it.name) },
-                                            onClick = {
-                                                viewModel.updateAllEQ(it.data)
-                                                presetMenuOpened.value = false
-                                            }
-                                        )
-                                    }
+                                EQ_PRESETS.forEach {
+                                    DropdownMenuItem(
+                                        text = { Text(text = it.name) },
+                                        onClick = {
+                                            viewModel.updateAllEQ(it.data)
+                                            presetMenuOpened.value = false
+                                        }
+                                    )
                                 }
                             }
-                            Row(
-                                horizontalArrangement = Arrangement.Center
-                            ) {
-                                eqValues.forEach { item ->
-                                    Column(
-                                        modifier = Modifier.padding(8.dp),
-                                        horizontalAlignment = Alignment.CenterHorizontally
-                                    ) {
-                                        Text(text = ((item.state.floatValue * 10).roundToInt() / 10f).toString())
-                                        VerticalSlider(
-                                            modifier = Modifier
-                                                .padding(8.dp, 0.dp)
-                                                .weight(1f),
-                                            value = item.state.floatValue,
-                                            onValueChange = { item.state.floatValue = it },
-                                            onValueChangeFinished = {
-                                                item.state.floatValue =
-                                                    (item.state.floatValue * 10).roundToInt() / 10f
-                                                viewModel.updateEQBand(
-                                                    item.id,
-                                                    item.state.floatValue
-                                                )
-                                            },
-                                            valueRange = -12f..12f
-                                        )
-                                        Text(text = item.name)
-                                    }
+                        }
+                        Row(
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            eqValues.forEach { item ->
+                                Column(
+                                    modifier = Modifier.padding(8.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(text = ((item.state.floatValue * 10).roundToInt() / 10f).toString())
+                                    VerticalSlider(
+                                        modifier = Modifier
+                                            .padding(8.dp, 0.dp)
+                                            .weight(1f),
+                                        value = item.state.floatValue,
+                                        onValueChange = { item.state.floatValue = it },
+                                        onValueChangeFinished = {
+                                            item.state.floatValue =
+                                                (item.state.floatValue * 10).roundToInt() / 10f
+                                            viewModel.updateEQBand(
+                                                item.id,
+                                                item.state.floatValue
+                                            )
+                                        },
+                                        valueRange = -12f..12f
+                                    )
+                                    Text(text = item.name)
                                 }
                             }
                         }
