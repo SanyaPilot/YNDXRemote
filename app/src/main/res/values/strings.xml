@@ -113,4 +113,10 @@
     <string name="enterName">Введите название</string>
     <string name="eqLabel">Эквалайзер</string>
     <string name="eqPreset">Пресет</string>
+    <string name="dndLabel">Не беспокоить</string>
+    <string name="start">Начало</string>
+    <string name="stop">Конец</string>
+    <string name="startTime">Время начала</string>
+    <string name="stopTime">Время окончания</string>
+    <string name="currentTime">Текущее время:</string>
 </resources>

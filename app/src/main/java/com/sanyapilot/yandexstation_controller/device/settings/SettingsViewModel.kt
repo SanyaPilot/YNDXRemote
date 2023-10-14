@@ -1,6 +1,8 @@
 package com.sanyapilot.yandexstation_controller.device.settings
 
 import android.support.v4.media.session.MediaControllerCompat
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.TimePickerState
 import androidx.compose.runtime.MutableFloatState
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.lifecycle.ViewModel
@@ -54,6 +56,12 @@ val EQ_PRESETS = listOf(
 
 const val CUSTOM_PRESET_NAME = "Свой пресет"
 
+data class DNDTime(
+    val hour: Int,
+    val minute: Int
+)
+
+@OptIn(ExperimentalMaterial3Api::class)
 class SettingsViewModel(
     private val deviceId: String,
     private val mediaController: MediaControllerCompat?
@@ -66,6 +74,9 @@ class SettingsViewModel(
     private var _rawEQValues = mutableListOf(0f, 0f, 0f, 0f, 0f)
     private val _eqValues = MutableStateFlow(listOf<EQBand>())
     private val _presetName = MutableStateFlow(CUSTOM_PRESET_NAME)
+    private val _dndEnabled = MutableStateFlow(false)
+    private val _dndStartValue = MutableStateFlow(DNDTime(0, 0))
+    private val _dndStopValue = MutableStateFlow(DNDTime(0, 0))
 
     val jingleEnabled: StateFlow<Boolean>
         get() = _jingleEnabled
@@ -81,6 +92,12 @@ class SettingsViewModel(
         get() = _eqValues
     val presetName: StateFlow<String>
         get() = _presetName
+    val dndEnabled: StateFlow<Boolean>
+        get() = _dndEnabled
+    val dndStartValue: StateFlow<DNDTime>
+        get() = _dndStartValue
+    val dndStopValue: StateFlow<DNDTime>
+        get() = _dndStopValue
 
     init {
         // For preview
@@ -113,6 +130,18 @@ class SettingsViewModel(
             }
             _rawEQValues = (eqRes.data!! as MutableList<Float>)
             updateEQValues(_rawEQValues)
+
+            // DND
+            val dndRes = FuckedQuasarClient.getDNDData(deviceId)
+            if (!dndRes.ok) {
+                _netStatus.value = NetStatus(false, dndRes.error)
+                return@thread
+            }
+            _dndEnabled.value = dndRes.enabled!!
+            val start = dndRes.start!!.split(':')
+            val stop = dndRes.stop!!.split(':')
+            _dndStartValue.value = DNDTime(start[0].toInt(), start[1].toInt())
+            _dndStopValue.value = DNDTime(stop[0].toInt(), stop[1].toInt())
         }
     }
 
@@ -205,6 +234,37 @@ class SettingsViewModel(
             if (res.ok) {
                 _rawEQValues = data.toMutableList()
                 updateEQValues(data)
+            } else {
+                _netStatus.value = NetStatus(false, res.error)
+            }
+        }
+    }
+
+    fun toggleDND() {
+        thread {
+            val res = FuckedQuasarClient.setDNDData(deviceId = deviceId, enable = !_dndEnabled.value)
+            if (res.ok) {
+                _dndEnabled.value = !_dndEnabled.value
+            } else {
+                _netStatus.value = NetStatus(false, res.error)
+            }
+        }
+    }
+
+    fun setDNDValues(start: TimePickerState, stop: TimePickerState) {
+        thread {
+            val sStart = "${start.hour.toString().padStart(2, '0')}:" +
+                    "${start.minute.toString().padStart(2, '0')}:00"
+            val sStop = "${stop.hour.toString().padStart(2, '0')}:" +
+                    "${stop.minute.toString().padStart(2, '0')}:00"
+            val res = FuckedQuasarClient.setDNDData(
+                deviceId = deviceId,
+                enable = true,
+                start = sStart, stop = sStop
+            )
+            if (res.ok) {
+                _dndStartValue.value = DNDTime(start.hour, start.minute)
+                _dndStopValue.value = DNDTime(stop.hour, stop.minute)
             } else {
                 _netStatus.value = NetStatus(false, res.error)
             }

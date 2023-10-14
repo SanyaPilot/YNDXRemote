@@ -120,6 +120,32 @@ data class EQSettingResult(
     val data: List<Float>? = null
 )
 
+@Serializable
+data class DNDSettingBody(
+    val device_id: String,
+    val realtime_update: Boolean,
+    val enable: Boolean,
+    val start: String? = null,
+    val stop: String? = null
+)
+
+@Serializable
+data class DNDSettingResponse(
+    val status: String,
+    val reason: String? = null,
+    val enabled: Boolean? = null,
+    val start: String? = null,
+    val stop: String? = null
+)
+
+data class DNDSettingResult(
+    val ok: Boolean,
+    val enabled: Boolean? = null,
+    val error: SettingsErrors? = null,
+    val start: String? = null,
+    val stop: String? = null
+)
+
 const val FQ_BACKEND_URL = "https://testing.yndxfuck.ru"
 val JSON_MEDIA_TYPE = "application/json; charset=utf-8".toMediaType()
 
@@ -366,6 +392,59 @@ object FuckedQuasarClient {
                 ok = false,
                 error = when (code) {
                     400 -> SettingsErrors.NOT_LINKED
+                    401 -> SettingsErrors.UNAUTHORIZED
+                    else -> SettingsErrors.UNKNOWN
+                }
+            )
+        }
+    }
+    fun getDNDData(deviceId: String): DNDSettingResult {
+        val res = Session.get("$FQ_BACKEND_URL/get_dnd_status?device_id=$deviceId")
+        if (res.errorId == Errors.TIMEOUT) {
+            return DNDSettingResult(false, error = SettingsErrors.TIMEOUT)
+        }
+        val code = res.response!!.code
+        return if (code == 200) {
+            val parsed = json.decodeFromString<DNDSettingResponse>(res.response.body.string())
+            DNDSettingResult(true, enabled = parsed.enabled, start = parsed.start, stop = parsed.stop)
+        } else {
+            DNDSettingResult(
+                ok = false,
+                error = when (code) {
+                    400 -> SettingsErrors.NOT_LINKED
+                    401 -> SettingsErrors.UNAUTHORIZED
+                    else -> SettingsErrors.UNKNOWN
+                }
+            )
+        }
+    }
+    fun setDNDData(deviceId: String, enable: Boolean, start: String? = null, stop: String? = null): DNDSettingResult {
+        if (!enable && (start != null || stop != null)) {
+            throw IllegalArgumentException()
+        }
+        if ((start != null && stop == null) || (start == null && stop != null)) {
+            throw IllegalArgumentException()
+        }
+        val body = json.encodeToString(DNDSettingBody(
+            device_id = deviceId, realtime_update = true,
+            enable = enable, start = start, stop = stop
+        ))
+        val res = Session.post("$FQ_BACKEND_URL/update_dnd", body.toRequestBody(JSON_MEDIA_TYPE))
+        if (res.errorId == Errors.TIMEOUT) {
+            return DNDSettingResult(false, error = SettingsErrors.TIMEOUT)
+        }
+        val code = res.response!!.code
+        return if (code == 200) {
+            DNDSettingResult(true)
+        } else {
+            val parsed = json.decodeFromString<DNDSettingResponse>(res.response.body.string())
+            DNDSettingResult(
+                ok = false,
+                error = when (code) {
+                    400 -> when (parsed.reason) {
+                        "not_registered" -> SettingsErrors.NOT_LINKED
+                        else -> SettingsErrors.UNKNOWN
+                    }
                     401 -> SettingsErrors.UNAUTHORIZED
                     else -> SettingsErrors.UNKNOWN
                 }

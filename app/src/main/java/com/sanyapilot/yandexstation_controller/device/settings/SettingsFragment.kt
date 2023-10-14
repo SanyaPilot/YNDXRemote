@@ -19,11 +19,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
@@ -37,8 +39,13 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TimeInput
+import androidx.compose.material3.TimePicker
+import androidx.compose.material3.TimePickerState
+import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -239,16 +246,72 @@ fun SettingsLayout(viewModel: SettingsViewModel = viewModel()) {
                 modifier = Modifier.clickable { viewModel.toggleSSType() }
             )
 
-            val eqOpened = rememberSaveable { mutableStateOf(false) }
+            val dndEnabled = viewModel.dndEnabled.collectAsState()
+            val dndStartTime = viewModel.dndStartValue.collectAsState()
+            val dndStopTime = viewModel.dndStopValue.collectAsState()
+            val dndStartTimeOpened = remember { mutableStateOf(false) }
+            val dndStopTimeOpened = remember { mutableStateOf(false) }
+
+            val startTimePickerState = rememberTimePickerState(dndStartTime.value.hour, dndStartTime.value.minute, true)
+            val stopTimePickerState = rememberTimePickerState(dndStopTime.value.hour, dndStopTime.value.minute, true)
+            if (dndStartTimeOpened.value) {
+                TimePickerDialog(
+                    onDismissRequest = { dndStartTimeOpened.value = false },
+                    state = startTimePickerState,
+                    label = stringResource(id = R.string.startTime),
+                    onApply = { viewModel.setDNDValues(startTimePickerState, stopTimePickerState) }
+                )
+            }
+            if (dndStopTimeOpened.value) {
+                TimePickerDialog(
+                    onDismissRequest = { dndStopTimeOpened.value = false },
+                    state = stopTimePickerState,
+                    label = stringResource(id = R.string.stopTime),
+                    onApply = { viewModel.setDNDValues(startTimePickerState, stopTimePickerState) }
+                )
+            }
+
             ListItem(
-                leadingContent = { Icon(painter = painterResource(id = R.drawable.round_equalizer_24), contentDescription = null) },
+                leadingContent = { Icon(painter = painterResource(id = R.drawable.round_do_not_disturb_on_24), contentDescription = null) },
+                headlineContent = { Text(text = stringResource(id = R.string.dndLabel)) },
+                trailingContent = { Switch(checked = dndEnabled.value, onCheckedChange = { viewModel.toggleDND() }) },
+                modifier = Modifier.clickable { viewModel.toggleDND() }
+            )
+            AnimatedVisibility(
+                visible = dndEnabled.value,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column {
+                    ListItem(
+                        headlineContent = { Text(text = stringResource(id = R.string.start)) },
+                        supportingContent = {
+                            Text(
+                                text = "${stringResource(id = R.string.currentTime)} " +
+                                        "${dndStartTime.value.hour.toString().padStart(2, '0')}:" +
+                                        dndStartTime.value.minute.toString().padStart(2, '0')
+                            )
+                        },
+                        modifier = Modifier.clickable { dndStartTimeOpened.value = true }
+                    )
+                    ListItem(
+                        headlineContent = { Text(text = stringResource(id = R.string.stop)) },
+                        supportingContent = {
+                            Text(
+                                text = "${stringResource(id = R.string.currentTime)} " +
+                                        "${dndStopTime.value.hour.toString().padStart(2, '0')}:" +
+                                        dndStopTime.value.minute.toString().padStart(2, '0')
+                            )
+                        },
+                        modifier = Modifier.clickable { dndStopTimeOpened.value = true }
+                    )
+                }
+            }
+
+            val eqOpened = rememberSaveable { mutableStateOf(false) }
+            ExpandingListItem(
+                expanded = eqOpened,
                 headlineContent = { Text(text = stringResource(id = R.string.eqLabel)) },
-                trailingContent = { Icon(
-                    painter = painterResource(id = if (eqOpened.value) R.drawable.round_keyboard_arrow_down_24
-                                                   else R.drawable.round_keyboard_arrow_right_24),
-                    contentDescription = null
-                ) },
-                modifier = Modifier.clickable { eqOpened.value = !eqOpened.value }
+                leadingContent = { Icon(painter = painterResource(id = R.drawable.round_equalizer_24), contentDescription = null) }
             )
 
             AnimatedVisibility(
@@ -388,6 +451,100 @@ fun VerticalSlider(
         onValueChangeFinished = onValueChangeFinished,
         valueRange = valueRange
     )
+}
+
+@Composable
+fun ExpandingListItem(
+    expanded: MutableState<Boolean>,
+    headlineContent: @Composable () -> Unit,
+    modifier: Modifier = Modifier,
+    supportingContent: @Composable (() -> Unit)? = null,
+    leadingContent: @Composable (() -> Unit)? = null
+) {
+    ListItem(
+        leadingContent = leadingContent,
+        headlineContent = headlineContent,
+        trailingContent = { Icon(
+            painter = painterResource(id = if (expanded.value) R.drawable.round_keyboard_arrow_down_24
+            else R.drawable.round_keyboard_arrow_right_24),
+            contentDescription = null
+        ) },
+        supportingContent = supportingContent,
+        modifier = Modifier
+            .clickable { expanded.value = !expanded.value }
+            .then(modifier)
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TimePickerDialog(
+    onDismissRequest: () -> Unit,
+    state: TimePickerState,
+    label: String,
+    onApply: (TimePickerState) -> Unit
+) {
+    val showPicker = remember { mutableStateOf(true) }
+    Dialog(onDismissRequest = onDismissRequest) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth(),
+            shape = RoundedCornerShape(28.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp)
+            ) {
+                Text(
+                    modifier = Modifier.padding(bottom = 20.dp),
+                    text = label,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                if (showPicker.value) {
+                    TimePicker(
+                        modifier = Modifier.align(Alignment.CenterHorizontally),
+                        state = state
+                    )
+                } else {
+                    TimeInput(
+                        modifier = Modifier.align(Alignment.CenterHorizontally),
+                        state = state
+                    )
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ){
+                    IconButton(onClick = { showPicker.value = !showPicker.value }) {
+                        Icon(
+                            painterResource(
+                                id = if (showPicker.value)
+                                        R.drawable.outline_keyboard_24 else
+                                        R.drawable.outline_schedule_24
+                            ),
+                            contentDescription = if (showPicker.value) {
+                                "Switch to Text Input"
+                            } else {
+                                "Switch to Touch Input"
+                            }
+                        )
+
+                    }
+                    Row {
+                        TextButton(onClick = onDismissRequest) {
+                            Text(text = stringResource(id = R.string.cancel))
+                        }
+                        TextButton(onClick = {
+                            onApply(state)
+                            onDismissRequest()
+                        }) {
+                            Text(text = stringResource(id = android.R.string.ok))
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 @Preview(showBackground = true)
