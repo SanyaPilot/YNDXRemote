@@ -30,6 +30,9 @@ class DeviceViewModel : ViewModel() {
 
     val seekTime = MutableLiveData<Int?>(null)
 
+    val selectedNavItem = MutableLiveData<Int?>(null)
+    val checkedControlsItem = MutableLiveData<Int?>(null)
+
     fun update(data: StationState) {
         isPlaying.value = data.playing
         volume.value = data.volume

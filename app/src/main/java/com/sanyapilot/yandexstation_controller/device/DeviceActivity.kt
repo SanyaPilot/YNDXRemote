@@ -11,7 +11,6 @@ import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
-import android.view.Menu
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.activity.viewModels
@@ -178,7 +177,14 @@ class DeviceActivity : AppCompatActivity() {
         }
 
         // Portrait
-        findViewById<BottomNavigationView?>(R.id.deviceNavigation)?.setOnItemSelectedListener { item ->
+        val navBar: BottomNavigationView? = findViewById(R.id.deviceNavigation)
+        if (viewModel.selectedNavItem.value != null) {
+            navBar?.selectedItemId = viewModel.selectedNavItem.value!!
+        }
+        if (navBar != null) {
+            updateLandscapeSelectedItem(navBar.selectedItemId)
+        }
+        navBar?.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.playbackPage -> {
                     supportFragmentManager.commit {
@@ -201,11 +207,19 @@ class DeviceActivity : AppCompatActivity() {
                     }
                 }
             }
+            updateLandscapeSelectedItem(item.itemId)
             true
         }
 
         // Landscape
-        findViewById<MaterialButtonToggleGroup?>(R.id.controlsSelector)?.addOnButtonCheckedListener { _, checkedId, isChecked ->
+        val controlsSelector: MaterialButtonToggleGroup? = findViewById(R.id.controlsSelector)
+        if (viewModel.checkedControlsItem.value != null) {
+            controlsSelector?.check(viewModel.checkedControlsItem.value!!)
+        }
+        if (controlsSelector != null) {
+            updatePortraitSelectedItem(controlsSelector.checkedButtonId)
+        }
+        controlsSelector?.addOnButtonCheckedListener { _, checkedId, isChecked ->
             if (isChecked) {
                 when (checkedId) {
                     R.id.playbackButton -> {
@@ -236,6 +250,7 @@ class DeviceActivity : AppCompatActivity() {
                         }
                     }
                 }
+                updatePortraitSelectedItem(checkedId)
             }
         }
     }
@@ -259,13 +274,27 @@ class DeviceActivity : AppCompatActivity() {
         mediaBrowser.disconnect()
     }
 
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        menuInflater.inflate(R.menu.device_actions, menu)
-        return true
-    }
-
     override fun onSupportNavigateUp(): Boolean {
         onBackPressed()
         return true
+    }
+
+    private fun updateLandscapeSelectedItem(id: Int) {
+        viewModel.checkedControlsItem.value = when (id) {
+            R.id.playbackPage -> R.id.playbackButton
+            R.id.rcPage -> R.id.remoteButton
+            R.id.settingsPage -> R.id.settingsButton
+            else -> R.id.playbackButton
+        }
+    }
+
+    private fun updatePortraitSelectedItem(id: Int) {
+        viewModel.selectedNavItem.value = when (id) {
+            R.id.playbackButton -> R.id.playbackPage
+            R.id.remoteButton -> R.id.rcPage
+            R.id.ttsButton -> R.id.rcPage
+            R.id.settingsButton -> R.id.settingsPage
+            else -> R.id.playbackPage
+        }
     }
 }
