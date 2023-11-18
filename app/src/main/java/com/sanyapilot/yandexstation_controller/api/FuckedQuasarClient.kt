@@ -1,9 +1,11 @@
 package com.sanyapilot.yandexstation_controller.api
+import android.util.Log
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
+import java.lang.Exception
 
 
 @Serializable
@@ -48,7 +50,7 @@ data class LinkDeviceResult(
 )
 
 enum class SettingsErrors {
-    UNAUTHORIZED, NOT_LINKED, INVALID_VALUE, TIMEOUT, UNKNOWN
+    UNAUTHORIZED, NOT_LINKED, INVALID_VALUE, UNSUPPORTED_ACTION, TIMEOUT, UNKNOWN
 }
 
 @Serializable
@@ -146,10 +148,40 @@ data class DNDSettingResult(
     val stop: String? = null
 )
 
+@Serializable
+data class ScreenSettingBody(
+    val device_id: String,
+    val realtime_update: Boolean,
+    val visualizer_preset: String? = null,
+    val autobrightness: Boolean? = null,
+    val brightness: Float? = null,
+    val clock_type: String? = null
+)
+
+@Serializable
+data class ScreenSettingResponse(
+    val status: String,
+    val reason: String? = null,
+    val visualizer_preset: String? = null,
+    val autobrightness: Boolean? = null,
+    val brightness: Float? = null,
+    val clock_type: String? = null
+)
+
+data class ScreenSettingResult(
+    val ok: Boolean,
+    val error: SettingsErrors? = null,
+    val visualizer_preset: String? = null,
+    val autobrightness: Boolean? = null,
+    val brightness: Float? = null,
+    val clock_type: String? = null
+)
+
 const val FQ_BACKEND_URL = "https://testing.yndxfuck.ru"
 val JSON_MEDIA_TYPE = "application/json; charset=utf-8".toMediaType()
 
 object FuckedQuasarClient {
+    const val TAG = "FuckedQuasarClient"
     private var devices = listOf<Speaker>()
     private val json = Json { ignoreUnknownKeys = true }
 
@@ -443,6 +475,75 @@ object FuckedQuasarClient {
                 error = when (code) {
                     400 -> when (parsed.reason) {
                         "not_registered" -> SettingsErrors.NOT_LINKED
+                        else -> SettingsErrors.UNKNOWN
+                    }
+                    401 -> SettingsErrors.UNAUTHORIZED
+                    else -> SettingsErrors.UNKNOWN
+                }
+            )
+        }
+    }
+    fun getScreenSettings(deviceId: String): ScreenSettingResult {
+        val res = Session.get("$FQ_BACKEND_URL/get_screen_settings?device_id=$deviceId")
+        if (res.errorId == Errors.TIMEOUT) {
+            return ScreenSettingResult(false, error = SettingsErrors.TIMEOUT)
+        }
+        val code = res.response!!.code
+        val parsed: ScreenSettingResponse? = try {
+            json.decodeFromString<ScreenSettingResponse>(res.response.body.string())
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to decode JSON!\n${e.message}")
+            null
+        }
+        return if (code == 200 && parsed != null) {
+            ScreenSettingResult(
+                true,
+                visualizer_preset = parsed.visualizer_preset,
+                autobrightness = parsed.autobrightness,
+                brightness = parsed.brightness,
+                clock_type = parsed.clock_type
+            )
+        } else {
+            ScreenSettingResult(
+                ok = false,
+                error = when (code) {
+                    400 -> when (parsed?.reason) {
+                        "not_registered" -> SettingsErrors.NOT_LINKED
+                        "unsupported_action" -> SettingsErrors.UNSUPPORTED_ACTION
+                        else -> SettingsErrors.UNKNOWN
+                    }
+                    401 -> SettingsErrors.UNAUTHORIZED
+                    else -> SettingsErrors.UNKNOWN
+                }
+            )
+        }
+    }
+    fun setVisualizerPreset(deviceId: String, name: String): ScreenSettingResult {
+        val body = json.encodeToString(ScreenSettingBody(
+            device_id = deviceId, realtime_update = true, visualizer_preset = name
+        ))
+        val res = Session.post(
+            "$FQ_BACKEND_URL/update_screen_settings", body.toRequestBody(JSON_MEDIA_TYPE)
+        )
+        if (res.errorId == Errors.TIMEOUT) {
+            return ScreenSettingResult(false, error = SettingsErrors.TIMEOUT)
+        }
+        val code = res.response!!.code
+        val parsed: ScreenSettingResponse? = try {
+            json.decodeFromString<ScreenSettingResponse>(res.response.body.string())
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to decode JSON!\n${e.message}")
+            null
+        }
+        return if (code == 200 && parsed != null) {
+            ScreenSettingResult(true)
+        } else {
+            ScreenSettingResult(
+                ok = false,
+                error = when (code) {
+                    400 -> when (parsed?.reason) {
+                        "not_registered" -> SettingsErrors.NOT_LINKED
+                        "unsupported_action" -> SettingsErrors.UNSUPPORTED_ACTION
                         else -> SettingsErrors.UNKNOWN
                     }
                     401 -> SettingsErrors.UNAUTHORIZED

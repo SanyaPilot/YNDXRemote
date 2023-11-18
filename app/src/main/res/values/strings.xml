@@ -119,4 +119,7 @@
     <string name="startTime">Время начала</string>
     <string name="stopTime">Время окончания</string>
     <string name="currentTime">Текущее время:</string>
+
+    <!-- Yandex.Station Max settings -->
+    <string name="visualizationLabel">Визуализация музыки</string>
 </resources>

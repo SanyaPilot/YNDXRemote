@@ -35,6 +35,7 @@ private const val PLAYER_NOTIFICATION_ID = 732
 
 const val DEVICE_ID = "com.sanyapilot.yandexstation_controller.deviceId"
 const val DEVICE_NAME = "com.sanyapilot.yandexstation_controller.deviceName"
+const val DEVICE_PLATFORM = "com.sanyapilot.yandexstation_controller.devicePlatform"
 
 class StationControlService : MediaBrowserServiceCompat() {
     companion object {
@@ -323,6 +324,7 @@ class StationControlService : MediaBrowserServiceCompat() {
     ): BrowserRoot {
         val curDeviceId = rootHints!!.getString(DEVICE_ID)
         val curDeviceName = rootHints.getString(DEVICE_NAME)
+        val curDevicePlatform = rootHints.getString(DEVICE_PLATFORM)
         if (curDeviceId != deviceId && curDeviceId != null) {
             if (deviceId != null) {
                 // Switch the device
@@ -351,8 +353,9 @@ class StationControlService : MediaBrowserServiceCompat() {
 
             // Start MediaSession and go foreground
             val sessionActivityIntent = Intent(this, DeviceActivity::class.java).apply {
-                putExtra("deviceId", curDeviceId)
-                putExtra("deviceName", curDeviceName)
+                putExtra(DEVICE_ID, curDeviceId)
+                putExtra(DEVICE_NAME, curDeviceName)
+                putExtra(DEVICE_PLATFORM, curDevicePlatform)
             }
             val sessionActivityPendingIntent = PendingIntent.getActivity(
                 this, 0, sessionActivityIntent, PendingIntent.FLAG_IMMUTABLE

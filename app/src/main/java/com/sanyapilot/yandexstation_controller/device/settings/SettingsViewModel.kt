@@ -7,6 +7,7 @@ import androidx.compose.runtime.MutableFloatState
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import com.sanyapilot.yandexstation_controller.R
 import com.sanyapilot.yandexstation_controller.api.FuckedQuasarClient
 import com.sanyapilot.yandexstation_controller.api.SettingsErrors
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -61,9 +62,24 @@ data class DNDTime(
     val minute: Int
 )
 
+data class VisPreset(
+    val id: String,
+    val drawableId: Int
+)
+
+val VIS_PRESETS = listOf(
+    VisPreset("pads", R.drawable.round_graphic_eq_24),
+    VisPreset("barsBottom", R.drawable.round_graphic_eq_24),
+    VisPreset("barsCenter", R.drawable.round_graphic_eq_24),
+    VisPreset("bricksSmall", R.drawable.round_graphic_eq_24),
+    VisPreset("flame", R.drawable.round_graphic_eq_24),
+    VisPreset("waveCenter", R.drawable.round_graphic_eq_24)
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 class SettingsViewModel(
     private val deviceId: String,
+    private val devicePlatform: String,
     private val mediaController: MediaControllerCompat?
 ) : ViewModel() {
     private val _jingleEnabled = MutableStateFlow(false)
@@ -77,6 +93,7 @@ class SettingsViewModel(
     private val _dndEnabled = MutableStateFlow(false)
     private val _dndStartValue = MutableStateFlow(DNDTime(0, 0))
     private val _dndStopValue = MutableStateFlow(DNDTime(0, 0))
+    private val _visPresetName = MutableStateFlow("wave")
 
     val jingleEnabled: StateFlow<Boolean>
         get() = _jingleEnabled
@@ -98,6 +115,8 @@ class SettingsViewModel(
         get() = _dndStartValue
     val dndStopValue: StateFlow<DNDTime>
         get() = _dndStopValue
+    val visPresetName: StateFlow<String>
+        get() = _visPresetName
 
     init {
         // For preview
@@ -142,6 +161,16 @@ class SettingsViewModel(
             val stop = dndRes.stop!!.split(':')
             _dndStartValue.value = DNDTime(start[0].toInt(), start[1].toInt())
             _dndStopValue.value = DNDTime(stop[0].toInt(), stop[1].toInt())
+
+            // Yandex.Station Max specific
+            if (devicePlatform == "yandexstation_2") {
+                val screenRes = FuckedQuasarClient.getScreenSettings(deviceId)
+                if (!screenRes.ok) {
+                    _netStatus.value = NetStatus(false, screenRes.error)
+                    return@thread
+                }
+                _visPresetName.value = screenRes.visualizer_preset!!
+            }
         }
     }
 
@@ -270,14 +299,29 @@ class SettingsViewModel(
             }
         }
     }
+
+    fun setVisPreset(name: String) {
+        thread {
+            val res = FuckedQuasarClient.setVisualizerPreset(
+                deviceId = deviceId,
+                name = name
+            )
+            if (res.ok) {
+                _visPresetName.value = name
+            } else {
+                _netStatus.value = NetStatus(false, res.error)
+            }
+        }
+    }
 }
 
 class SettingsViewModelFactory(
     private val deviceId: String,
+    private val devicePlatform: String,
     private val mediaController: MediaControllerCompat?
 ) : ViewModelProvider.Factory {
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        return SettingsViewModel(deviceId, mediaController) as T
+        return SettingsViewModel(deviceId, devicePlatform, mediaController) as T
     }
 }

@@ -14,10 +14,12 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenuItem
@@ -28,6 +30,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -72,6 +75,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sanyapilot.yandexstation_controller.R
 import com.sanyapilot.yandexstation_controller.api.SettingsErrors
 import com.sanyapilot.yandexstation_controller.ui.theme.AppTheme
+import kotlin.math.min
 import kotlin.math.roundToInt
 
 class SettingsFragment : Fragment() {
@@ -83,6 +87,7 @@ class SettingsFragment : Fragment() {
             this,
             SettingsViewModelFactory(
                 requireArguments().getString("deviceId")!!,
+                requireArguments().getString("devicePlatform")!!,
                 MediaControllerCompat.getMediaController(requireActivity())
             )
         )[SettingsViewModel::class.java]
@@ -98,17 +103,20 @@ class SettingsFragment : Fragment() {
             setContent {
                 AppTheme {
                     Surface {
-                        SettingsLayout(viewModel)
+                        SettingsLayout(viewModel, requireArguments().getString("devicePlatform")!!)
                     }
                 }
             }
         }
     }
     companion object {
-        fun instance(deviceId: String): SettingsFragment {
+        fun instance(deviceId: String, devicePlatform: String): SettingsFragment {
             val fragment = SettingsFragment()
             val args = Bundle()
-            args.putString("deviceId", deviceId)
+            args.apply {
+                putString("deviceId", deviceId)
+                putString("devicePlatform", devicePlatform)
+            }
             fragment.arguments = args
             return fragment
         }
@@ -117,7 +125,10 @@ class SettingsFragment : Fragment() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsLayout(viewModel: SettingsViewModel = viewModel()) {
+fun SettingsLayout(
+    viewModel: SettingsViewModel = viewModel(),
+    platform: String = "yandexstation_2"
+) {
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
 
@@ -400,6 +411,69 @@ fun SettingsLayout(viewModel: SettingsViewModel = viewModel()) {
                 }
             }
 
+            // Yandex.Station Max specific
+            if (platform == "yandexstation_2") {
+                val visOpened = rememberSaveable { mutableStateOf(false) }
+                ExpandingListItem(
+                    expanded = visOpened,
+                    headlineContent = { Text(text = stringResource(id = R.string.visualizationLabel)) },
+                    leadingContent = {
+                        Icon(
+                            painter = painterResource(id = R.drawable.round_graphic_eq_24),
+                            contentDescription = null
+                        )
+                    }
+                )
+
+                AnimatedVisibility(
+                    visible = visOpened.value
+                ) {
+                    val visPresetName by viewModel.visPresetName.collectAsState()
+                    Column(
+                        modifier = Modifier.padding(8.dp)
+                    ) {
+                        var i = 0
+                        while (i < VIS_PRESETS.size) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 4.dp),
+                                horizontalArrangement = Arrangement.SpaceEvenly
+                            ) {
+                                val endIdx = min(i + 2, VIS_PRESETS.size - 1)
+                                VIS_PRESETS.slice(i..endIdx).forEach {
+                                    val enabled = it.id == visPresetName
+                                    val colors =
+                                        if (enabled) ButtonDefaults.filledTonalButtonColors()
+                                        else ButtonDefaults.outlinedButtonColors()
+                                    val elevation =
+                                        if (enabled) ButtonDefaults.filledTonalButtonElevation()
+                                        else null
+                                    OutlinedButton(
+                                        onClick = { viewModel.setVisPreset(it.id) },
+                                        shape = RoundedCornerShape(24.dp),
+                                        colors = colors,
+                                        elevation = elevation
+                                    ) {
+                                        Column(
+                                            horizontalAlignment = Alignment.CenterHorizontally
+                                        ) {
+                                            Icon(
+                                                painter = painterResource(id = it.drawableId),
+                                                contentDescription = null,
+                                                modifier = Modifier.size(60.dp)
+                                            )
+                                            Text(text = it.id)
+                                        }
+                                    }
+                                }
+                                i += 3
+                            }
+                        }
+                    }
+                }
+            }
+
             ListItem(
                 leadingContent = { Icon(painter = painterResource(id = R.drawable.round_drive_file_rename_outline_24), contentDescription = null) },
                 headlineContent = { Text(text = stringResource(id = R.string.renameLabel)) },
@@ -552,7 +626,9 @@ fun TimePickerDialog(
 fun SettingsPreview() {
     AppTheme {
         Surface {
-            SettingsLayout(viewModel(factory = SettingsViewModelFactory("deaddeaddeaddeaddead", null)))
+            SettingsLayout(viewModel(
+                factory = SettingsViewModelFactory("deaddeaddeaddeaddead", "yandexstation_2", null)
+            ))
         }
     }
 }

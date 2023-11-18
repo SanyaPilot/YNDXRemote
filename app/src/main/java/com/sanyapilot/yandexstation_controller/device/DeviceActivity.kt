@@ -24,6 +24,7 @@ import com.sanyapilot.yandexstation_controller.service.DEVICE_ID
 import com.sanyapilot.yandexstation_controller.service.DEVICE_NAME
 import com.sanyapilot.yandexstation_controller.R
 import com.sanyapilot.yandexstation_controller.device.settings.SettingsFragment
+import com.sanyapilot.yandexstation_controller.service.DEVICE_PLATFORM
 import com.sanyapilot.yandexstation_controller.service.StationControlService
 import kotlin.concurrent.thread
 
@@ -35,6 +36,7 @@ class DeviceActivity : AppCompatActivity() {
     private val viewModel: DeviceViewModel by viewModels()
     private lateinit var mediaBrowser: MediaBrowserCompat
     private lateinit var deviceId: String
+    private lateinit var devicePlatform: String
 
     private val connectionCallbacks = object : MediaBrowserCompat.ConnectionCallback() {
         override fun onConnected() {
@@ -130,8 +132,9 @@ class DeviceActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_device)
 
-        deviceId = intent.getStringExtra("deviceId")!!
-        val deviceName = intent.getStringExtra("deviceName")
+        deviceId = intent.getStringExtra(DEVICE_ID)!!
+        val deviceName = intent.getStringExtra(DEVICE_NAME)
+        devicePlatform = intent.getStringExtra(DEVICE_PLATFORM)!!
 
         val appBar = findViewById<MaterialToolbar>(R.id.deviceAppBar)
         appBar?.let {
@@ -149,6 +152,7 @@ class DeviceActivity : AppCompatActivity() {
         hints.apply {
             putString(DEVICE_ID, deviceId)
             putString(DEVICE_NAME, deviceName)
+            putString(DEVICE_PLATFORM, devicePlatform)
         }
         mediaBrowser = MediaBrowserCompat(
             this,
@@ -203,7 +207,7 @@ class DeviceActivity : AppCompatActivity() {
                 R.id.settingsPage -> {
                     supportFragmentManager.commit {
                         setReorderingAllowed(true)
-                        replace(R.id.controlsContainer, SettingsFragment.instance(deviceId))
+                        replace(R.id.controlsContainer, SettingsFragment.instance(deviceId, devicePlatform))
                     }
                 }
             }
@@ -246,7 +250,7 @@ class DeviceActivity : AppCompatActivity() {
                     R.id.settingsButton -> {
                         supportFragmentManager.commit {
                             setReorderingAllowed(true)
-                            replace(R.id.controlsContainer, SettingsFragment.instance(deviceId))
+                            replace(R.id.controlsContainer, SettingsFragment.instance(deviceId, devicePlatform))
                         }
                     }
                 }

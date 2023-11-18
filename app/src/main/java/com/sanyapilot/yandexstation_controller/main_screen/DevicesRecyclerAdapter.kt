@@ -19,6 +19,9 @@ import com.sanyapilot.yandexstation_controller.R
 import com.sanyapilot.yandexstation_controller.api.Speaker
 import com.sanyapilot.yandexstation_controller.api.mDNSWorker
 import com.sanyapilot.yandexstation_controller.misc.stationIcons
+import com.sanyapilot.yandexstation_controller.service.DEVICE_ID
+import com.sanyapilot.yandexstation_controller.service.DEVICE_NAME
+import com.sanyapilot.yandexstation_controller.service.DEVICE_PLATFORM
 
 class DevicesRecyclerAdapter(
     private val activity: Activity,
@@ -51,12 +54,13 @@ class DevicesRecyclerAdapter(
                 }
             }
         }
-        fun goOnline(udid: String, name: String) {
+        fun goOnline(udid: String, name: String, platform: String) {
             offlineImage.visibility = View.INVISIBLE
             card.setOnClickListener {
                 val intent = Intent(it.context, DeviceActivity::class.java).apply {
-                    putExtra("deviceId", udid)
-                    putExtra("deviceName", name)
+                    putExtra(DEVICE_ID, udid)
+                    putExtra(DEVICE_NAME, name)
+                    putExtra(DEVICE_PLATFORM, platform)
                 }
                 it.context.startActivity(intent)
             }
@@ -70,16 +74,16 @@ class DevicesRecyclerAdapter(
     }
     override fun onCreateViewHolder(viewGroup: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         // Create a new view, which defines the UI of the list item
-        if (viewType == 0) {
+        return if (viewType == 0) {
             val view = LayoutInflater.from(viewGroup.context)
                 .inflate(R.layout.device_element, viewGroup, false)
 
-            return ViewHolder(view)
+            ViewHolder(view)
         } else {
             val view = LayoutInflater.from(viewGroup.context)
                 .inflate(R.layout.device_element_title, viewGroup, false)
 
-            return TitleHolder(view)
+            TitleHolder(view)
         }
     }
     override fun onBindViewHolder(viewHolder: RecyclerView.ViewHolder, position: Int) {
@@ -96,7 +100,7 @@ class DevicesRecyclerAdapter(
 
                 // Device became online
                 mDNSWorker.addListener(curDevice.id) {
-                    activity.runOnUiThread { curViewHolder.goOnline(curDevice.id, curDevice.name) }
+                    activity.runOnUiThread { curViewHolder.goOnline(curDevice.id, curDevice.name, curDevice.platform) }
                 }
                 // Device is offline again
                 mDNSWorker.addOnLostListener(curDevice.id) {
@@ -104,7 +108,7 @@ class DevicesRecyclerAdapter(
                 }
 
                 if (mDNSWorker.deviceExists(curDevice.id))
-                    curViewHolder.goOnline(curDevice.id, curDevice.name)
+                    curViewHolder.goOnline(curDevice.id, curDevice.name, curDevice.platform)
                 else
                     curViewHolder.goOffline()
 
