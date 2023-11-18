@@ -316,7 +316,7 @@ fun SettingsLayout(viewModel: SettingsViewModel = viewModel()) {
 
             AnimatedVisibility(
                 visible = eqOpened.value,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.align(Alignment.CenterHorizontally)
             ) {
                 val eqValues by viewModel.eqValues.collectAsState()
                 val curPresetName by viewModel.presetName.collectAsState()
@@ -330,7 +330,7 @@ fun SettingsLayout(viewModel: SettingsViewModel = viewModel()) {
 
                 ) {
                     Column(
-                        modifier = Modifier.padding(4.dp)
+                        modifier = Modifier.padding(8.dp)
                     ) {
                         ExposedDropdownMenuBox(
                             modifier = Modifier.padding(8.dp),
@@ -368,12 +368,12 @@ fun SettingsLayout(viewModel: SettingsViewModel = viewModel()) {
                             }
                         }
                         Row(
-                            horizontalArrangement = Arrangement.Center
+                            horizontalArrangement = Arrangement.SpaceEvenly
                         ) {
                             eqValues.forEach { item ->
                                 Column(
-                                    modifier = Modifier.padding(8.dp),
-                                    horizontalAlignment = Alignment.CenterHorizontally
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    modifier = Modifier.padding(4.dp)
                                 ) {
                                     Text(text = ((item.state.floatValue * 10).roundToInt() / 10f).toString())
                                     VerticalSlider(
