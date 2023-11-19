@@ -131,7 +131,7 @@ class SettingsViewModel(
                 _netStatus.value = NetStatus(false, jingleRes.error)
                 return@thread
             }
-            _jingleEnabled.value = jingleRes.enabled!!
+            _jingleEnabled.value = jingleRes.data!!.enabled!!
 
             // Screensavers
             val ssRes = FuckedQuasarClient.getSSType(deviceId)
@@ -139,7 +139,7 @@ class SettingsViewModel(
                 _netStatus.value = NetStatus(false, ssRes.error)
                 return@thread
             }
-            _ssImages.value = ssRes.type == "image"
+            _ssImages.value = ssRes.data!!.type == "image"
 
             // EQ
             val eqRes = FuckedQuasarClient.getEQData(deviceId)
@@ -147,7 +147,7 @@ class SettingsViewModel(
                 _netStatus.value = NetStatus(false, eqRes.error)
                 return@thread
             }
-            _rawEQValues = (eqRes.data!! as MutableList<Float>)
+            _rawEQValues = (eqRes.data!!.data as MutableList<Float>)
             updateEQValues(_rawEQValues)
 
             // DND
@@ -156,9 +156,9 @@ class SettingsViewModel(
                 _netStatus.value = NetStatus(false, dndRes.error)
                 return@thread
             }
-            _dndEnabled.value = dndRes.enabled!!
-            val start = dndRes.start!!.split(':')
-            val stop = dndRes.stop!!.split(':')
+            _dndEnabled.value = dndRes.data!!.enabled!!
+            val start = dndRes.data.start!!.split(':')
+            val stop = dndRes.data.stop!!.split(':')
             _dndStartValue.value = DNDTime(start[0].toInt(), start[1].toInt())
             _dndStopValue.value = DNDTime(stop[0].toInt(), stop[1].toInt())
 
@@ -169,7 +169,7 @@ class SettingsViewModel(
                     _netStatus.value = NetStatus(false, screenRes.error)
                     return@thread
                 }
-                _visPresetName.value = screenRes.visualizer_preset!!
+                _visPresetName.value = screenRes.data!!.visualizer_preset!!
             }
         }
     }
