@@ -100,6 +100,7 @@ class SettingsViewModel(
     private val _dndStartValue = MutableStateFlow(DNDTime(0, 0))
     private val _dndStopValue = MutableStateFlow(DNDTime(0, 0))
     private val _visPresetName = MutableStateFlow("wave")
+    private val _visRandomEnabled = MutableStateFlow(false)
     private val _clockType = MutableStateFlow("small")
 
     val jingleEnabled: StateFlow<Boolean>
@@ -124,6 +125,8 @@ class SettingsViewModel(
         get() = _dndStopValue
     val visPresetName: StateFlow<String>
         get() = _visPresetName
+    val visRandomEnabled: StateFlow<Boolean>
+        get() = _visRandomEnabled
     val clockType: StateFlow<String>
         get() = _clockType
 
@@ -179,6 +182,7 @@ class SettingsViewModel(
                     return@thread
                 }
                 _visPresetName.value = screenRes.data!!.visualizer_preset!!
+                _visRandomEnabled.value = _visPresetName.value == "random"
                 _clockType.value = screenRes.data.clock_type!!
             }
         }
@@ -318,6 +322,19 @@ class SettingsViewModel(
             )
             if (res.ok) {
                 _visPresetName.value = name
+            } else {
+                _netStatus.value = NetStatus(false, res.error)
+            }
+        }
+    }
+    fun toggleVisRandom() {
+        thread {
+            val res = FuckedQuasarClient.setVisualizerPreset(
+                deviceId = deviceId,
+                name = if (_visRandomEnabled.value) _visPresetName.value else "random"
+            )
+            if (res.ok) {
+                _visRandomEnabled.value = !_visRandomEnabled.value
             } else {
                 _netStatus.value = NetStatus(false, res.error)
             }

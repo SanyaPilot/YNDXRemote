@@ -122,5 +122,6 @@
 
     <!-- Yandex.Station Max settings -->
     <string name="visualizationLabel">Визуализация музыки</string>
+    <string name="visualizationRandom">Случайный режим</string>
     <string name="clockTypeLabel">Вид часов на экране</string>
 </resources>

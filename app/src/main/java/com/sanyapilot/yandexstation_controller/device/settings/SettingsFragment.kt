@@ -429,21 +429,27 @@ fun SettingsLayout(
                     visible = visOpened.value
                 ) {
                     val visPresetName by viewModel.visPresetName.collectAsState()
-                    Column(
-                        modifier = Modifier.padding(8.dp)
-                    ) {
+                    val visRandomEnabled by viewModel.visRandomEnabled.collectAsState()
+                    Column {
+                        ListItem(
+                            leadingContent = { Icon(painter = painterResource(id = R.drawable.round_shuffle_24), contentDescription = null) },
+                            headlineContent = { Text(stringResource(R.string.visualizationRandom)) },
+                            trailingContent = { Switch(checked = visRandomEnabled, onCheckedChange = { viewModel.toggleVisRandom() }) },
+                            modifier = Modifier.clickable { viewModel.toggleVisRandom() }
+                        )
                         var i = 0
                         while (i < VIS_PRESETS.size) {
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(vertical = 4.dp),
+                                    .padding(vertical = 4.dp, horizontal = 8.dp),
                                 horizontalArrangement = Arrangement.SpaceEvenly
                             ) {
                                 val endIdx = min(i + 2, VIS_PRESETS.size - 1)
                                 VIS_PRESETS.slice(i..endIdx).forEach {
                                     BigSelectableButton(
-                                        enabled = it.id == visPresetName,
+                                        selected = it.id == visPresetName,
+                                        enabled = !visRandomEnabled,
                                         onClick = { viewModel.setVisPreset(it.id) },
                                         painter = painterResource(id = it.drawableId)
                                     ) { Text(text = it.id) }
@@ -476,7 +482,7 @@ fun SettingsLayout(
                     ) {
                         CLOCK_TYPES.forEach {
                             BigSelectableButton(
-                                enabled = it.id == selectedClockType,
+                                selected = it.id == selectedClockType,
                                 onClick = { viewModel.setClockType(it.id) },
                                 painter = painterResource(id = it.drawableId)
                             ) { Text(text = it.id) }
@@ -634,21 +640,23 @@ fun TimePickerDialog(
 
 @Composable
 fun BigSelectableButton(
-    enabled: Boolean = false,
+    selected: Boolean = false,
+    enabled: Boolean = true,
     onClick: () -> Unit,
     painter: Painter? = null,
     content: @Composable (() -> Unit)? = null
 ) {
     val colors =
-        if (enabled) ButtonDefaults.filledTonalButtonColors()
+        if (selected) ButtonDefaults.filledTonalButtonColors()
         else ButtonDefaults.outlinedButtonColors()
     val elevation =
-        if (enabled) ButtonDefaults.filledTonalButtonElevation()
+        if (selected) ButtonDefaults.filledTonalButtonElevation()
         else null
     OutlinedButton(
         onClick = onClick,
         shape = RoundedCornerShape(24.dp),
         colors = colors,
+        enabled = enabled,
         elevation = elevation
     ) {
         Column(
