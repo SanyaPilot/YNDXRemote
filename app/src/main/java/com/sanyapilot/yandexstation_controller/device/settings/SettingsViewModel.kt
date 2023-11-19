@@ -62,18 +62,24 @@ data class DNDTime(
     val minute: Int
 )
 
-data class VisPreset(
+data class Preset(
     val id: String,
     val drawableId: Int
 )
 
 val VIS_PRESETS = listOf(
-    VisPreset("pads", R.drawable.round_graphic_eq_24),
-    VisPreset("barsBottom", R.drawable.round_graphic_eq_24),
-    VisPreset("barsCenter", R.drawable.round_graphic_eq_24),
-    VisPreset("bricksSmall", R.drawable.round_graphic_eq_24),
-    VisPreset("flame", R.drawable.round_graphic_eq_24),
-    VisPreset("waveCenter", R.drawable.round_graphic_eq_24)
+    Preset("pads", R.drawable.round_graphic_eq_24),
+    Preset("barsBottom", R.drawable.round_graphic_eq_24),
+    Preset("barsCenter", R.drawable.round_graphic_eq_24),
+    Preset("bricksSmall", R.drawable.round_graphic_eq_24),
+    Preset("flame", R.drawable.round_graphic_eq_24),
+    Preset("waveCenter", R.drawable.round_graphic_eq_24)
+)
+
+val CLOCK_TYPES = listOf(
+    Preset("small", R.drawable.round_access_time_24),
+    Preset("middle", R.drawable.round_access_time_24),
+    Preset("large", R.drawable.round_access_time_24),
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -94,6 +100,7 @@ class SettingsViewModel(
     private val _dndStartValue = MutableStateFlow(DNDTime(0, 0))
     private val _dndStopValue = MutableStateFlow(DNDTime(0, 0))
     private val _visPresetName = MutableStateFlow("wave")
+    private val _clockType = MutableStateFlow("small")
 
     val jingleEnabled: StateFlow<Boolean>
         get() = _jingleEnabled
@@ -117,6 +124,8 @@ class SettingsViewModel(
         get() = _dndStopValue
     val visPresetName: StateFlow<String>
         get() = _visPresetName
+    val clockType: StateFlow<String>
+        get() = _clockType
 
     init {
         // For preview
@@ -170,6 +179,7 @@ class SettingsViewModel(
                     return@thread
                 }
                 _visPresetName.value = screenRes.data!!.visualizer_preset!!
+                _clockType.value = screenRes.data.clock_type!!
             }
         }
     }
@@ -308,6 +318,19 @@ class SettingsViewModel(
             )
             if (res.ok) {
                 _visPresetName.value = name
+            } else {
+                _netStatus.value = NetStatus(false, res.error)
+            }
+        }
+    }
+    fun setClockType(type: String) {
+        thread {
+            val res = FuckedQuasarClient.setClockType(
+                deviceId = deviceId,
+                type = type
+            )
+            if (res.ok) {
+                _clockType.value = type
             } else {
                 _netStatus.value = NetStatus(false, res.error)
             }

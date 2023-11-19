@@ -154,10 +154,10 @@ object FuckedQuasarClient {
 
     fun fetchDevices(): RequestResponse {
         val result = Session.get("$FQ_BACKEND_URL/glagol/device_list")
-        if (!result.ok) {
+        if (!result.ok || result.response == null) {
             return result
         }
-        val body = result.response!!.body.string()
+        val body = result.response.body.string()
         val parsed = json.decodeFromString<DevicesResponse>(body)
         result.response.close()
         devices = parsed.devices
@@ -208,6 +208,7 @@ object FuckedQuasarClient {
             Log.e(TAG, "Failed to decode JSON!\n${e.message}")
             null
         }
+        res.response.close()
         return if (code == 200 && parsed != null) {
             ReqResult(ok = true, data = parsed)
         } else {
@@ -218,10 +219,16 @@ object FuckedQuasarClient {
                         "not_registered" -> SettingsErrors.NOT_LINKED
                         "invalid_name" -> SettingsErrors.INVALID_VALUE
                         "unsupported_action" -> SettingsErrors.UNSUPPORTED_ACTION
-                        else -> SettingsErrors.UNKNOWN
+                        else -> {
+                            Log.e(TAG,"Unexpected server response!\nCode: $code\nResponse: $parsed")
+                            SettingsErrors.UNKNOWN
+                        }
                     }
                     401 -> SettingsErrors.UNAUTHORIZED
-                    else -> SettingsErrors.UNKNOWN
+                    else -> {
+                        Log.e(TAG,"Unexpected server response!\nCode: $code\nResponse: $parsed")
+                        SettingsErrors.UNKNOWN
+                    }
                 }
             )
         }
@@ -361,6 +368,12 @@ object FuckedQuasarClient {
     fun setVisualizerPreset(deviceId: String, name: String): ReqResult<GenericResponse> {
         val body = json.encodeToString(ScreenSettingBody(
             device_id = deviceId, realtime_update = true, visualizer_preset = name
+        )).toRequestBody(JSON_MEDIA_TYPE)
+        return doPOST(url = "/update_screen_settings", body = body)
+    }
+    fun setClockType(deviceId: String, type: String): ReqResult<GenericResponse> {
+        val body = json.encodeToString(ScreenSettingBody(
+            device_id = deviceId, realtime_update = true, clock_type = type
         )).toRequestBody(JSON_MEDIA_TYPE)
         return doPOST(url = "/update_screen_settings", body = body)
     }

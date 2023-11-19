@@ -58,6 +58,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
@@ -324,7 +325,6 @@ fun SettingsLayout(
                 headlineContent = { Text(text = stringResource(id = R.string.eqLabel)) },
                 leadingContent = { Icon(painter = painterResource(id = R.drawable.round_equalizer_24), contentDescription = null) }
             )
-
             AnimatedVisibility(
                 visible = eqOpened.value,
                 modifier = Modifier.align(Alignment.CenterHorizontally)
@@ -413,6 +413,7 @@ fun SettingsLayout(
 
             // Yandex.Station Max specific
             if (platform == "yandexstation_2") {
+                // Visualizer
                 val visOpened = rememberSaveable { mutableStateOf(false) }
                 ExpandingListItem(
                     expanded = visOpened,
@@ -424,7 +425,6 @@ fun SettingsLayout(
                         )
                     }
                 )
-
                 AnimatedVisibility(
                     visible = visOpened.value
                 ) {
@@ -442,33 +442,44 @@ fun SettingsLayout(
                             ) {
                                 val endIdx = min(i + 2, VIS_PRESETS.size - 1)
                                 VIS_PRESETS.slice(i..endIdx).forEach {
-                                    val enabled = it.id == visPresetName
-                                    val colors =
-                                        if (enabled) ButtonDefaults.filledTonalButtonColors()
-                                        else ButtonDefaults.outlinedButtonColors()
-                                    val elevation =
-                                        if (enabled) ButtonDefaults.filledTonalButtonElevation()
-                                        else null
-                                    OutlinedButton(
+                                    BigSelectableButton(
+                                        enabled = it.id == visPresetName,
                                         onClick = { viewModel.setVisPreset(it.id) },
-                                        shape = RoundedCornerShape(24.dp),
-                                        colors = colors,
-                                        elevation = elevation
-                                    ) {
-                                        Column(
-                                            horizontalAlignment = Alignment.CenterHorizontally
-                                        ) {
-                                            Icon(
-                                                painter = painterResource(id = it.drawableId),
-                                                contentDescription = null,
-                                                modifier = Modifier.size(60.dp)
-                                            )
-                                            Text(text = it.id)
-                                        }
-                                    }
+                                        painter = painterResource(id = it.drawableId)
+                                    ) { Text(text = it.id) }
                                 }
                                 i += 3
                             }
+                        }
+                    }
+                }
+
+                // Clock type
+                val clockOpened = rememberSaveable { mutableStateOf(false) }
+                ExpandingListItem(
+                    expanded = clockOpened,
+                    headlineContent = { Text(text = stringResource(id = R.string.clockTypeLabel)) },
+                    leadingContent = {
+                        Icon(
+                            painter = painterResource(id = R.drawable.round_access_time_24),
+                            contentDescription = null
+                        )
+                    }
+                )
+                AnimatedVisibility(visible = clockOpened.value) {
+                    val selectedClockType by viewModel.clockType.collectAsState()
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp),
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        CLOCK_TYPES.forEach {
+                            BigSelectableButton(
+                                enabled = it.id == selectedClockType,
+                                onClick = { viewModel.setClockType(it.id) },
+                                painter = painterResource(id = it.drawableId)
+                            ) { Text(text = it.id) }
                         }
                     }
                 }
@@ -616,6 +627,42 @@ fun TimePickerDialog(
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun BigSelectableButton(
+    enabled: Boolean = false,
+    onClick: () -> Unit,
+    painter: Painter? = null,
+    content: @Composable (() -> Unit)? = null
+) {
+    val colors =
+        if (enabled) ButtonDefaults.filledTonalButtonColors()
+        else ButtonDefaults.outlinedButtonColors()
+    val elevation =
+        if (enabled) ButtonDefaults.filledTonalButtonElevation()
+        else null
+    OutlinedButton(
+        onClick = onClick,
+        shape = RoundedCornerShape(24.dp),
+        colors = colors,
+        elevation = elevation
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            if (painter != null) {
+                Icon(
+                    painter = painter,
+                    contentDescription = null,
+                    modifier = Modifier.size(60.dp)
+                )
+            }
+            if (content != null) {
+                content()
             }
         }
     }
