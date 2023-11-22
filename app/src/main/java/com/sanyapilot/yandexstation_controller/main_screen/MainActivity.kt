@@ -73,19 +73,6 @@ class MainActivity : AppCompatActivity() {
         container = findViewById(R.id.mainFragmentContainer)
         title = findViewById(R.id.mainAppBarTitle)
 
-        val netCaps = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
-        if (wifiManager.isWifiEnabled && netCaps != null && netCaps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
-            initUI()
-        } else {
-            supportFragmentManager.commit {
-                setReorderingAllowed(true)
-                replace<NoWiFiFragment>(R.id.mainFragmentContainer)
-            }
-        }
-    }
-
-    private fun initUI() {
-        Log.d(TAG, "Init UI")
         // Check if we need auth
         if (!sharedPrefs.contains("access-token")) {
             startActivity(Intent(this, LoginActivity::class.java))
@@ -156,35 +143,6 @@ class MainActivity : AppCompatActivity() {
         if (!viewModel.isLoggedIn()) doNetwork()
     }
 
-    fun retryInitUI(view: View) {
-        Log.d(TAG, "Retrying UI init!")
-        val netCaps = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
-        if (wifiManager.isWifiEnabled && netCaps != null && netCaps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
-            // Fade out fragments container
-            val fadeOutContainer = AlphaAnimation(1f, 0f)
-            fadeOutContainer.interpolator = AccelerateInterpolator()
-            fadeOutContainer.duration = 200
-            fadeOutContainer.setAnimationListener(object : Animation.AnimationListener {
-                override fun onAnimationStart(p0: Animation?) {
-                }
-
-                override fun onAnimationEnd(p0: Animation?) {
-                    container.visibility = View.INVISIBLE
-                    initUI()
-                }
-
-                override fun onAnimationRepeat(p0: Animation?) {
-                }
-            })
-            container.startAnimation(fadeOutContainer)
-        } else {
-            Snackbar.make(
-                findViewById(R.id.mainLayout), getString(R.string.noWiFi),
-                Snackbar.LENGTH_SHORT
-            ).show()
-        }
-    }
-
     override fun onRestart() {
         // Handle cookie update after returning from LoginActivity
         super.onRestart()
@@ -198,7 +156,7 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         if (mDNSWorker.isReady())
-            thread(start = true) { mDNSWorker.start() }
+            thread(start = true) { startNSD() }
     }
     fun fetchDevices() {
         val result = FuckedQuasarClient.fetchDevices()
@@ -295,6 +253,14 @@ class MainActivity : AppCompatActivity() {
                 loadingImage.startAnimation(fadeOutImage)
             }
             mDNSWorker.init(this)
+            startNSD()
+        }
+    }
+    private fun startNSD() {
+        // Start NSD only if WiFi enabled
+        val netCaps = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
+        if (wifiManager.isWifiEnabled && netCaps?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true) {
+            mDNSWorker.start()
         }
     }
     fun logOut(view: View) {

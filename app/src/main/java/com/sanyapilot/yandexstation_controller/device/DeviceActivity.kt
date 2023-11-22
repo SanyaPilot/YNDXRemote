@@ -1,9 +1,13 @@
 package com.sanyapilot.yandexstation_controller.device
 
 import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
 import android.media.AudioManager
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import android.net.wifi.WifiManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
@@ -46,6 +50,9 @@ class DeviceActivity : AppCompatActivity() {
     private lateinit var deviceId: String
     private lateinit var devicePlatform: String
     private lateinit var deviceName: String
+
+    private lateinit var wifiManager: WifiManager
+    private lateinit var connectivityManager: ConnectivityManager
 
     private val connectionCallbacks = object : MediaBrowserCompat.ConnectionCallback() {
         override fun onConnected() {
@@ -145,6 +152,9 @@ class DeviceActivity : AppCompatActivity() {
         deviceName = intent.getStringExtra(DEVICE_NAME)!!
         devicePlatform = intent.getStringExtra(DEVICE_PLATFORM)!!
 
+        wifiManager = getSystemService(Context.WIFI_SERVICE) as WifiManager
+        connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+
         val appBar = findViewById<MaterialToolbar>(R.id.deviceAppBar)
         appBar?.let {
             setSupportActionBar(appBar)
@@ -181,7 +191,10 @@ class DeviceActivity : AppCompatActivity() {
     private fun goOffline(listen: Boolean, showAnim: Boolean) {
         if (listen) {
             mDNSWorker.addListener(deviceId) { runOnUiThread { goOnline(true) } }
-            mDNSWorker.start()
+            val netCaps = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
+            if (wifiManager.isWifiEnabled && netCaps?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true) {
+                mDNSWorker.start()
+            }
         }
 
         viewModel.removeObservers(this)

@@ -366,7 +366,6 @@ object mDNSWorker {
 
     fun init(context: Context) {
         helper = StationSearcher(context)
-        helper.beginSearch()
     }
     fun stop() {
         helper.stopSearch()
