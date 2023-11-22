@@ -452,7 +452,7 @@ fun SettingsLayout(
                                         enabled = !visRandomEnabled,
                                         onClick = { viewModel.setVisPreset(it.id) },
                                         painter = painterResource(id = it.drawableId)
-                                    ) { Text(text = it.id) }
+                                    )
                                 }
                                 i += 3
                             }
@@ -485,7 +485,7 @@ fun SettingsLayout(
                                 selected = it.id == selectedClockType,
                                 onClick = { viewModel.setClockType(it.id) },
                                 painter = painterResource(id = it.drawableId)
-                            ) { Text(text = it.id) }
+                            )
                         }
                     }
                 }
@@ -666,7 +666,7 @@ fun BigSelectableButton(
                 Icon(
                     painter = painter,
                     contentDescription = null,
-                    modifier = Modifier.size(60.dp)
+                    modifier = Modifier.size(64.dp)
                 )
             }
             if (content != null) {

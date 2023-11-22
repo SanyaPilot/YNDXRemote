@@ -68,18 +68,18 @@ data class Preset(
 )
 
 val VIS_PRESETS = listOf(
-    Preset("pads", R.drawable.round_graphic_eq_24),
-    Preset("barsBottom", R.drawable.round_graphic_eq_24),
-    Preset("barsCenter", R.drawable.round_graphic_eq_24),
-    Preset("bricksSmall", R.drawable.round_graphic_eq_24),
-    Preset("flame", R.drawable.round_graphic_eq_24),
-    Preset("waveCenter", R.drawable.round_graphic_eq_24)
+    Preset("pads", R.drawable.vis_pads),
+    Preset("barsBottom", R.drawable.vis_bars_bottom),
+    Preset("barsCenter", R.drawable.vis_bars_center),
+    Preset("bricksSmall", R.drawable.vis_bricks),
+    Preset("flame", R.drawable.vis_wave_bottom),
+    Preset("waveCenter", R.drawable.vis_wave_center)
 )
 
 val CLOCK_TYPES = listOf(
-    Preset("small", R.drawable.round_access_time_24),
-    Preset("middle", R.drawable.round_access_time_24),
-    Preset("large", R.drawable.round_access_time_24),
+    Preset("small", R.drawable.clock_small),
+    Preset("middle", R.drawable.clock_middle),
+    Preset("large", R.drawable.clock_large),
 )
 
 @OptIn(ExperimentalMaterial3Api::class)

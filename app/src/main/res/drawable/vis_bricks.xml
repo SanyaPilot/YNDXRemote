@@ -1,0 +1,138 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="195dp"
+    android:height="130dp"
+    android:viewportWidth="195"
+    android:viewportHeight="130">
+  <path
+      android:pathData="M5,120L15,120A5,5 0,0 1,20 125L20,125A5,5 0,0 1,15 130L5,130A5,5 0,0 1,0 125L0,125A5,5 0,0 1,5 120z"
+      android:fillColor="#3D3D3D"/>
+  <path
+      android:pathData="M5,105L15,105A5,5 0,0 1,20 110L20,110A5,5 0,0 1,15 115L5,115A5,5 0,0 1,0 110L0,110A5,5 0,0 1,5 105z"
+      android:fillColor="#3D3D3D"/>
+  <path
+      android:pathData="M5,90L15,90A5,5 0,0 1,20 95L20,95A5,5 0,0 1,15 100L5,100A5,5 0,0 1,0 95L0,95A5,5 0,0 1,5 90z"
+      android:fillColor="#3D3D3D"/>
+  <path
+      android:pathData="M105,120L115,120A5,5 0,0 1,120 125L120,125A5,5 0,0 1,115 130L105,130A5,5 0,0 1,100 125L100,125A5,5 0,0 1,105 120z"
+      android:fillColor="#3D3D3D"/>
+  <path
+      android:pathData="M105,105L115,105A5,5 0,0 1,120 110L120,110A5,5 0,0 1,115 115L105,115A5,5 0,0 1,100 110L100,110A5,5 0,0 1,105 105z"
+      android:fillColor="#3D3D3D"/>
+  <path
+      android:pathData="M105,90L115,90A5,5 0,0 1,120 95L120,95A5,5 0,0 1,115 100L105,100A5,5 0,0 1,100 95L100,95A5,5 0,0 1,105 90z"
+      android:fillColor="#3D3D3D"/>
+  <path
+      android:pathData="M30,120L40,120A5,5 0,0 1,45 125L45,125A5,5 0,0 1,40 130L30,130A5,5 0,0 1,25 125L25,125A5,5 0,0 1,30 120z"
+      android:fillColor="#3D3D3D"/>
+  <path
+      android:pathData="M30,105L40,105A5,5 0,0 1,45 110L45,110A5,5 0,0 1,40 115L30,115A5,5 0,0 1,25 110L25,110A5,5 0,0 1,30 105z"
+      android:fillColor="#3D3D3D"/>
+  <path
+      android:pathData="M30,90L40,90A5,5 0,0 1,45 95L45,95A5,5 0,0 1,40 100L30,100A5,5 0,0 1,25 95L25,95A5,5 0,0 1,30 90z"
+      android:fillColor="#3D3D3D"/>
+  <path
+      android:pathData="M30,75L40,75A5,5 0,0 1,45 80L45,80A5,5 0,0 1,40 85L30,85A5,5 0,0 1,25 80L25,80A5,5 0,0 1,30 75z"
+      android:fillColor="#3D3D3D"/>
+  <path
+      android:pathData="M30,60L40,60A5,5 0,0 1,45 65L45,65A5,5 0,0 1,40 70L30,70A5,5 0,0 1,25 65L25,65A5,5 0,0 1,30 60z"
+      android:fillColor="#3D3D3D"/>
+  <path
+      android:pathData="M30,45L40,45A5,5 0,0 1,45 50L45,50A5,5 0,0 1,40 55L30,55A5,5 0,0 1,25 50L25,50A5,5 0,0 1,30 45z"
+      android:fillColor="#3D3D3D"/>
+  <path
+      android:pathData="M55,30L65,30A5,5 0,0 1,70 35L70,35A5,5 0,0 1,65 40L55,40A5,5 0,0 1,50 35L50,35A5,5 0,0 1,55 30z"
+      android:fillColor="#3D3D3D"/>
+  <path
+      android:pathData="M55,15L65,15A5,5 0,0 1,70 20L70,20A5,5 0,0 1,65 25L55,25A5,5 0,0 1,50 20L50,20A5,5 0,0 1,55 15z"
+      android:fillColor="#3D3D3D"/>
+  <path
+      android:pathData="M55,0L65,0A5,5 0,0 1,70 5L70,5A5,5 0,0 1,65 10L55,10A5,5 0,0 1,50 5L50,5A5,5 0,0 1,55 0z"
+      android:fillColor="#3D3D3D"/>
+  <path
+      android:pathData="M55,120L65,120A5,5 0,0 1,70 125L70,125A5,5 0,0 1,65 130L55,130A5,5 0,0 1,50 125L50,125A5,5 0,0 1,55 120z"
+      android:fillColor="#3D3D3D"/>
+  <path
+      android:pathData="M55,105L65,105A5,5 0,0 1,70 110L70,110A5,5 0,0 1,65 115L55,115A5,5 0,0 1,50 110L50,110A5,5 0,0 1,55 105z"
+      android:fillColor="#3D3D3D"/>
+  <path
+      android:pathData="M55,90L65,90A5,5 0,0 1,70 95L70,95A5,5 0,0 1,65 100L55,100A5,5 0,0 1,50 95L50,95A5,5 0,0 1,55 90z"
+      android:fillColor="#3D3D3D"/>
+  <path
+      android:pathData="M55,75L65,75A5,5 0,0 1,70 80L70,80A5,5 0,0 1,65 85L55,85A5,5 0,0 1,50 80L50,80A5,5 0,0 1,55 75z"
+      android:fillColor="#3D3D3D"/>
+  <path
+      android:pathData="M55,60L65,60A5,5 0,0 1,70 65L70,65A5,5 0,0 1,65 70L55,70A5,5 0,0 1,50 65L50,65A5,5 0,0 1,55 60z"
+      android:fillColor="#3D3D3D"/>
+  <path
+      android:pathData="M55,45L65,45A5,5 0,0 1,70 50L70,50A5,5 0,0 1,65 55L55,55A5,5 0,0 1,50 50L50,50A5,5 0,0 1,55 45z"
+      android:fillColor="#3D3D3D"/>
+  <path
+      android:pathData="M80,30L90,30A5,5 0,0 1,95 35L95,35A5,5 0,0 1,90 40L80,40A5,5 0,0 1,75 35L75,35A5,5 0,0 1,80 30z"
+      android:fillColor="#3D3D3D"/>
+  <path
+      android:pathData="M80,15L90,15A5,5 0,0 1,95 20L95,20A5,5 0,0 1,90 25L80,25A5,5 0,0 1,75 20L75,20A5,5 0,0 1,80 15z"
+      android:fillColor="#3D3D3D"/>
+  <path
+      android:pathData="M80,120L90,120A5,5 0,0 1,95 125L95,125A5,5 0,0 1,90 130L80,130A5,5 0,0 1,75 125L75,125A5,5 0,0 1,80 120z"
+      android:fillColor="#3D3D3D"/>
+  <path
+      android:pathData="M80,105L90,105A5,5 0,0 1,95 110L95,110A5,5 0,0 1,90 115L80,115A5,5 0,0 1,75 110L75,110A5,5 0,0 1,80 105z"
+      android:fillColor="#3D3D3D"/>
+  <path
+      android:pathData="M80,90L90,90A5,5 0,0 1,95 95L95,95A5,5 0,0 1,90 100L80,100A5,5 0,0 1,75 95L75,95A5,5 0,0 1,80 90z"
+      android:fillColor="#3D3D3D"/>
+  <path
+      android:pathData="M80,75L90,75A5,5 0,0 1,95 80L95,80A5,5 0,0 1,90 85L80,85A5,5 0,0 1,75 80L75,80A5,5 0,0 1,80 75z"
+      android:fillColor="#3D3D3D"/>
+  <path
+      android:pathData="M155,120L165,120A5,5 0,0 1,170 125L170,125A5,5 0,0 1,165 130L155,130A5,5 0,0 1,150 125L150,125A5,5 0,0 1,155 120z"
+      android:fillColor="#3D3D3D"/>
+  <path
+      android:pathData="M155,105L165,105A5,5 0,0 1,170 110L170,110A5,5 0,0 1,165 115L155,115A5,5 0,0 1,150 110L150,110A5,5 0,0 1,155 105z"
+      android:fillColor="#3D3D3D"/>
+  <path
+      android:pathData="M155,90L165,90A5,5 0,0 1,170 95L170,95A5,5 0,0 1,165 100L155,100A5,5 0,0 1,150 95L150,95A5,5 0,0 1,155 90z"
+      android:fillColor="#3D3D3D"/>
+  <path
+      android:pathData="M155,75L165,75A5,5 0,0 1,170 80L170,80A5,5 0,0 1,165 85L155,85A5,5 0,0 1,150 80L150,80A5,5 0,0 1,155 75z"
+      android:fillColor="#3D3D3D"/>
+  <path
+      android:pathData="M180,120L190,120A5,5 0,0 1,195 125L195,125A5,5 0,0 1,190 130L180,130A5,5 0,0 1,175 125L175,125A5,5 0,0 1,180 120z"
+      android:fillColor="#3D3D3D"/>
+  <path
+      android:pathData="M180,105L190,105A5,5 0,0 1,195 110L195,110A5,5 0,0 1,190 115L180,115A5,5 0,0 1,175 110L175,110A5,5 0,0 1,180 105z"
+      android:fillColor="#3D3D3D"/>
+  <path
+      android:pathData="M180,90L190,90A5,5 0,0 1,195 95L195,95A5,5 0,0 1,190 100L180,100A5,5 0,0 1,175 95L175,95A5,5 0,0 1,180 90z"
+      android:fillColor="#3D3D3D"/>
+  <path
+      android:pathData="M180,75L190,75A5,5 0,0 1,195 80L195,80A5,5 0,0 1,190 85L180,85A5,5 0,0 1,175 80L175,80A5,5 0,0 1,180 75z"
+      android:fillColor="#3D3D3D"/>
+  <path
+      android:pathData="M130,60L140,60A5,5 0,0 1,145 65L145,65A5,5 0,0 1,140 70L130,70A5,5 0,0 1,125 65L125,65A5,5 0,0 1,130 60z"
+      android:fillColor="#3D3D3D"/>
+  <path
+      android:pathData="M80,60L90,60A5,5 0,0 1,95 65L95,65A5,5 0,0 1,90 70L80,70A5,5 0,0 1,75 65L75,65A5,5 0,0 1,80 60z"
+      android:fillColor="#3D3D3D"/>
+  <path
+      android:pathData="M80,45L90,45A5,5 0,0 1,95 50L95,50A5,5 0,0 1,90 55L80,55A5,5 0,0 1,75 50L75,50A5,5 0,0 1,80 45z"
+      android:fillColor="#3D3D3D"/>
+  <path
+      android:pathData="M130,120L140,120A5,5 0,0 1,145 125L145,125A5,5 0,0 1,140 130L130,130A5,5 0,0 1,125 125L125,125A5,5 0,0 1,130 120z"
+      android:fillColor="#3D3D3D"/>
+  <path
+      android:pathData="M130,105L140,105A5,5 0,0 1,145 110L145,110A5,5 0,0 1,140 115L130,115A5,5 0,0 1,125 110L125,110A5,5 0,0 1,130 105z"
+      android:fillColor="#3D3D3D"/>
+  <path
+      android:pathData="M130,90L140,90A5,5 0,0 1,145 95L145,95A5,5 0,0 1,140 100L130,100A5,5 0,0 1,125 95L125,95A5,5 0,0 1,130 90z"
+      android:fillColor="#3D3D3D"/>
+  <path
+      android:pathData="M130,75L140,75A5,5 0,0 1,145 80L145,80A5,5 0,0 1,140 85L130,85A5,5 0,0 1,125 80L125,80A5,5 0,0 1,130 75z"
+      android:fillColor="#3D3D3D"/>
+  <path
+      android:pathData="M130,45L140,45A5,5 0,0 1,145 50L145,50A5,5 0,0 1,140 55L130,55A5,5 0,0 1,125 50L125,50A5,5 0,0 1,130 45z"
+      android:fillColor="#3D3D3D"/>
+  <path
+      android:pathData="M180,60L190,60A5,5 0,0 1,195 65L195,65A5,5 0,0 1,190 70L180,70A5,5 0,0 1,175 65L175,65A5,5 0,0 1,180 60z"
+      android:fillColor="#3D3D3D"/>
+</vector>
