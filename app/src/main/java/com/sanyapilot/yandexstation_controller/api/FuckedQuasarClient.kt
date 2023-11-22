@@ -1,5 +1,6 @@
 package com.sanyapilot.yandexstation_controller.api
 import android.util.Log
+import com.sanyapilot.yandexstation_controller.BuildConfig
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -144,7 +145,7 @@ data class ScreenSettingResponse(
     val clock_type: String? = null
 ) : APIResponse
 
-const val FQ_BACKEND_URL = "https://testing.yndxfuck.ru"
+val FQ_BACKEND_URL = if (BuildConfig.DEBUG) "https://testing.yndxfuck.ru" else "https://yndxfuck.ru"
 val JSON_MEDIA_TYPE = "application/json; charset=utf-8".toMediaType()
 
 object FuckedQuasarClient {
