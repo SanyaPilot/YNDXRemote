@@ -228,6 +228,7 @@ class GlagolClient(private val speaker: Speaker) : WebSocketListener() {
     }
 
     override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
+        Log.e(TAG, "Failure occurred while working with a WS!")
         t.printStackTrace()
         failureListener?.let { it() }
     }
@@ -379,8 +380,18 @@ object mDNSWorker {
     fun addListener(uuid: String, listener: () -> Unit) {
         listeners[uuid] = listener
     }
+    fun removeListener(uuid: String) {
+        listeners.remove(uuid)
+    }
     fun addOnLostListener(uuid: String, listener: () -> Unit) {
         lostListeners[uuid] = listener
+    }
+    fun removeOnLostListener(uuid: String) {
+        lostListeners.remove(uuid)
+    }
+    fun removeAllListeners(uuid: String) {
+        removeListener(uuid)
+        removeOnLostListener(uuid)
     }
     fun addDevice(device: LocalDevice) {
         devices.add(device)

@@ -101,12 +101,7 @@ class StationControlService : MediaBrowserServiceCompat() {
             override fun onStop() {
                 Log.d(TAG, "mediaSession onStop callback")
                 station.endLocal()
-                stopSelf()
-                mediaSession.isActive = false
-                mediaSession.release()
-                stopForeground(Service.STOP_FOREGROUND_REMOVE)
-                notificationManager.cancel(PLAYER_NOTIFICATION_ID)
-                isForeground = false
+                stopSession()
             }
 
             override fun onSkipToNext() {
@@ -343,11 +338,7 @@ class StationControlService : MediaBrowserServiceCompat() {
                 listener = { observer(it) },
                 closedListener = {
                     // Close session
-                    stopSelf()
-                    mediaSession.isActive = false
-                    mediaSession.release()
-                    stopForeground(STOP_FOREGROUND_REMOVE)
-                    isForeground = false
+                    stopSession()
                 }
             )
 
@@ -584,6 +575,15 @@ class StationControlService : MediaBrowserServiceCompat() {
                 updateNotification()
             }
         }
+    }
+
+    private fun stopSession() {
+        stopSelf()
+        mediaSession.isActive = false
+        mediaSession.release()
+        stopForeground(STOP_FOREGROUND_REMOVE)
+        notificationManager.cancel(PLAYER_NOTIFICATION_ID)
+        isForeground = false
     }
 
     override fun onDestroy() {

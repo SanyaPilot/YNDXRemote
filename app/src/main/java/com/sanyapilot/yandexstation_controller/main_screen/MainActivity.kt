@@ -195,12 +195,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onPause() {
-        super.onPause()
-        if (viewModel.isLoggedIn())
-            thread(start = true) { mDNSWorker.stop() }
-    }
-
     override fun onResume() {
         super.onResume()
         if (mDNSWorker.isReady())

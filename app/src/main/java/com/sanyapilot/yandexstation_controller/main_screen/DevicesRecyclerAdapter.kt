@@ -46,24 +46,9 @@ class DevicesRecyclerAdapter(
         }
         fun goOffline() {
             offlineImage.visibility = View.VISIBLE
-            card.setOnClickListener {
-                Toast(it.context).apply {
-                    duration = Toast.LENGTH_SHORT
-                    setText(it.context.getString(R.string.deviceOffline))
-                    show()
-                }
-            }
         }
-        fun goOnline(udid: String, name: String, platform: String) {
+        fun goOnline() {
             offlineImage.visibility = View.INVISIBLE
-            card.setOnClickListener {
-                val intent = Intent(it.context, DeviceActivity::class.java).apply {
-                    putExtra(DEVICE_ID, udid)
-                    putExtra(DEVICE_NAME, name)
-                    putExtra(DEVICE_PLATFORM, platform)
-                }
-                it.context.startActivity(intent)
-            }
         }
     }
     private inner class TitleHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -97,10 +82,18 @@ class DevicesRecyclerAdapter(
                 curViewHolder.type.text = curDevice.platform
                 curViewHolder.udid.text = curDevice.id
 
+                curViewHolder.card.setOnClickListener {
+                    val intent = Intent(it.context, DeviceActivity::class.java).apply {
+                        putExtra(DEVICE_ID, curDevice.id)
+                        putExtra(DEVICE_NAME, curDevice.name)
+                        putExtra(DEVICE_PLATFORM, curDevice.platform)
+                    }
+                    it.context.startActivity(intent)
+                }
 
                 // Device became online
                 mDNSWorker.addListener(curDevice.id) {
-                    activity.runOnUiThread { curViewHolder.goOnline(curDevice.id, curDevice.name, curDevice.platform) }
+                    activity.runOnUiThread { curViewHolder.goOnline() }
                 }
                 // Device is offline again
                 mDNSWorker.addOnLostListener(curDevice.id) {
@@ -108,7 +101,7 @@ class DevicesRecyclerAdapter(
                 }
 
                 if (mDNSWorker.deviceExists(curDevice.id))
-                    curViewHolder.goOnline(curDevice.id, curDevice.name, curDevice.platform)
+                    curViewHolder.goOnline()
                 else
                     curViewHolder.goOffline()
 

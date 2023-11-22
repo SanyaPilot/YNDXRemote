@@ -11,9 +11,16 @@ import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
+import android.view.View
+import android.view.animation.AccelerateInterpolator
+import android.view.animation.AlphaAnimation
+import android.view.animation.Animation
+import android.view.animation.DecelerateInterpolator
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.activity.viewModels
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentContainerView
 import androidx.fragment.app.commit
 import androidx.fragment.app.replace
 import com.google.android.material.appbar.MaterialToolbar
@@ -23,6 +30,7 @@ import com.google.android.material.elevation.SurfaceColors
 import com.sanyapilot.yandexstation_controller.service.DEVICE_ID
 import com.sanyapilot.yandexstation_controller.service.DEVICE_NAME
 import com.sanyapilot.yandexstation_controller.R
+import com.sanyapilot.yandexstation_controller.api.mDNSWorker
 import com.sanyapilot.yandexstation_controller.device.settings.SettingsFragment
 import com.sanyapilot.yandexstation_controller.service.DEVICE_PLATFORM
 import com.sanyapilot.yandexstation_controller.service.StationControlService
@@ -37,6 +45,7 @@ class DeviceActivity : AppCompatActivity() {
     private lateinit var mediaBrowser: MediaBrowserCompat
     private lateinit var deviceId: String
     private lateinit var devicePlatform: String
+    private lateinit var deviceName: String
 
     private val connectionCallbacks = object : MediaBrowserCompat.ConnectionCallback() {
         override fun onConnected() {
@@ -100,7 +109,7 @@ class DeviceActivity : AppCompatActivity() {
 
         override fun onSessionDestroyed() {
             mediaBrowser.disconnect()
-            finish()
+            goOffline(listen = false, showAnim = true)
         }
     }
 
@@ -133,7 +142,7 @@ class DeviceActivity : AppCompatActivity() {
         setContentView(R.layout.activity_device)
 
         deviceId = intent.getStringExtra(DEVICE_ID)!!
-        val deviceName = intent.getStringExtra(DEVICE_NAME)
+        deviceName = intent.getStringExtra(DEVICE_NAME)!!
         devicePlatform = intent.getStringExtra(DEVICE_PLATFORM)!!
 
         val appBar = findViewById<MaterialToolbar>(R.id.deviceAppBar)
@@ -160,6 +169,126 @@ class DeviceActivity : AppCompatActivity() {
             connectionCallbacks,
             hints
         )
+
+        mDNSWorker.removeAllListeners(deviceId)
+        if (mDNSWorker.getDevice(deviceId) != null) {
+            goOnline(false)
+        } else {
+            goOffline(listen = true, showAnim = false)
+        }
+    }
+
+    private fun goOffline(listen: Boolean, showAnim: Boolean) {
+        if (listen) {
+            mDNSWorker.addListener(deviceId) { runOnUiThread { goOnline(true) } }
+            mDNSWorker.start()
+        }
+
+        viewModel.removeObservers(this)
+        if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            val coverImage = findViewById<ImageView>(R.id.cover)
+            val trackName = findViewById<TextView>(R.id.trackName)
+            val trackArtist = findViewById<TextView>(R.id.trackArtist)
+            coverImage.visibility = View.GONE
+            trackName.visibility = View.GONE
+            trackArtist.visibility = View.GONE
+        }
+
+        // Portrait
+        val navBar: BottomNavigationView? = findViewById(R.id.deviceNavigation)
+        if (viewModel.selectedNavItem.value != null) {
+            navBar?.selectedItemId = viewModel.selectedNavItem.value!!
+        }
+        if (navBar != null) {
+            updateLandscapeSelectedItem(navBar.selectedItemId)
+        }
+        navBar?.setOnItemSelectedListener { item ->
+            when (item.itemId) {
+                R.id.playbackPage -> {
+                    supportFragmentManager.commit {
+                        setReorderingAllowed(true)
+                        replace<DeviceOfflineFragment>(R.id.controlsContainer, "DEVICE_OFFLINE")
+                    }
+                }
+
+                R.id.rcPage -> {
+                    supportFragmentManager.commit {
+                        setReorderingAllowed(true)
+                        replace<DeviceOfflineFragment>(R.id.controlsContainer, "DEVICE_OFFLINE")
+                    }
+                }
+
+                R.id.settingsPage -> {
+                    supportFragmentManager.commit {
+                        setReorderingAllowed(true)
+                        replace(R.id.controlsContainer, SettingsFragment.instance(deviceId, devicePlatform), "DEVICE_SETTINGS")
+                    }
+                }
+            }
+            updateLandscapeSelectedItem(item.itemId)
+            true
+        }
+
+        // Landscape
+        val controlsSelector: MaterialButtonToggleGroup? = findViewById(R.id.controlsSelector)
+        if (viewModel.checkedControlsItem.value != null) {
+            controlsSelector?.check(viewModel.checkedControlsItem.value!!)
+        }
+        if (controlsSelector != null) {
+            updatePortraitSelectedItem(controlsSelector.checkedButtonId)
+        }
+        controlsSelector?.addOnButtonCheckedListener { _, checkedId, isChecked ->
+            if (isChecked) {
+                when (checkedId) {
+                    R.id.playbackButton -> {
+                        supportFragmentManager.commit {
+                            setReorderingAllowed(true)
+                            replace<DeviceOfflineFragment>(R.id.controlsContainer, "DEVICE_OFFLINE")
+                        }
+                    }
+
+                    R.id.remoteButton -> {
+                        supportFragmentManager.commit {
+                            setReorderingAllowed(true)
+                            replace<DeviceOfflineFragment>(R.id.controlsContainer, "DEVICE_OFFLINE")
+                        }
+                    }
+
+                    R.id.ttsButton -> {
+                        supportFragmentManager.commit {
+                            setReorderingAllowed(true)
+                            replace<DeviceOfflineFragment>(R.id.controlsContainer, "DEVICE_OFFLINE")
+                        }
+                    }
+
+                    R.id.settingsButton -> {
+                        supportFragmentManager.commit {
+                            setReorderingAllowed(true)
+                            replace(R.id.controlsContainer, SettingsFragment.instance(deviceId, devicePlatform), "DEVICE_SETTINGS")
+                        }
+                    }
+                }
+                updatePortraitSelectedItem(checkedId)
+            }
+        }
+
+        // Display offline screen
+        if (supportFragmentManager.findFragmentByTag("DEVICE_SETTINGS")?.isVisible != true) {
+            if (showAnim) {
+                changeFragWithAnim(DeviceOfflineFragment(), "DEVICE_OFFLINE")
+            } else {
+                supportFragmentManager.commit {
+                    setReorderingAllowed(true)
+                    replace<DeviceOfflineFragment>(R.id.controlsContainer, "DEVICE_OFFLINE")
+                }
+            }
+        }
+    }
+
+    private fun goOnline(afterOffline: Boolean) {
+        // Stop scan
+        mDNSWorker.removeAllListeners(deviceId)
+        mDNSWorker.stop()
 
         if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
             val coverImage = findViewById<ImageView>(R.id.cover)
@@ -193,21 +322,21 @@ class DeviceActivity : AppCompatActivity() {
                 R.id.playbackPage -> {
                     supportFragmentManager.commit {
                         setReorderingAllowed(true)
-                        replace<DevicePlaybackFragment>(R.id.controlsContainer)
+                        replace<DevicePlaybackFragment>(R.id.controlsContainer, "DEVICE_PLAYBACK")
                     }
                 }
 
                 R.id.rcPage -> {
                     supportFragmentManager.commit {
                         setReorderingAllowed(true)
-                        replace<DeviceRemoteFragment>(R.id.controlsContainer)
+                        replace<DeviceRemoteFragment>(R.id.controlsContainer, "DEVICE_REMOTE")
                     }
                 }
 
                 R.id.settingsPage -> {
                     supportFragmentManager.commit {
                         setReorderingAllowed(true)
-                        replace(R.id.controlsContainer, SettingsFragment.instance(deviceId, devicePlatform))
+                        replace(R.id.controlsContainer, SettingsFragment.instance(deviceId, devicePlatform), "DEVICE_SETTINGS")
                     }
                 }
             }
@@ -229,53 +358,106 @@ class DeviceActivity : AppCompatActivity() {
                     R.id.playbackButton -> {
                         supportFragmentManager.commit {
                             setReorderingAllowed(true)
-                            replace<DevicePlaybackFragment>(R.id.controlsContainer)
+                            replace<DevicePlaybackFragment>(R.id.controlsContainer, "DEVICE_PLAYBACK")
                         }
                     }
 
                     R.id.remoteButton -> {
                         supportFragmentManager.commit {
                             setReorderingAllowed(true)
-                            replace<DeviceRemoteFragment>(R.id.controlsContainer)
+                            replace<DeviceRemoteFragment>(R.id.controlsContainer, "DEVICE_REMOTE")
                         }
                     }
 
                     R.id.ttsButton -> {
                         supportFragmentManager.commit {
                             setReorderingAllowed(true)
-                            replace<DeviceTTSFragment>(R.id.controlsContainer)
+                            replace<DeviceTTSFragment>(R.id.controlsContainer, "DEVICE_TTS")
                         }
                     }
 
                     R.id.settingsButton -> {
                         supportFragmentManager.commit {
                             setReorderingAllowed(true)
-                            replace(R.id.controlsContainer, SettingsFragment.instance(deviceId, devicePlatform))
+                            replace(R.id.controlsContainer, SettingsFragment.instance(deviceId, devicePlatform), "DEVICE_SETTINGS")
                         }
                     }
                 }
                 updatePortraitSelectedItem(checkedId)
             }
         }
+        if (afterOffline) {
+            startControlService()
+            volumeControlStream = AudioManager.STREAM_MUSIC
+            changeFragWithAnim(DevicePlaybackFragment(), "DEVICE_PLAYBACK")
+            navBar?.selectedItemId = R.id.playbackPage
+            controlsSelector?.uncheck(controlsSelector.checkedButtonId)
+            controlsSelector?.check(R.id.playbackButton)
+            updateLandscapeSelectedItem(R.id.playbackButton)
+            updatePortraitSelectedItem(R.id.playbackPage)
+        }
     }
 
-    override fun onStart() {
+    private fun changeFragWithAnim(fragment: Fragment, tag: String) {
+        val container = findViewById<FragmentContainerView>(R.id.controlsContainer)
+        val fadeOutContainer = AlphaAnimation(1f, 0f)
+        fadeOutContainer.interpolator = AccelerateInterpolator()
+        fadeOutContainer.duration = 200
+
+        val fadeInContainer = AlphaAnimation(0f, 1f)
+        fadeInContainer.interpolator = DecelerateInterpolator()
+        fadeInContainer.duration = 200
+        fadeInContainer.setAnimationListener(object : Animation.AnimationListener {
+            override fun onAnimationStart(animation: Animation?) {}
+            override fun onAnimationEnd(animation: Animation?) {
+                container.visibility = View.VISIBLE
+            }
+
+            override fun onAnimationRepeat(animation: Animation?) {}
+        })
+
+        fadeOutContainer.setAnimationListener(object : Animation.AnimationListener {
+            override fun onAnimationStart(animation: Animation?) {}
+            override fun onAnimationEnd(animation: Animation?) {
+                container.visibility = View.INVISIBLE
+                supportFragmentManager.commit {
+                    setReorderingAllowed(true)
+                    replace(R.id.controlsContainer, fragment, tag)
+                }
+                container.startAnimation(fadeInContainer)
+            }
+
+            override fun onAnimationRepeat(animation: Animation?) {}
+        })
+
+        container.startAnimation(fadeOutContainer)
+    }
+
+    private fun startControlService() {
         // Start StationControlService
         startService(Intent(this, StationControlService::class.java))
-
-        super.onStart()
         mediaBrowser.connect()
+    }
+    override fun onStart() {
+        super.onStart()
+        if (mDNSWorker.getDevice(deviceId) != null) {
+            startControlService()
+        }
     }
 
     override fun onResume() {
         super.onResume()
-        volumeControlStream = AudioManager.STREAM_MUSIC
+        if (mDNSWorker.getDevice(deviceId) != null) {
+            volumeControlStream = AudioManager.STREAM_MUSIC
+        }
     }
 
     public override fun onStop() {
         super.onStop()
-        MediaControllerCompat.getMediaController(this)?.unregisterCallback(controllerCallback)
-        mediaBrowser.disconnect()
+        if (mDNSWorker.getDevice(deviceId) != null) {
+            MediaControllerCompat.getMediaController(this)?.unregisterCallback(controllerCallback)
+            mediaBrowser.disconnect()
+        }
     }
 
     override fun onSupportNavigateUp(): Boolean {

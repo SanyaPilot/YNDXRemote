@@ -34,9 +34,7 @@ class YandexStationService(val speaker: Speaker, val client: GlagolClient, val l
                 closedListener()
             }
             client.setOnFailureListener {
-                // Try to restart connection
-                Thread.sleep(1000)
-                startLocal()
+                closedListener()
             }
             client.start { listener(it) }
         }

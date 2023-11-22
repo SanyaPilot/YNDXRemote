@@ -54,6 +54,7 @@
     <string name="commands">Команды</string>
     <string name="rc">Пульт</string>
 
+    <string name="offlineMode">Нет соединения с колонкой!</string>
     <string name="revertToCloud">Соединение с колонкой потеряно! Возврат в облачный режим</string>
     <string name="revertToLocal">Соединение установлено! Локальный режим включен</string>
 
