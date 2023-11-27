@@ -21,6 +21,7 @@ fun NetStatusSnack(
                 message = when(netStatus.error) {
                     SettingsErrors.NOT_LINKED -> context.resources.getString(R.string.deviceNotLinked)
                     SettingsErrors.UNAUTHORIZED -> context.resources.getString(R.string.unauthorizedError)
+                    SettingsErrors.NO_INTERNET -> context.resources.getString(R.string.errorNoInternet)
                     SettingsErrors.TIMEOUT -> context.resources.getString(R.string.unknownError)
                     SettingsErrors.UNKNOWN -> context.resources.getString(R.string.unknownError)
                     else -> context.resources.getString(R.string.wtf)

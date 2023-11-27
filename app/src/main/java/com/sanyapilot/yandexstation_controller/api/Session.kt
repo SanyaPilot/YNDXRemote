@@ -6,6 +6,7 @@ import okhttp3.*
 import okhttp3.RequestBody.Companion.toRequestBody
 import okio.IOException
 import org.json.JSONObject
+import java.net.ConnectException
 import java.security.SecureRandom
 import java.security.cert.CertificateException
 import java.security.cert.X509Certificate
@@ -23,7 +24,7 @@ data class RequestResponse(
 )
 
 enum class Errors {
-    INVALID_CODE, INVALID_TOKEN, TIMEOUT, BAD_REQUEST, INTERNAL_SERVER_ERROR
+    INVALID_CODE, INVALID_TOKEN, TIMEOUT, BAD_REQUEST, INTERNAL_SERVER_ERROR, CONNECTION_ERROR
 }
 
 enum class Methods {
@@ -139,7 +140,11 @@ object Session {
                 }
                 else -> RequestResponse(true, response = resp)
             }
+        } catch (e: ConnectException) {
+            Log.e(TAG, "Error performing request!\n${e.message}")
+            return RequestResponse(false, Errors.CONNECTION_ERROR, null)
         } catch (e: IOException) {
+            Log.e(TAG, "Error performing request!\n${e.message}")
             return RequestResponse(false, Errors.TIMEOUT, null)
         }
     }

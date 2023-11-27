@@ -56,7 +56,7 @@ data class LinkDeviceResult(
 )
 
 enum class SettingsErrors {
-    UNAUTHORIZED, NOT_LINKED, INVALID_VALUE, UNSUPPORTED_ACTION, TIMEOUT, UNKNOWN
+    UNAUTHORIZED, NOT_LINKED, INVALID_VALUE, UNSUPPORTED_ACTION, TIMEOUT, UNKNOWN, NO_INTERNET
 }
 
 @Serializable
@@ -219,6 +219,9 @@ object FuckedQuasarClient {
         }
         if (res.errorId == Errors.TIMEOUT) {
             return ReqResult(false, error = SettingsErrors.TIMEOUT)
+        }
+        if (res.errorId == Errors.CONNECTION_ERROR) {
+            return ReqResult(false, error = SettingsErrors.NO_INTERNET)
         }
         if (res.response == null) {
             return ReqResult(false, error = SettingsErrors.UNKNOWN)
