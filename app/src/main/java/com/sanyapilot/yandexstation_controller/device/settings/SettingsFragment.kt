@@ -48,7 +48,6 @@ import androidx.compose.material3.TimePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -74,7 +73,8 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sanyapilot.yandexstation_controller.R
-import com.sanyapilot.yandexstation_controller.api.SettingsErrors
+import com.sanyapilot.yandexstation_controller.composables.ExpandingListItem
+import com.sanyapilot.yandexstation_controller.composables.NetStatusSnack
 import com.sanyapilot.yandexstation_controller.ui.theme.AppTheme
 import kotlin.math.min
 import kotlin.math.roundToInt
@@ -206,20 +206,11 @@ fun SettingsLayout(
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { innerPadding ->
         val netStatus = viewModel.netStatus.collectAsState()
-        if (!netStatus.value.ok) {
-            LaunchedEffect(snackbarHostState) {
-                snackbarHostState.showSnackbar(
-                    message = when(netStatus.value.error) {
-                        SettingsErrors.NOT_LINKED -> context.resources.getString(R.string.deviceNotLinked)
-                        SettingsErrors.UNAUTHORIZED -> context.resources.getString(R.string.unauthorizedError)
-                        SettingsErrors.TIMEOUT -> context.resources.getString(R.string.unknownError)
-                        SettingsErrors.UNKNOWN -> context.resources.getString(R.string.unknownError)
-                        else -> context.resources.getString(R.string.wtf)
-                    },
-                    duration = SnackbarDuration.Long
-                )
-            }
-        }
+        NetStatusSnack(
+            context = context,
+            netStatus = netStatus.value,
+            snackbarHostState = snackbarHostState
+        )
 
         val renameError = viewModel.renameError.collectAsState()
         if (renameError.value) {
@@ -541,29 +532,6 @@ fun VerticalSlider(
         onValueChange = onValueChange,
         onValueChangeFinished = onValueChangeFinished,
         valueRange = valueRange
-    )
-}
-
-@Composable
-fun ExpandingListItem(
-    expanded: MutableState<Boolean>,
-    headlineContent: @Composable () -> Unit,
-    modifier: Modifier = Modifier,
-    supportingContent: @Composable (() -> Unit)? = null,
-    leadingContent: @Composable (() -> Unit)? = null
-) {
-    ListItem(
-        leadingContent = leadingContent,
-        headlineContent = headlineContent,
-        trailingContent = { Icon(
-            painter = painterResource(id = if (expanded.value) R.drawable.round_keyboard_arrow_down_24
-            else R.drawable.round_keyboard_arrow_right_24),
-            contentDescription = null
-        ) },
-        supportingContent = supportingContent,
-        modifier = Modifier
-            .clickable { expanded.value = !expanded.value }
-            .then(modifier)
     )
 }
 

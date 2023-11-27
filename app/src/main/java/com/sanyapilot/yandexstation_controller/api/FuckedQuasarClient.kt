@@ -145,6 +145,19 @@ data class ScreenSettingResponse(
     val clock_type: String? = null
 ) : APIResponse
 
+@Serializable
+data class UserInfoResponse(
+    override val status: String,
+    override val reason: String? = null,
+    val name: String? = null,
+    val timezone: String? = null
+) : APIResponse
+
+@Serializable
+data class TimezoneBody(
+    val value: String
+)
+
 val FQ_BACKEND_URL = if (BuildConfig.DEBUG) "https://testing.yndxfuck.ru" else "https://yndxfuck.ru"
 val JSON_MEDIA_TYPE = "application/json; charset=utf-8".toMediaType()
 
@@ -182,10 +195,11 @@ object FuckedQuasarClient {
     ): ReqResult<T> {
         val res = when(type) {
             "GET" -> {
-                if (deviceId == null) {
-                    throw IllegalArgumentException("Device ID is required!")
+                if (deviceId != null) {
+                    Session.get("$FQ_BACKEND_URL$url?device_id=$deviceId")
+                } else {
+                    Session.get("$FQ_BACKEND_URL$url")
                 }
-                Session.get("$FQ_BACKEND_URL$url?device_id=$deviceId")
             }
             "POST" -> {
                 if (body == null) {
@@ -234,7 +248,7 @@ object FuckedQuasarClient {
             )
         }
     }
-    private inline fun <reified T: APIResponse> doGET(url: String, deviceId: String): ReqResult<T> {
+    private inline fun <reified T: APIResponse> doGET(url: String, deviceId: String? = null): ReqResult<T> {
         return doRequest(type = "GET", url = url, deviceId = deviceId)
     }
     private inline fun <reified T: APIResponse> doPOST(url: String, body: RequestBody): ReqResult<T> {
@@ -377,5 +391,14 @@ object FuckedQuasarClient {
             device_id = deviceId, realtime_update = true, clock_type = type
         )).toRequestBody(JSON_MEDIA_TYPE)
         return doPOST(url = "/update_screen_settings", body = body)
+    }
+
+    // User
+    fun getUserInfo() : ReqResult<UserInfoResponse> {
+        return doGET(url = "/user_info")
+    }
+    fun updateTimezone(value: String) : ReqResult<GenericResponse> {
+        val body = json.encodeToString(TimezoneBody(value)).toRequestBody(JSON_MEDIA_TYPE)
+        return doPOST(url = "/update_timezone", body = body)
     }
 }

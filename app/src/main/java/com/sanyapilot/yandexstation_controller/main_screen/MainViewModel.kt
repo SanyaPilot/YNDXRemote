@@ -4,20 +4,19 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 
-data class UserDataObj(
-    val displayName: String,
-    val nickname: String?,
-    val avatarURL: String?
-)
-
 class MainViewModel : ViewModel() {
-    private val userData: MutableLiveData<UserDataObj> by lazy { MutableLiveData<UserDataObj>() }
+    private val userName: MutableLiveData<String> by lazy { MutableLiveData<String>() }
+    private val userAvatar: MutableLiveData<String> by lazy { MutableLiveData<String>() }
     private val loggedIn: MutableLiveData<Boolean> by lazy { MutableLiveData<Boolean>(false) }
-    fun updateUserData(new: UserDataObj) {
-        userData.value = new
+    fun updateUserData(name: String) {
+        userName.value = name
+        userAvatar.value = null
     }
-    fun getUserData(): LiveData<UserDataObj> {
-        return userData
+    fun getUserName(): LiveData<String> {
+        return userName
+    }
+    fun getUserAvatar(): LiveData<String?> {
+        return userAvatar
     }
     fun isLoggedIn(): Boolean {
         return if (loggedIn.value != null) loggedIn.value!! else false

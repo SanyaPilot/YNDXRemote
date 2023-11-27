@@ -12,7 +12,7 @@ import androidx.lifecycle.ViewModelProvider
 import coil.load
 import coil.transform.CircleCropTransformation
 import com.sanyapilot.yandexstation_controller.R
-import com.sanyapilot.yandexstation_controller.api.UserData
+import com.sanyapilot.yandexstation_controller.api.FuckedQuasarClient
 import kotlin.concurrent.thread
 
 class UserFragment : Fragment() {
@@ -36,39 +36,35 @@ class UserFragment : Fragment() {
         credits.movementMethod = LinkMovementMethod.getInstance()
 
         // Register observer
-        viewModel.getUserData().observe(viewLifecycleOwner) { userData ->
-            val avatar = view.findViewById<ImageView>(R.id.userAvatar)
+        viewModel.getUserName().observe(viewLifecycleOwner) {
             val displayName = view.findViewById<TextView>(R.id.userName)
-            val displayNickname = view.findViewById<TextView>(R.id.userNickname)
+            //val displayNickname = view.findViewById<TextView>(R.id.userNickname)
 
-            if (userData.avatarURL != null) {
-                avatar.load(userData.avatarURL) {
+            displayName.text = it
+            //displayNickname.text = userData.nickname
+
+            displayName.visibility = TextView.VISIBLE
+            //displayNickname.visibility = if (displayNickname != null) TextView.VISIBLE else TextView.GONE
+        }
+        viewModel.getUserAvatar().observe(viewLifecycleOwner) {
+            val avatar = view.findViewById<ImageView>(R.id.userAvatar)
+            if (it != null) {
+                avatar.load(it) {
                     crossfade(100)
                     transformations(CircleCropTransformation())
                 }
             } else {
                 avatar.setImageResource(R.drawable.baseline_account_circle_24)
             }
-
-            displayName.text = userData.displayName
-            displayNickname.text = userData.nickname
-
-            displayName.visibility = TextView.VISIBLE
-            displayNickname.visibility = if (displayNickname != null) TextView.VISIBLE else TextView.GONE
         }
 
-        if (viewModel.getUserData().value == null) {
-            thread(start = true) {
-                // Get data about user
-                UserData.updateUserData()
-                requireActivity().runOnUiThread {
-                    viewModel.updateUserData(
-                        UserDataObj(
-                            UserData.getDisplayName(),
-                            UserData.getNickname(),
-                            UserData.getAvatarURL()
-                        )
-                    )
+        if (viewModel.getUserName().value == null) {
+            thread {
+                val res = FuckedQuasarClient.getUserInfo()
+                if (res.ok) {
+                    requireActivity().runOnUiThread {
+                        viewModel.updateUserData(res.data!!.name!!)
+                    }
                 }
             }
         }
