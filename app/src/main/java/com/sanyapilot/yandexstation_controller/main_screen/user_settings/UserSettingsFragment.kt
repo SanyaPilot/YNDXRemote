@@ -6,19 +6,26 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -85,7 +92,10 @@ fun UserSettingsLayout(
         )
 
         Column(
-            modifier = Modifier.padding(innerPadding)
+            modifier = Modifier
+                .padding(innerPadding)
+                .fillMaxHeight()
+                .verticalScroll(rememberScrollState())
         ) {
             // Timezone
             val tzOpened = rememberSaveable { mutableStateOf(false) }
@@ -104,7 +114,7 @@ fun UserSettingsLayout(
                 val tzMenuOpened = remember { mutableStateOf(false) }
                 val curTimezoneName by viewModel.curTimezoneName.collectAsState()
                 ExposedDropdownMenuBox(
-                    modifier = Modifier.padding(horizontal = 16.dp),
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                     expanded = tzMenuOpened.value,
                     onExpandedChange = {
                         tzMenuOpened.value = !tzMenuOpened.value
@@ -134,6 +144,44 @@ fun UserSettingsLayout(
                                     viewModel.updateTimezone(it.value)
                                     tzMenuOpened.value = false
                                 }
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Spotters
+            val spottersOpened = rememberSaveable { mutableStateOf(false) }
+            ExpandingListItem(
+                expanded = spottersOpened,
+                headlineContent = { Text(text = stringResource(id = R.string.spottersLabel)) },
+                supportingContent = { Text(text = stringResource(id = R.string.spottersDescription)) },
+                leadingContent = {
+                    Icon(
+                        painter = painterResource(id = R.drawable.round_message_24),
+                        contentDescription = null
+                    )
+                }
+            )
+            AnimatedVisibility(visible = spottersOpened.value) {
+                val enabledSpotters by viewModel.enabledSpotters.collectAsState()
+                Column {
+                    SPOTTERS.forEach { spotters ->
+                        Text(
+                            modifier = Modifier
+                                .padding(start = 16.dp, top = 16.dp),
+                            text = stringResource(id = SPOTTER_TYPE_NAMES[spotters.key]!!),
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        spotters.value.forEach { obj ->
+                            ListItem(
+                                headlineContent = { Text(stringResource(id = obj.name)) },
+                                supportingContent = { Text(stringResource(id = obj.description)) },
+                                trailingContent = { Switch(
+                                    checked = enabledSpotters[spotters.key]?.contains(obj.value) == true,
+                                    onCheckedChange = { viewModel.toggleSpotter(spotters.key, obj.value) }
+                                )},
+                                modifier = Modifier.clickable { viewModel.toggleSpotter(spotters.key, obj.value) }
                             )
                         }
                     }

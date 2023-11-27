@@ -1,6 +1,7 @@
 package com.sanyapilot.yandexstation_controller.main_screen.user_settings
 
 import androidx.lifecycle.ViewModel
+import com.sanyapilot.yandexstation_controller.R
 import com.sanyapilot.yandexstation_controller.api.FuckedQuasarClient
 import com.sanyapilot.yandexstation_controller.device.settings.NetStatus
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,23 +27,86 @@ val TIMEZONES = listOf(
     Timezone("UTC+12 (MSK+9)", "+12")
 )
 
+data class Spotter(
+    val name: Int,
+    val description: Int,
+    val value: String
+)
+
+val SPOTTERS = mapOf(
+    "music" to listOf(
+        Spotter(
+            name = R.string.spotterPlayAndPauseTitle,
+            description = R.string.spotterPlayAndPauseDesc,
+            value = "playAndPause"
+        ),
+        Spotter(
+            name = R.string.spotterMusicNavigationTitle,
+            description = R.string.spotterMusicNavigationDesc,
+            value = "navigation"
+        ),
+        Spotter(
+            name = R.string.spotterVolumeTitle,
+            description = R.string.spotterVolumeDesc,
+            value = "volume"
+        )
+    ),
+    "tv" to listOf(
+        Spotter(
+            name = R.string.spotterTVNavigationTitle,
+            description = R.string.spotterTVNavigationDesc,
+            value = "navigation"
+        ),
+        Spotter(
+            name = R.string.spotterBackToHomeTitle,
+            description = R.string.spotterBackToHomeDesc,
+            value = "backToHome"
+        )
+    ),
+    "smartHome" to listOf(
+        Spotter(
+            name = R.string.spotterLightControlTitle,
+            description = R.string.spotterLightControlDesc,
+            value = "light"
+        ),
+        Spotter(
+            name = R.string.spotterTVControlTitle,
+            description = R.string.spotterTVControlDesc,
+            value = "tv"
+        )
+    )
+)
+
+val SPOTTER_TYPE_NAMES = mapOf(
+    "music" to R.string.spottersMusicTitle,
+    "tv" to R.string.spottersTVTitle,
+    "smartHome" to R.string.spottersSmartHomeTitle
+)
+
 class UserSettingsViewModel : ViewModel() {
     private val _netStatus = MutableStateFlow(NetStatus(true))
     private val _curTimezoneName = MutableStateFlow("UTC+3 (MSK)")
+    private val _enabledSpotters = MutableStateFlow(mapOf<String, List<String>>())
 
     val netStatus: StateFlow<NetStatus>
         get() = _netStatus
     val curTimezoneName: StateFlow<String>
         get() = _curTimezoneName
+    val enabledSpotters: StateFlow<Map<String, List<String>>>
+        get() = _enabledSpotters
 
     init {
         thread {
+            // Timezone
             val res = FuckedQuasarClient.getUserInfo()
             if (!res.ok) {
                 _netStatus.value = NetStatus(false, res.error)
                 return@thread
             }
             updateTZName(res.data!!.timezone!!)
+
+            // Spotters
+            _enabledSpotters.value = res.data.spotters!!
         }
     }
 
@@ -61,6 +125,29 @@ class UserSettingsViewModel : ViewModel() {
                 _netStatus.value = NetStatus(false, res.error)
             } else {
                 updateTZName(value)
+            }
+        }
+    }
+
+    fun toggleSpotter(type: String, name: String) {
+        thread {
+            val temp = _enabledSpotters.value.toMutableMap()
+            val tempList = if (temp[type] == null) {
+                mutableListOf()
+            } else {
+                temp[type]!!.toMutableList()
+            }
+            if (tempList.contains(name)) {
+                tempList.remove(name)
+            } else {
+                tempList.add(name)
+            }
+            temp[type] = tempList.toList()
+            val res = FuckedQuasarClient.updateSpotters(temp)
+            if (!res.ok) {
+                _netStatus.value = NetStatus(false, res.error)
+            } else {
+                _enabledSpotters.value = temp
             }
         }
     }

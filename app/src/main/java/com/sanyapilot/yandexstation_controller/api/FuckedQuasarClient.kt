@@ -150,12 +150,19 @@ data class UserInfoResponse(
     override val status: String,
     override val reason: String? = null,
     val name: String? = null,
-    val timezone: String? = null
+    val timezone: String? = null,
+    val spotters: Map<String, List<String>>? = null
 ) : APIResponse
 
 @Serializable
 data class TimezoneBody(
     val value: String
+)
+
+@Serializable
+data class SpottersBody(
+    val data: Map<String, List<String>>,
+    val realtime_update: Boolean
 )
 
 val FQ_BACKEND_URL = if (BuildConfig.DEBUG) "https://testing.yndxfuck.ru" else "https://yndxfuck.ru"
@@ -400,5 +407,13 @@ object FuckedQuasarClient {
     fun updateTimezone(value: String) : ReqResult<GenericResponse> {
         val body = json.encodeToString(TimezoneBody(value)).toRequestBody(JSON_MEDIA_TYPE)
         return doPOST(url = "/update_timezone", body = body)
+    }
+
+    fun updateSpotters(data: Map<String, List<String>>) : ReqResult<GenericResponse> {
+        val body = json.encodeToString(SpottersBody(
+            data = data,
+            realtime_update = true
+        )).toRequestBody(JSON_MEDIA_TYPE)
+        return doPOST(url = "/update_spotters", body = body)
     }
 }

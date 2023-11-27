@@ -130,4 +130,26 @@
     <string name="userSettingsTitle">Настройки аккаунта</string>
     <string name="timezoneLabel">Часовой пояс</string>
     <string name="timezoneDescription">Эта настройка влияет на DND</string>
+    <string name="spottersLabel">Быстрые команды станции</string>
+    <string name="spottersDescription">Можно озвучивать сразу, не говоря \"Алиса\"</string>
+
+    <string name="spottersMusicTitle">Музыка, фильмы и голос</string>
+    <string name="spotterPlayAndPauseTitle">Воспроизведение и пауза</string>
+    <string name="spotterPlayAndPauseDesc">Стоп, хватит, пауза, продолжи, играй</string>
+    <string name="spotterMusicNavigationTitle">Переключение треков и эпизодов</string>
+    <string name="spotterMusicNavigationDesc">Дальше, назад, следующий</string>
+    <string name="spotterVolumeTitle">Регулировка громкости</string>
+    <string name="spotterVolumeDesc">Тише, громче</string>
+
+    <string name="spottersTVTitle">Навигация по интерфейсу</string>
+    <string name="spotterTVNavigationTitle">Управление интерфейсом</string>
+    <string name="spotterTVNavigationDesc">Выше, ниже, вверх, вниз, вправо, влево</string>
+    <string name="spotterBackToHomeTitle">Возврат на домашний экран</string>
+    <string name="spotterBackToHomeDesc">Домой</string>
+
+    <string name="spottersSmartHomeTitle">Умный дом</string>
+    <string name="spotterLightControlTitle">Управление светом</string>
+    <string name="spotterLightControlDesc">Включи свет, выключи свет</string>
+    <string name="spotterTVControlTitle">Управление телевизором</string>
+    <string name="spotterTVControlDesc">Включи телевизор, выключи телевизор</string>
 </resources>
