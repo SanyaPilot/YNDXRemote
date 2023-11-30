@@ -36,6 +36,12 @@
     <string name="updateBtn">Обновить</string>
     <string name="loading">Загрузка…</string>
 
+    <string name="online">В сети</string>
+    <string name="offline">Не в сети</string>
+
+    <string name="device_yandexstation">Яндекс.Станция</string>
+    <string name="device_yandexstation_2">Яндекс.Станция Макс</string>
+
     <string name="deviceList">Список устройств</string>
     <string name="deviceOffline">Устройство не в сети!</string>
     <string name="noDevices">Сейчас здесь нет устройств.\nПривяжите колонку в Telegram боте\nt.me/yndxfuck_bot</string>

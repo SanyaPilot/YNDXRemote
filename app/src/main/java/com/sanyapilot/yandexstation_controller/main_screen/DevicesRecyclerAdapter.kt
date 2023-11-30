@@ -24,6 +24,12 @@ import com.sanyapilot.yandexstation_controller.service.DEVICE_ID
 import com.sanyapilot.yandexstation_controller.service.DEVICE_NAME
 import com.sanyapilot.yandexstation_controller.service.DEVICE_PLATFORM
 
+val DEVICE_NAME_RES = mapOf(
+    "yandexstation" to R.string.device_yandexstation,
+    "yandexstation_2" to R.string.device_yandexstation_2
+)
+val DEVICE_NAME_FALL_RES = R.string.device_yandexstation
+
 class DevicesRecyclerAdapter(
     private val activity: Activity,
     private val dataSet: List<Any>
@@ -31,7 +37,7 @@ class DevicesRecyclerAdapter(
     private inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val name: TextView
         val type: TextView
-        val udid: TextView
+        val onlineText: TextView
         val image: ImageView
         val card: MaterialCardView
 
@@ -39,30 +45,41 @@ class DevicesRecyclerAdapter(
             // Define click listener for the ViewHolder's View.
             name = view.findViewById(R.id.deviceName)
             type = view.findViewById(R.id.deviceType)
-            udid = view.findViewById(R.id.deviceOnlineText)
+            onlineText = view.findViewById(R.id.deviceOnlineText)
             image = view.findViewById(R.id.deviceImage)
             card = view.findViewById(R.id.deviceCard)
         }
-        fun goOffline() {
-            card.animate().apply {
-                duration = 200
-                alpha(0.38f)
-                withEndAction {
-                    name.setTextColor(MaterialColors.getColor(card, android.R.attr.textColorPrimary))
+        fun goOffline(animate: Boolean) {
+            if (animate) {
+                card.animate().apply {
+                    duration = 200
+                    alpha(0.38f)
+                    withEndAction {
+                        name.setTextColor(MaterialColors.getColor(card, android.R.attr.textColorPrimary))
+                    }
+                    start()
                 }
-                start()
+            } else {
+                card.alpha = 0.38f
+                name.setTextColor(MaterialColors.getColor(card, android.R.attr.textColorPrimary))
             }
-
+            onlineText.setText(R.string.offline)
         }
-        fun goOnline() {
-            card.animate().apply {
-                duration = 200
-                alpha(1f)
-                withEndAction {
-                    name.setTextColor(MaterialColors.getColor(card, com.google.android.material.R.attr.colorOnPrimaryContainer))
+        fun goOnline(animate: Boolean) {
+            if (animate) {
+                card.animate().apply {
+                    duration = 200
+                    alpha(1f)
+                    withEndAction {
+                        name.setTextColor(MaterialColors.getColor(card, com.google.android.material.R.attr.colorOnPrimaryContainer))
+                    }
+                    start()
                 }
-                start()
+            } else {
+                card.alpha = 1f
+                name.setTextColor(MaterialColors.getColor(card, com.google.android.material.R.attr.colorOnPrimaryContainer))
             }
+            onlineText.setText(R.string.online)
         }
     }
     private inner class TitleHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -93,8 +110,7 @@ class DevicesRecyclerAdapter(
             if (curDevice is Speaker) {
                 curViewHolder.image.setImageResource(stationIcons.getOrDefault(curDevice.platform, R.drawable.station_icon))
                 curViewHolder.name.text = curDevice.name
-                curViewHolder.type.text = curDevice.platform
-                curViewHolder.udid.text = curDevice.id
+                curViewHolder.type.setText(DEVICE_NAME_RES.getOrDefault(curDevice.platform, DEVICE_NAME_FALL_RES))
 
                 curViewHolder.card.setOnClickListener {
                     val intent = Intent(it.context, DeviceActivity::class.java).apply {
@@ -107,17 +123,17 @@ class DevicesRecyclerAdapter(
 
                 // Device became online
                 mDNSWorker.addListener(curDevice.id) {
-                    activity.runOnUiThread { curViewHolder.goOnline() }
+                    activity.runOnUiThread { curViewHolder.goOnline(true) }
                 }
                 // Device is offline again
                 mDNSWorker.addOnLostListener(curDevice.id) {
-                    activity.runOnUiThread { curViewHolder.goOffline() }
+                    activity.runOnUiThread { curViewHolder.goOffline(true) }
                 }
 
                 if (mDNSWorker.deviceExists(curDevice.id))
-                    curViewHolder.goOnline()
+                    curViewHolder.goOnline(false)
                 else
-                    curViewHolder.goOffline()
+                    curViewHolder.goOffline(false)
 
                 curViewHolder.card.setOnLongClickListener {
                     val clipboard: ClipboardManager = it.context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
