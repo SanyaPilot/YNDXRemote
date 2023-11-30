@@ -165,7 +165,7 @@ class MainActivity : AppCompatActivity() {
         if (mDNSWorker.isReady())
             thread(start = true) { startNSD() }
     }
-    fun fetchDevices() {
+    fun fetchDevices() : Boolean {
         val result = FuckedQuasarClient.fetchDevices()
         if (!result.ok) {
             if (result.errorId == Errors.TIMEOUT) {
@@ -198,6 +198,7 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+        return result.ok
     }
     private fun doNetwork() {
         title.text = getString(R.string.loading)
@@ -205,7 +206,9 @@ class MainActivity : AppCompatActivity() {
         loadingImage.visibility = View.VISIBLE
         // Prepare speakers
         thread(start = true) {
-            fetchDevices()
+            if (!fetchDevices()) {
+                return@thread
+            }
             runOnUiThread {
                 viewModel.setLoggedIn(true)
                 val fadeOut = AlphaAnimation(1f, 0f)
