@@ -12,9 +12,7 @@ import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.View
-import android.view.animation.AccelerateInterpolator
 import android.view.animation.AlphaAnimation
-import android.view.animation.Animation
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts.RequestPermission
@@ -36,7 +34,6 @@ import com.sanyapilot.yandexstation_controller.main_screen.user_settings.UserSet
 import kotlin.concurrent.thread
 
 const val TOKEN_INVALID = "com.sanyapilot.yandexstation_controller.tokenInvalid"
-const val SWITCH_ANIM_DURATION: Long = 150
 const val PLAYER_CHANNEL_ID = "yast_control"
 
 class MainActivity : AppCompatActivity() {
@@ -91,19 +88,15 @@ class MainActivity : AppCompatActivity() {
         bottomNavigation.selectedItemId = R.id.devicesPage
         bottomNavigation.setOnItemSelectedListener { item ->
             // Animations
-            val fadeOut = AlphaAnimation(1f, 0f)
-            fadeOut.interpolator = AccelerateInterpolator()
-            fadeOut.duration = SWITCH_ANIM_DURATION
-
-            val fadeIn = AlphaAnimation(0f, 1f)
-            fadeIn.interpolator = AccelerateInterpolator()
-            fadeIn.duration = SWITCH_ANIM_DURATION
-
-            fadeOut.setAnimationListener(object : Animation.AnimationListener {
-                override fun onAnimationStart(p0: Animation?) {
-                }
-
-                override fun onAnimationEnd(p0: Animation?) {
+            title.animate().apply {
+                duration = 200
+                alpha(0f)
+                start()
+            }
+            container.animate().apply {
+                duration = 200
+                alpha(0f)
+                withEndAction {
                     Log.d(TAG, "Replacing frag!")
                     when (item.itemId) {
                         R.id.devicesPage -> {
@@ -125,23 +118,19 @@ class MainActivity : AppCompatActivity() {
                             }
                         }
                     }
-
-                    container.startAnimation(fadeIn)
-                    title.startAnimation(fadeIn)
+                    title.animate().apply {
+                        duration = 200
+                        alpha(1f)
+                        start()
+                    }
+                    container.animate().apply {
+                        duration = 200
+                        alpha(1f)
+                        start()
+                    }
                 }
-
-                override fun onAnimationRepeat(p0: Animation?) {
-                }
-            })
-
-            val fadeOutText = AlphaAnimation(1f, 0f)
-            fadeOutText.interpolator = AccelerateInterpolator()
-            fadeOutText.duration = SWITCH_ANIM_DURATION
-
-            // Start switching from fade out animation
-            title.startAnimation(fadeOutText)
-            container.startAnimation(fadeOut)
-
+                start()
+            }
             true
         }
         bottomNavigation.setOnItemReselectedListener {}
@@ -211,15 +200,10 @@ class MainActivity : AppCompatActivity() {
             }
             runOnUiThread {
                 viewModel.setLoggedIn(true)
-                val fadeOut = AlphaAnimation(1f, 0f)
-                fadeOut.interpolator = AccelerateInterpolator()
-                fadeOut.duration = 200
-
-                fadeOut.setAnimationListener(object : Animation.AnimationListener {
-                    override fun onAnimationStart(p0: Animation?) {
-                    }
-
-                    override fun onAnimationEnd(p0: Animation?) {
+                progressBar.animate().apply {
+                    duration = 200
+                    alpha(0f)
+                    withEndAction {
                         // Remove loading progress bar from layout
                         progressBar.visibility = View.GONE
 
@@ -230,7 +214,6 @@ class MainActivity : AppCompatActivity() {
 
                         // Start fade in animations for elements
                         val fadeIn = AlphaAnimation(0f, 1f)
-                        fadeIn.interpolator = AccelerateInterpolator()
                         fadeIn.duration = 200
 
                         container.visibility = View.VISIBLE
@@ -239,28 +222,17 @@ class MainActivity : AppCompatActivity() {
                         bottomNavigation.startAnimation(fadeIn)
                         window.navigationBarColor = SurfaceColors.SURFACE_2.getColor(this@MainActivity)
                     }
+                    start()
+                }
 
-                    override fun onAnimationRepeat(p0: Animation?) {
-                    }
-                })
-                progressBar.startAnimation(fadeOut)
-
-                val fadeOutImage = AlphaAnimation(1f, 0f)
-                fadeOutImage.interpolator = AccelerateInterpolator()
-                fadeOutImage.duration = 200
-                fadeOutImage.setAnimationListener(object : Animation.AnimationListener {
-                    override fun onAnimationStart(p0: Animation?) {
-                    }
-
-                    override fun onAnimationEnd(p0: Animation?) {
+                loadingImage.animate().apply {
+                    duration = 200
+                    alpha(0f)
+                    withEndAction {
                         loadingImage.visibility = View.GONE
                     }
-
-                    override fun onAnimationRepeat(p0: Animation?) {
-                    }
-                })
-
-                loadingImage.startAnimation(fadeOutImage)
+                    start()
+                }
             }
             mDNSWorker.init(this)
             startNSD()
