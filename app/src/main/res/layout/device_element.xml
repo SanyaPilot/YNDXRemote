@@ -14,6 +14,7 @@
         android:layout_marginTop="8dp"
         android:layout_marginEnd="16dp"
         android:layout_marginBottom="8dp"
+        android:alpha="0.38"
         android:clickable="true">
 
         <androidx.constraintlayout.widget.ConstraintLayout
@@ -27,7 +28,7 @@
                 android:layout_height="80dp"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                tools:srcCompat="@tools:sample/avatars" />
+                tools:srcCompat="@drawable/station_icon" />
 
             <TextView
                 android:id="@+id/deviceName"
@@ -35,7 +36,6 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
                 android:text="TextView"
-                android:textColor="?attr/colorOnPrimaryContainer"
                 android:textSize="20sp"
                 android:textStyle="bold"
                 app:layout_constraintStart_toEndOf="@+id/deviceImage"
@@ -51,7 +51,7 @@
                 app:layout_constraintTop_toBottomOf="@+id/deviceName" />
 
             <TextView
-                android:id="@+id/deviceUDID"
+                android:id="@+id/deviceOnlineText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
@@ -59,13 +59,6 @@
                 app:layout_constraintStart_toStartOf="@+id/deviceType"
                 app:layout_constraintTop_toBottomOf="@+id/deviceType" />
 
-            <ImageView
-                android:id="@+id/offlineImage"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:srcCompat="@drawable/round_link_off_24" />
         </androidx.constraintlayout.widget.ConstraintLayout>
     </com.google.android.material.card.MaterialCardView>
 

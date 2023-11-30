@@ -14,6 +14,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.card.MaterialCardView
+import com.google.android.material.color.MaterialColors
 import com.sanyapilot.yandexstation_controller.device.DeviceActivity
 import com.sanyapilot.yandexstation_controller.R
 import com.sanyapilot.yandexstation_controller.api.Speaker
@@ -33,22 +34,35 @@ class DevicesRecyclerAdapter(
         val udid: TextView
         val image: ImageView
         val card: MaterialCardView
-        val offlineImage: ImageView
 
         init {
             // Define click listener for the ViewHolder's View.
             name = view.findViewById(R.id.deviceName)
             type = view.findViewById(R.id.deviceType)
-            udid = view.findViewById(R.id.deviceUDID)
+            udid = view.findViewById(R.id.deviceOnlineText)
             image = view.findViewById(R.id.deviceImage)
             card = view.findViewById(R.id.deviceCard)
-            offlineImage = view.findViewById(R.id.offlineImage)
         }
         fun goOffline() {
-            offlineImage.visibility = View.VISIBLE
+            card.animate().apply {
+                duration = 200
+                alpha(0.38f)
+                withEndAction {
+                    name.setTextColor(MaterialColors.getColor(card, android.R.attr.textColorPrimary))
+                }
+                start()
+            }
+
         }
         fun goOnline() {
-            offlineImage.visibility = View.INVISIBLE
+            card.animate().apply {
+                duration = 200
+                alpha(1f)
+                withEndAction {
+                    name.setTextColor(MaterialColors.getColor(card, com.google.android.material.R.attr.colorOnPrimaryContainer))
+                }
+                start()
+            }
         }
     }
     private inner class TitleHolder(view: View) : RecyclerView.ViewHolder(view) {
