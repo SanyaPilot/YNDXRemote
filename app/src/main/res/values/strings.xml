@@ -70,6 +70,7 @@
     <!-- User screen -->
     <string name="codedWithLove">Создано проектом YNDXFuck с ❤️</string>
     <string name="credits"><b>Разработка:</b> <a href="https://github.com/SanyaPilot">SanyaPilot</a>\n
+        <b>Дизайн и иконки:</b> <a href="https://t.me/nexussed">nexussed!</a>\n\n
         <b>Спасибо проекту</b>\n
         <a href="https://github.com/AlexxIT/YandexStation">Яндекс.Станция для Home Assistant</a>\n
         за исследование протокола Glagol</string>

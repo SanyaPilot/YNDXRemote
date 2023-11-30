@@ -34,7 +34,7 @@ import com.sanyapilot.yandexstation_controller.main_screen.user_settings.UserSet
 import kotlin.concurrent.thread
 
 const val TOKEN_INVALID = "com.sanyapilot.yandexstation_controller.tokenInvalid"
-const val PLAYER_CHANNEL_ID = "yast_control"
+const val PLAYER_CHANNEL_ID = "com.sanyapilot.yandexstation_controller.yast_control"
 
 class MainActivity : AppCompatActivity() {
     companion object {

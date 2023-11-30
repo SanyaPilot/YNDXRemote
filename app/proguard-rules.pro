@@ -25,3 +25,6 @@
 public static *** d(...);
 public static *** v(...);
 }
+
+-keepattributes LineNumberTable,SourceFile
+-renamesourcefileattribute SourceFile
