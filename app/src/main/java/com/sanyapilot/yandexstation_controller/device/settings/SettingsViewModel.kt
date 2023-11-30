@@ -13,6 +13,7 @@ import com.sanyapilot.yandexstation_controller.api.SettingsErrors
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlin.concurrent.thread
+import kotlin.math.roundToInt
 
 data class NetStatus(
     val ok: Boolean,
@@ -102,6 +103,8 @@ class SettingsViewModel(
     private val _visPresetName = MutableStateFlow("wave")
     private val _visRandomEnabled = MutableStateFlow(false)
     private val _clockType = MutableStateFlow("small")
+    private val _screenAutoBrightness = MutableStateFlow(true)
+    private val _screenBrightness = MutableStateFlow(1f)
 
     val jingleEnabled: StateFlow<Boolean>
         get() = _jingleEnabled
@@ -129,6 +132,10 @@ class SettingsViewModel(
         get() = _visRandomEnabled
     val clockType: StateFlow<String>
         get() = _clockType
+    val screenAutoBrightness: StateFlow<Boolean>
+        get() = _screenAutoBrightness
+    val screenBrightness: StateFlow<Float>
+        get() = _screenBrightness
 
     init {
         // For preview
@@ -184,6 +191,8 @@ class SettingsViewModel(
                 _visPresetName.value = screenRes.data!!.visualizer_preset!!
                 _visRandomEnabled.value = _visPresetName.value == "random"
                 _clockType.value = screenRes.data.clock_type!!
+                _screenAutoBrightness.value = screenRes.data.autobrightness!!
+                _screenBrightness.value = screenRes.data.brightness!!
             }
         }
     }
@@ -348,6 +357,33 @@ class SettingsViewModel(
             )
             if (res.ok) {
                 _clockType.value = type
+            } else {
+                _netStatus.value = NetStatus(false, res.error)
+            }
+        }
+    }
+    fun toggleAutoBrightness() {
+        thread {
+            val res = FuckedQuasarClient.setAuthBrightnessState(
+                deviceId = deviceId,
+                state = !_screenAutoBrightness.value
+            )
+            if (res.ok) {
+                _screenAutoBrightness.value = !_screenAutoBrightness.value
+            } else {
+                _netStatus.value = NetStatus(false, res.error)
+            }
+        }
+    }
+    fun updateScreenBrightness(level: Float) {
+        thread {
+            val roundedLevel = (level * 100).roundToInt() / 100f
+            val res = FuckedQuasarClient.setBrightnessLevel(
+                deviceId = deviceId,
+                level = roundedLevel
+            )
+            if (res.ok) {
+                _screenBrightness.value = roundedLevel
             } else {
                 _netStatus.value = NetStatus(false, res.error)
             }

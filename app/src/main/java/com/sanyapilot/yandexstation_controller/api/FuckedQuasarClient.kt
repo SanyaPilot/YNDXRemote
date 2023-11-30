@@ -402,6 +402,18 @@ object FuckedQuasarClient {
         )).toRequestBody(JSON_MEDIA_TYPE)
         return doPOST(url = "/update_screen_settings", body = body)
     }
+    fun setAuthBrightnessState(deviceId: String, state: Boolean): ReqResult<GenericResponse> {
+        val body = json.encodeToString(ScreenSettingBody(
+            device_id = deviceId, realtime_update = true, autobrightness = state
+        )).toRequestBody(JSON_MEDIA_TYPE)
+        return doPOST(url = "/update_screen_settings", body = body)
+    }
+    fun setBrightnessLevel(deviceId: String, level: Float) : ReqResult<GenericResponse> {
+        val body = json.encodeToString(ScreenSettingBody(
+            device_id = deviceId, realtime_update = true, brightness = level
+        )).toRequestBody(JSON_MEDIA_TYPE)
+        return doPOST(url = "/update_screen_settings", body = body)
+    }
 
     // User
     fun getUserInfo() : ReqResult<UserInfoResponse> {

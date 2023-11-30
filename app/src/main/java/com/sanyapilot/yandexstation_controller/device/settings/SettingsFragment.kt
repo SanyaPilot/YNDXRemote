@@ -50,11 +50,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.Painter
@@ -476,6 +478,50 @@ fun SettingsLayout(
                                 selected = it.id == selectedClockType,
                                 onClick = { viewModel.setClockType(it.id) },
                                 painter = painterResource(id = it.drawableId)
+                            )
+                        }
+                    }
+                }
+
+                // Screen brightness
+                val brightnessOpened = rememberSaveable { mutableStateOf(false) }
+                ExpandingListItem(
+                    expanded = brightnessOpened,
+                    headlineContent = { Text(text = stringResource(id = R.string.screenBrightnessLabel)) },
+                    leadingContent = {
+                        Icon(
+                            painter = painterResource(id = R.drawable.baseline_settings_brightness_24),
+                            contentDescription = null
+                        )
+                    }
+                )
+                AnimatedVisibility(visible = brightnessOpened.value) {
+                    val autoBrightness by viewModel.screenAutoBrightness.collectAsState()
+                    val brightnessLevel by viewModel.screenBrightness.collectAsState()
+                    val curSliderLevel = remember { mutableFloatStateOf(brightnessLevel) }
+                    Column {
+                        ListItem(
+                            leadingContent = { Icon(painter = painterResource(id = R.drawable.round_brightness_auto_24), contentDescription = null) },
+                            headlineContent = { Text(text = stringResource(id = R.string.screenAutoBrightnessLabel)) },
+                            trailingContent = { Switch(checked = autoBrightness, onCheckedChange = { viewModel.toggleAutoBrightness() }) },
+                            modifier = Modifier.clickable { viewModel.toggleAutoBrightness() }
+                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(horizontal = 16.dp)
+                        ) {
+                            Slider(
+                                value = curSliderLevel.floatValue,
+                                enabled = !autoBrightness,
+                                onValueChange = { curSliderLevel.floatValue = it },
+                                onValueChangeFinished = { viewModel.updateScreenBrightness(curSliderLevel.floatValue) },
+                                modifier = Modifier.weight(1f)
+                            )
+                            Text(
+                                text = "${(curSliderLevel.floatValue * 100).roundToInt()}%",
+                                modifier = Modifier
+                                    .padding(start = 8.dp)
+                                    .alpha(if (autoBrightness) 0.38f else 1f)
                             )
                         }
                     }
