@@ -189,7 +189,7 @@ class SettingsViewModel(
                     return@thread
                 }
                 _visPresetName.value = screenRes.data!!.visualizer_preset!!
-                _visRandomEnabled.value = _visPresetName.value == "random"
+                _visRandomEnabled.value = screenRes.data.visualizer_random!!
                 _clockType.value = screenRes.data.clock_type!!
                 _screenAutoBrightness.value = screenRes.data.autobrightness!!
                 _screenBrightness.value = screenRes.data.brightness!!
@@ -340,7 +340,7 @@ class SettingsViewModel(
         thread {
             val res = FuckedQuasarClient.setVisualizerPreset(
                 deviceId = deviceId,
-                name = if (_visRandomEnabled.value) _visPresetName.value else "random"
+                random = !_visRandomEnabled.value
             )
             if (res.ok) {
                 _visRandomEnabled.value = !_visRandomEnabled.value

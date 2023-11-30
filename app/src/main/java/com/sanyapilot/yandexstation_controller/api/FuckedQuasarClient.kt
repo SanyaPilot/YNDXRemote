@@ -129,6 +129,7 @@ data class DNDSettingResponse(
 data class ScreenSettingBody(
     val device_id: String,
     val realtime_update: Boolean,
+    val visualizer_random: Boolean? = null,
     val visualizer_preset: String? = null,
     val autobrightness: Boolean? = null,
     val brightness: Float? = null,
@@ -139,6 +140,7 @@ data class ScreenSettingBody(
 data class ScreenSettingResponse(
     override val status: String,
     override val reason: String? = null,
+    val visualizer_random: Boolean? = null,
     val visualizer_preset: String? = null,
     val autobrightness: Boolean? = null,
     val brightness: Float? = null,
@@ -390,9 +392,12 @@ object FuckedQuasarClient {
     fun getScreenSettings(deviceId: String): ReqResult<ScreenSettingResponse> {
         return doGET(url = "/get_screen_settings", deviceId = deviceId)
     }
-    fun setVisualizerPreset(deviceId: String, name: String): ReqResult<GenericResponse> {
+    fun setVisualizerPreset(deviceId: String, name: String? = null, random : Boolean? = null): ReqResult<GenericResponse> {
         val body = json.encodeToString(ScreenSettingBody(
-            device_id = deviceId, realtime_update = true, visualizer_preset = name
+            device_id = deviceId,
+            realtime_update = true,
+            visualizer_preset = name,
+            visualizer_random = random
         )).toRequestBody(JSON_MEDIA_TYPE)
         return doPOST(url = "/update_screen_settings", body = body)
     }
