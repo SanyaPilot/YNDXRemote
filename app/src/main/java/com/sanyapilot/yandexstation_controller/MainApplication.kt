@@ -14,6 +14,6 @@ MainApplication: Application() {
 
         // Load token from storage (if exists)
         val sharedPrefs = getSharedPreferences("auth", Context.MODE_PRIVATE)
-        if (sharedPrefs.contains("access-token")) Session.accessToken = sharedPrefs.getString("access-token", null)!!
+        if (sharedPrefs.contains("xToken")) Session.xToken = sharedPrefs.getString("xToken", null)!!
     }
 }

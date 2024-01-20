@@ -28,6 +28,7 @@ import com.google.android.material.snackbar.Snackbar
 import com.sanyapilot.yandexstation_controller.R
 import com.sanyapilot.yandexstation_controller.api.Errors
 import com.sanyapilot.yandexstation_controller.api.FuckedQuasarClient
+import com.sanyapilot.yandexstation_controller.api.Session
 import com.sanyapilot.yandexstation_controller.api.mDNSWorker
 import com.sanyapilot.yandexstation_controller.device_register.DeviceRegisterActivity
 import com.sanyapilot.yandexstation_controller.main_screen.user_settings.UserSettingsFragment
@@ -72,7 +73,7 @@ class MainActivity : AppCompatActivity() {
         title = findViewById(R.id.mainAppBarTitle)
 
         // Check if we need auth
-        if (!sharedPrefs.contains("access-token")) {
+        if (!sharedPrefs.contains("xToken")) {
             startActivity(Intent(this, LoginActivity::class.java))
             finish()
             return
@@ -169,7 +170,7 @@ class MainActivity : AppCompatActivity() {
                 Log.d(TAG, "token auth fail")
                 runOnUiThread {
                     with (sharedPrefs.edit()) {
-                        remove("access-token")
+                        remove("xToken")
                         commit()
                     }
                     startActivity(
@@ -248,9 +249,10 @@ class MainActivity : AppCompatActivity() {
     fun logOut(view: View) {
         // Logout action, starting LoginActivity
         with (sharedPrefs.edit()) {
-            remove("access-token")
+            remove("xToken")
             commit()
         }
+        Session.clearAllCookies()
         startActivity(Intent(this, LoginActivity::class.java))
         finish()
     }
