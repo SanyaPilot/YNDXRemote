@@ -1,20 +1,6 @@
 package com.sanyapilot.yandexstation_controller.device.settings
 
-import android.support.v4.media.session.MediaControllerCompat
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.TimePickerState
-import androidx.compose.runtime.MutableFloatState
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import com.sanyapilot.yandexstation_controller.R
-import com.sanyapilot.yandexstation_controller.api.FuckedQuasarClient
-import com.sanyapilot.yandexstation_controller.api.SettingsErrors
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlin.concurrent.thread
-import kotlin.math.roundToInt
-
+/* TODO: Implement device settings
 data class NetStatus(
     val ok: Boolean,
     val error: SettingsErrors? = null
@@ -142,10 +128,10 @@ class SettingsViewModel(
         updateEQValues(_rawEQValues)
 
         thread {
-            _deviceName.value = FuckedQuasarClient.getDeviceById(deviceId)!!.name
+            _deviceName.value = QuasarClient.getDeviceById(deviceId)!!.name
 
             // Activation sound
-            val jingleRes = FuckedQuasarClient.getJingleStatus(deviceId)
+            val jingleRes = QuasarClient.getJingleStatus(deviceId)
             if (!jingleRes.ok) {
                 _netStatus.value = NetStatus(false, jingleRes.error)
                 return@thread
@@ -153,7 +139,7 @@ class SettingsViewModel(
             _jingleEnabled.value = jingleRes.data!!.enabled!!
 
             // Screensavers
-            val ssRes = FuckedQuasarClient.getSSType(deviceId)
+            val ssRes = QuasarClient.getSSType(deviceId)
             if (!ssRes.ok) {
                 _netStatus.value = NetStatus(false, ssRes.error)
                 return@thread
@@ -161,7 +147,7 @@ class SettingsViewModel(
             _ssImages.value = ssRes.data!!.type == "image"
 
             // EQ
-            val eqRes = FuckedQuasarClient.getEQData(deviceId)
+            val eqRes = QuasarClient.getEQData(deviceId)
             if (!eqRes.ok) {
                 _netStatus.value = NetStatus(false, eqRes.error)
                 return@thread
@@ -170,7 +156,7 @@ class SettingsViewModel(
             updateEQValues(_rawEQValues)
 
             // DND
-            val dndRes = FuckedQuasarClient.getDNDData(deviceId)
+            val dndRes = QuasarClient.getDNDData(deviceId)
             if (!dndRes.ok) {
                 _netStatus.value = NetStatus(false, dndRes.error)
                 return@thread
@@ -183,7 +169,7 @@ class SettingsViewModel(
 
             // Yandex.Station Max specific
             if (devicePlatform == "yandexstation_2") {
-                val screenRes = FuckedQuasarClient.getScreenSettings(deviceId)
+                val screenRes = QuasarClient.getScreenSettings(deviceId)
                 if (!screenRes.ok) {
                     _netStatus.value = NetStatus(false, screenRes.error)
                     return@thread
@@ -220,7 +206,7 @@ class SettingsViewModel(
 
     fun toggleJingle() {
         thread {
-            val res = FuckedQuasarClient.setJingleStatus(deviceId, !_jingleEnabled.value)
+            val res = QuasarClient.setJingleStatus(deviceId, !_jingleEnabled.value)
             if (!res.ok) {
                 _netStatus.value = NetStatus(false, res.error)
             } else {
@@ -231,7 +217,7 @@ class SettingsViewModel(
 
     fun toggleSSType() {
         thread {
-            val res = FuckedQuasarClient.setSSType(deviceId, if (_ssImages.value) "video" else "image")
+            val res = QuasarClient.setSSType(deviceId, if (_ssImages.value) "video" else "image")
             if (!res.ok) {
                 _netStatus.value = NetStatus(false, res.error)
             } else {
@@ -242,10 +228,10 @@ class SettingsViewModel(
 
     fun unlinkDevice() {
         thread {
-            val res = FuckedQuasarClient.unlinkDevice(deviceId)
+            val res = QuasarClient.unlinkDevice(deviceId)
             if (res.ok) {
                 // Stop service and finish activity
-                FuckedQuasarClient.fetchDevices()
+                QuasarClient.fetchDevices()
                 mediaController?.transportControls?.stop()
             } else {
                 _netStatus.value = NetStatus(false, res.error)
@@ -255,11 +241,11 @@ class SettingsViewModel(
 
     fun updateDeviceName(name: String) {
         thread {
-            val res = FuckedQuasarClient.renameDevice(deviceId, name)
+            val res = QuasarClient.renameDevice(deviceId, name)
             if (res.ok) {
                 _deviceName.value = name
                 _renameError.value = false
-                FuckedQuasarClient.fetchDevices()
+                QuasarClient.fetchDevices()
             } else if (res.error == SettingsErrors.INVALID_VALUE) {
                 _renameError.value = true
             } else {
@@ -271,7 +257,7 @@ class SettingsViewModel(
     fun updateEQBand(id: Int, value: Float) {
         thread {
             _rawEQValues[id] = value
-            val res = FuckedQuasarClient.setEQData(deviceId, _rawEQValues.toList())
+            val res = QuasarClient.setEQData(deviceId, _rawEQValues.toList())
             if (res.ok) {
                 updateEQValues(_rawEQValues)
             } else {
@@ -282,7 +268,7 @@ class SettingsViewModel(
 
     fun updateAllEQ(data: List<Float>) {
         thread {
-            val res = FuckedQuasarClient.setEQData(deviceId, data)
+            val res = QuasarClient.setEQData(deviceId, data)
             if (res.ok) {
                 _rawEQValues = data.toMutableList()
                 updateEQValues(data)
@@ -294,7 +280,7 @@ class SettingsViewModel(
 
     fun toggleDND() {
         thread {
-            val res = FuckedQuasarClient.setDNDData(deviceId = deviceId, enable = !_dndEnabled.value)
+            val res = QuasarClient.setDNDData(deviceId = deviceId, enable = !_dndEnabled.value)
             if (res.ok) {
                 _dndEnabled.value = !_dndEnabled.value
             } else {
@@ -309,7 +295,7 @@ class SettingsViewModel(
                     "${start.minute.toString().padStart(2, '0')}:00"
             val sStop = "${stop.hour.toString().padStart(2, '0')}:" +
                     "${stop.minute.toString().padStart(2, '0')}:00"
-            val res = FuckedQuasarClient.setDNDData(
+            val res = QuasarClient.setDNDData(
                 deviceId = deviceId,
                 enable = true,
                 start = sStart, stop = sStop
@@ -325,7 +311,7 @@ class SettingsViewModel(
 
     fun setVisPreset(name: String) {
         thread {
-            val res = FuckedQuasarClient.setVisualizerPreset(
+            val res = QuasarClient.setVisualizerPreset(
                 deviceId = deviceId,
                 name = name
             )
@@ -338,7 +324,7 @@ class SettingsViewModel(
     }
     fun toggleVisRandom() {
         thread {
-            val res = FuckedQuasarClient.setVisualizerPreset(
+            val res = QuasarClient.setVisualizerPreset(
                 deviceId = deviceId,
                 random = !_visRandomEnabled.value
             )
@@ -351,7 +337,7 @@ class SettingsViewModel(
     }
     fun setClockType(type: String) {
         thread {
-            val res = FuckedQuasarClient.setClockType(
+            val res = QuasarClient.setClockType(
                 deviceId = deviceId,
                 type = type
             )
@@ -364,7 +350,7 @@ class SettingsViewModel(
     }
     fun toggleAutoBrightness() {
         thread {
-            val res = FuckedQuasarClient.setAuthBrightnessState(
+            val res = QuasarClient.setAuthBrightnessState(
                 deviceId = deviceId,
                 state = !_screenAutoBrightness.value
             )
@@ -378,7 +364,7 @@ class SettingsViewModel(
     fun updateScreenBrightness(level: Float) {
         thread {
             val roundedLevel = (level * 100).roundToInt() / 100f
-            val res = FuckedQuasarClient.setBrightnessLevel(
+            val res = QuasarClient.setBrightnessLevel(
                 deviceId = deviceId,
                 level = roundedLevel
             )
@@ -401,3 +387,4 @@ class SettingsViewModelFactory(
         return SettingsViewModel(deviceId, devicePlatform, mediaController) as T
     }
 }
+*/
