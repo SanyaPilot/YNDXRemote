@@ -329,7 +329,7 @@ class StationControlService : MediaBrowserServiceCompat() {
                 stopForeground(Service.STOP_FOREGROUND_DETACH)
             }
             Log.d(TAG, "DeviceID: $curDeviceId")
-            val speaker = FuckedQuasarClient.getDeviceById(curDeviceId)
+            val speaker = QuasarClient.getDeviceById(curDeviceId)
                 ?: return BrowserRoot(MY_EMPTY_MEDIA_ROOT_ID, null)
 
             station = YandexStationService(

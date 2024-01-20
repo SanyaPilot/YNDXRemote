@@ -11,7 +11,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.sanyapilot.yandexstation_controller.R
-import com.sanyapilot.yandexstation_controller.api.FuckedQuasarClient
+import com.sanyapilot.yandexstation_controller.api.QuasarClient
 import kotlin.concurrent.thread
 
 class DevicesFragment : Fragment() {
@@ -45,7 +45,7 @@ class DevicesFragment : Fragment() {
         if (fetch)
             thread(start = true) { activity.fetchDevices() }
 
-        val devices = FuckedQuasarClient.getDevices()
+        val devices = QuasarClient.getDevices()
         if (devices.isEmpty()) {
             val noDevicesImage = requireView().findViewById<ImageView>(R.id.noDevicesImage)
             val noDevicesText = requireView().findViewById<TextView>(R.id.noDevicesText)

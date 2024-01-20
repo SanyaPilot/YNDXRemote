@@ -27,7 +27,7 @@ import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.google.android.material.snackbar.Snackbar
 import com.sanyapilot.yandexstation_controller.R
 import com.sanyapilot.yandexstation_controller.api.Errors
-import com.sanyapilot.yandexstation_controller.api.FuckedQuasarClient
+import com.sanyapilot.yandexstation_controller.api.QuasarClient
 import com.sanyapilot.yandexstation_controller.api.Session
 import com.sanyapilot.yandexstation_controller.api.mDNSWorker
 import kotlin.concurrent.thread
@@ -148,7 +148,7 @@ class MainActivity : AppCompatActivity() {
             thread(start = true) { startNSD() }
     }
     fun fetchDevices() : Boolean {
-        val result = FuckedQuasarClient.fetchDevices()
+        val result = QuasarClient.fetchDevices()
         if (!result.ok) {
             if (result.errorId == Errors.TIMEOUT) {
                 Log.d(TAG, "timeout")

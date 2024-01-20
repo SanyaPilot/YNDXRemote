@@ -1,33 +1,53 @@
 package com.sanyapilot.yandexstation_controller.api
-import android.util.Log
-import com.sanyapilot.yandexstation_controller.BuildConfig
+import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.RequestBody
-import okhttp3.RequestBody.Companion.toRequestBody
-import java.lang.Exception
 
 @Serializable
 data class DevicesResponse(
-    val devices: List<Speaker>
+    val households: List<QuasarHousehold>
+)
+
+@Serializable
+data class QuasarHousehold (
+    val name: String,
+    val rooms: List<QuasarRoom>,
+    val all: List<QuasarDevice>,
+    @Contextual
+    val sharing_info: Any? = null
+)
+
+@Serializable
+data class QuasarRoom (
+    val name: String,
+    val items: List<QuasarDevice>,
+)
+
+@Serializable
+data class QuasarDevice (
+    val id: String,
+    val name: String,
+    val type: String,
+    val quasar_info: QuasarInfo? = null,
+)
+
+@Serializable
+data class QuasarInfo (
+    val device_id: String,
+    val platform: String
 )
 
 @Serializable
 data class Speaker(
     val id: String,
     val name: String,
-    val platform: String,
-    val networkInfo: NetworkInfo
+    val platform: String
 )
 
-@Serializable
-data class NetworkInfo(
-    val external_port: Int? = null,
-    val ip_addresses: List<String>? = null,
-    val mac_addresses: List<String>? = null
-)
+/* TODO: Implement device settings
+enum class SettingsErrors {
+    UNAUTHORIZED, NOT_LINKED, INVALID_VALUE, TIMEOUT, UNKNOWN, NO_INTERNET
+}
 
 interface APIResponse {
     val status: String
@@ -39,25 +59,6 @@ data class ReqResult<T>(
     val error: SettingsErrors? = null,
     val data: T? = null
 )
-
-enum class LinkDeviceErrors {
-    DEVICE_OFFLINE, ALREADY_RUNNING, REGISTERED_ALREADY, INVALID_CODE, UNAUTHORIZED, UNKNOWN, TIMEOUT
-}
-
-@Serializable
-data class LinkDeviceBody(
-    val device_id: String,
-    val code: Int?
-)
-
-data class LinkDeviceResult(
-    val ok: Boolean,
-    val error: LinkDeviceErrors? = null
-)
-
-enum class SettingsErrors {
-    UNAUTHORIZED, NOT_LINKED, INVALID_VALUE, UNSUPPORTED_ACTION, TIMEOUT, UNKNOWN, NO_INTERNET
-}
 
 @Serializable
 data class GenericResponse(
@@ -166,24 +167,40 @@ data class SpottersBody(
     val data: Map<String, List<String>>,
     val realtime_update: Boolean
 )
+*/
 
-val FQ_BACKEND_URL = if (BuildConfig.DEBUG) "https://testing.yndxfuck.ru" else "https://yndxfuck.ru"
-val JSON_MEDIA_TYPE = "application/json; charset=utf-8".toMediaType()
+val QUASAR_BACKEND_URL = "https://iot.quasar.yandex.ru/m/user"
+val QUASAR_V3_BACKEND_URL = "https://iot.quasar.yandex.ru/m/v3/user"
 
-object FuckedQuasarClient {
-    const val TAG = "FuckedQuasarClient"
-    private var devices = listOf<Speaker>()
+// val JSON_MEDIA_TYPE = "application/json; charset=utf-8".toMediaType()
+
+object QuasarClient {
+    const val TAG = "QuasarClient"
+    private var devices = mutableListOf<Speaker>()
     private val json = Json { ignoreUnknownKeys = true }
 
     fun fetchDevices(): RequestResponse {
-        val result = Session.get("$FQ_BACKEND_URL/glagol/device_list")
+        val result = Session.get("$QUASAR_V3_BACKEND_URL/devices")
         if (!result.ok || result.response == null) {
             return result
         }
-        val body = result.response.body.string()
-        val parsed = json.decodeFromString<DevicesResponse>(body)
+        val parsed = json.decodeFromString<DevicesResponse>(result.response.body.string())
         result.response.close()
-        devices = parsed.devices
+
+        for (house in parsed.households) {
+            if (house.sharing_info != null){
+                continue
+            }
+            for (device in house.all) {
+                if (device.type.startsWith("devices.types.smart_speaker") && device.quasar_info != null) {
+                    devices.add(Speaker(
+                        id = device.quasar_info.device_id,
+                        name = device.name,
+                        platform = device.quasar_info.platform
+                    ))
+                }
+            }
+        }
         return result
     }
     fun getDevices(): List<Speaker> = devices
@@ -199,6 +216,8 @@ object FuckedQuasarClient {
         return null
     }
 
+    // TODO: Implement settings
+    /*
     private inline fun <reified T: APIResponse> doRequest(
         type: String, url: String, body: RequestBody? = null, deviceId: String? = null
     ): ReqResult<T> {
@@ -265,67 +284,6 @@ object FuckedQuasarClient {
     }
     private inline fun <reified T: APIResponse> doPOST(url: String, body: RequestBody): ReqResult<T> {
         return doRequest(type = "POST", url = url, body = body)
-    }
-
-    fun linkDeviceStage1(deviceId: String): LinkDeviceResult {
-        val body = json.encodeToString(LinkDeviceBody(device_id = deviceId, code = null))
-        val res = Session.post("$FQ_BACKEND_URL/reg_device", body.toRequestBody(JSON_MEDIA_TYPE))
-        if (res.errorId == Errors.TIMEOUT) {
-            return LinkDeviceResult(false, LinkDeviceErrors.TIMEOUT)
-        }
-        if (res.response == null) {
-            return LinkDeviceResult(false, error = LinkDeviceErrors.UNKNOWN)
-        }
-        val parsed = try {
-            json.decodeFromString<GenericResponse>(res.response.body.string())
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to decode JSON!\n${e.message}")
-            null
-        }
-        return if (parsed?.status == "ok") {
-            LinkDeviceResult(true)
-        } else {
-            LinkDeviceResult(
-                false,
-                when (parsed?.reason!!) {
-                    "already_running" -> LinkDeviceErrors.ALREADY_RUNNING
-                    "unauthorized" -> LinkDeviceErrors.UNAUTHORIZED
-                    "registered_already" -> LinkDeviceErrors.REGISTERED_ALREADY
-                    "timeout" -> LinkDeviceErrors.DEVICE_OFFLINE
-                    "device_offline" -> LinkDeviceErrors.DEVICE_OFFLINE
-                    else -> LinkDeviceErrors.UNKNOWN
-                }
-            )
-        }
-    }
-    fun linkDeviceStage2(deviceId: String, code: Int): LinkDeviceResult {
-        val body = json.encodeToString(LinkDeviceBody(device_id = deviceId, code = code))
-        val res = Session.post("$FQ_BACKEND_URL/submit_2fa", body.toRequestBody(JSON_MEDIA_TYPE))
-        if (res.errorId == Errors.TIMEOUT) {
-            return LinkDeviceResult(false, LinkDeviceErrors.TIMEOUT)
-        }
-        if (res.response == null) {
-            return LinkDeviceResult(false, error = LinkDeviceErrors.UNKNOWN)
-        }
-        val parsed = try {
-            json.decodeFromString<GenericResponse>(res.response.body.string())
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to decode JSON!\n${e.message}")
-            null
-        }
-        return if (parsed?.status == "ok") {
-            LinkDeviceResult(true)
-        } else {
-            LinkDeviceResult(
-                false,
-                when (parsed?.reason!!) {
-                    "unauthorized" -> LinkDeviceErrors.UNAUTHORIZED
-                    "invalid_code" -> LinkDeviceErrors.INVALID_CODE
-                    "timeout" -> LinkDeviceErrors.DEVICE_OFFLINE
-                    else -> LinkDeviceErrors.UNKNOWN
-                }
-            )
-        }
     }
 
     fun unlinkDevice(deviceId: String): ReqResult<GenericResponse> {
@@ -435,5 +393,5 @@ object FuckedQuasarClient {
             realtime_update = true
         )).toRequestBody(JSON_MEDIA_TYPE)
         return doPOST(url = "/update_spotters", body = body)
-    }
+    }*/
 }
