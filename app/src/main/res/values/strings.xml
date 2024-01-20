@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">YNDXFuck Remote</string>
+    <string name="app_name">YNDXRemote</string>
     <!-- Common -->
     <string name="yes">Да</string>
     <string name="no">Нет</string>
@@ -19,7 +19,7 @@
     <string name="aboutAccount">Об аккаунте</string>
     <string name="logOut">Выйти</string>
     <string name="loginHello">Привет!</string>
-    <string name="loginDescription">Это приложение от команды YNDXFuck для управления вашей прошитой станцией.</string>
+    <string name="loginDescription">Это приложение от команды YNDXFuck для управления вашей станцией.</string>
     <string name="howToGetCode">Как получить код?</string>
     <string name="telegram">Telegram</string>
     <string name="authCode">Код из бота</string>
