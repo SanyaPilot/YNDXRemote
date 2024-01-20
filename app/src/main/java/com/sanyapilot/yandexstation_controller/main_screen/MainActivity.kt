@@ -30,7 +30,6 @@ import com.sanyapilot.yandexstation_controller.api.Errors
 import com.sanyapilot.yandexstation_controller.api.FuckedQuasarClient
 import com.sanyapilot.yandexstation_controller.api.Session
 import com.sanyapilot.yandexstation_controller.api.mDNSWorker
-import com.sanyapilot.yandexstation_controller.device_register.DeviceRegisterActivity
 import com.sanyapilot.yandexstation_controller.main_screen.user_settings.UserSettingsFragment
 import kotlin.concurrent.thread
 
@@ -255,9 +254,6 @@ class MainActivity : AppCompatActivity() {
         Session.clearAllCookies()
         startActivity(Intent(this, LoginActivity::class.java))
         finish()
-    }
-    fun linkDevice(view: View) {
-        startActivity(Intent(this, DeviceRegisterActivity::class.java))
     }
     private fun createNotificationChannel() {
         val name = "Station player"
