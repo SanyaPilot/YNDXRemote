@@ -12,8 +12,6 @@ import androidx.lifecycle.ViewModelProvider
 import coil.load
 import coil.transform.CircleCropTransformation
 import com.sanyapilot.yandexstation_controller.R
-import com.sanyapilot.yandexstation_controller.api.FuckedQuasarClient
-import kotlin.concurrent.thread
 
 class UserFragment : Fragment() {
     override fun onCreateView(
@@ -59,14 +57,7 @@ class UserFragment : Fragment() {
         }
 
         if (viewModel.getUserName().value == null) {
-            thread {
-                val res = FuckedQuasarClient.getUserInfo()
-                if (res.ok) {
-                    requireActivity().runOnUiThread {
-                        viewModel.updateUserData(res.data!!.name!!)
-                    }
-                }
-            }
+            viewModel.updateUserData()
         }
     }
 }
