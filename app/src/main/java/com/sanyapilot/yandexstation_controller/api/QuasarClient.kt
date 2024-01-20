@@ -169,8 +169,8 @@ data class SpottersBody(
 )
 */
 
-val QUASAR_BACKEND_URL = "https://iot.quasar.yandex.ru/m/user"
-val QUASAR_V3_BACKEND_URL = "https://iot.quasar.yandex.ru/m/v3/user"
+val QUASAR_IOT_BACKEND_URL = "https://iot.quasar.yandex.ru/m/user"
+val QUASAR_IOT_V3_BACKEND_URL = "https://iot.quasar.yandex.ru/m/v3/user"
 
 // val JSON_MEDIA_TYPE = "application/json; charset=utf-8".toMediaType()
 
@@ -180,7 +180,7 @@ object QuasarClient {
     private val json = Json { ignoreUnknownKeys = true }
 
     fun fetchDevices(): RequestResponse {
-        val result = Session.get("$QUASAR_V3_BACKEND_URL/devices")
+        val result = Session.get("$QUASAR_IOT_V3_BACKEND_URL/devices")
         if (!result.ok || result.response == null) {
             return result
         }

@@ -135,6 +135,8 @@ data class FormSlot(
 )
 
 // Glagol local communication protocol
+
+val QUASAR_BACKEND_URL = "https://quasar.yandex.ru"
 class GlagolClient(private val speaker: Speaker) : WebSocketListener() {
     companion object {
         private const val TAG = "GlagolClient"
@@ -154,7 +156,7 @@ class GlagolClient(private val speaker: Speaker) : WebSocketListener() {
             return GlagolResponse(false, GlagolErrors.DEVICE_NOT_DISCOVERED)
 
         // Get device token
-        val response = Session.get("$FQ_BACKEND_URL/glagol/token?device_id=${speaker.id}&platform=${speaker.platform}")
+        val response = Session.get("$QUASAR_BACKEND_URL/glagol/token?device_id=${speaker.id}&platform=${speaker.platform}")
         val parsed = json.decodeFromString<TokenResponse>(response.response!!.body.string())
         token = parsed.token
         Log.d(TAG, "Got token $token")
