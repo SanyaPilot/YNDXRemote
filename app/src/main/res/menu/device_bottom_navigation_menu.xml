@@ -9,7 +9,8 @@
         android:id="@+id/rcPage"
         android:enabled="true"
         android:icon="@drawable/round_control_camera_24"
-        android:title="@string/rc" />
+        android:title="@string/rc"
+        android:visible="false" />
     <item
         android:id="@+id/settingsPage"
         android:enabled="true"

@@ -20,15 +20,10 @@ import com.sanyapilot.yandexstation_controller.R
 import com.sanyapilot.yandexstation_controller.api.Speaker
 import com.sanyapilot.yandexstation_controller.api.mDNSWorker
 import com.sanyapilot.yandexstation_controller.misc.stationIcons
+import com.sanyapilot.yandexstation_controller.misc.stationNames
 import com.sanyapilot.yandexstation_controller.service.DEVICE_ID
 import com.sanyapilot.yandexstation_controller.service.DEVICE_NAME
 import com.sanyapilot.yandexstation_controller.service.DEVICE_PLATFORM
-
-val DEVICE_NAME_RES = mapOf(
-    "yandexstation" to R.string.device_yandexstation,
-    "yandexstation_2" to R.string.device_yandexstation_2
-)
-val DEVICE_NAME_FALL_RES = R.string.device_yandexstation
 
 class DevicesRecyclerAdapter(
     private val activity: Activity,
@@ -108,9 +103,9 @@ class DevicesRecyclerAdapter(
             val curViewHolder = viewHolder as ViewHolder
             val curDevice = dataSet[position]
             if (curDevice is Speaker) {
-                curViewHolder.image.setImageResource(stationIcons.getOrDefault(curDevice.platform, R.drawable.station_icon))
+                curViewHolder.image.setImageResource(stationIcons.getOrDefault(curDevice.platform, R.drawable.station_unknown))
                 curViewHolder.name.text = curDevice.name
-                curViewHolder.type.setText(DEVICE_NAME_RES.getOrDefault(curDevice.platform, DEVICE_NAME_FALL_RES))
+                curViewHolder.type.setText(stationNames.getOrDefault(curDevice.platform, R.string.station_unknown))
 
                 curViewHolder.card.setOnClickListener {
                     val intent = Intent(it.context, DeviceActivity::class.java).apply {

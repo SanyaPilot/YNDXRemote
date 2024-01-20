@@ -39,12 +39,20 @@
     <string name="online">В сети</string>
     <string name="offline">Не в сети</string>
 
-    <string name="device_yandexstation">Яндекс.Станция</string>
-    <string name="device_yandexstation_2">Яндекс.Станция Макс</string>
-
     <string name="deviceList">Список устройств</string>
     <string name="deviceOffline">Устройство не в сети!</string>
     <string name="noDevices">Сейчас здесь нет устройств.\nПривяжите колонку в Telegram боте\nt.me/yndxfuck_bot</string>
+
+    <!-- Device names -->
+    <string name="station">Яндекс Станция</string>
+    <string name="station_max">Яндекс Станция Макс</string>
+    <string name="station_mini">Яндекс Станция Мини</string>
+    <string name="station_lite">Яндекс Станция Лайт</string>
+    <string name="station_mini2">Яндекс Станция Мини 2</string>
+    <string name="station_2">Яндекс Станция 2</string>
+    <string name="station_midi">Яндекс Станция Миди</string>
+    <string name="station_duo_max">Яндекс Станция Дуо Макс</string>
+    <string name="station_unknown">Колонка с Алисой</string>
 
     <!-- Device activity -->
     <string name="deviceActivityHeader">Управление станцией</string>

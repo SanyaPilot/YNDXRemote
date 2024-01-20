@@ -36,6 +36,7 @@ import com.sanyapilot.yandexstation_controller.service.DEVICE_NAME
 import com.sanyapilot.yandexstation_controller.R
 import com.sanyapilot.yandexstation_controller.api.mDNSWorker
 import com.sanyapilot.yandexstation_controller.device.settings.SettingsFragment
+import com.sanyapilot.yandexstation_controller.misc.stationsWithVideo
 import com.sanyapilot.yandexstation_controller.service.DEVICE_PLATFORM
 import com.sanyapilot.yandexstation_controller.service.StationControlService
 import kotlin.concurrent.thread
@@ -161,6 +162,13 @@ class DeviceActivity : AppCompatActivity() {
             supportActionBar!!.setDisplayHomeAsUpEnabled(true)
             supportActionBar!!.setDisplayShowHomeEnabled(true)
             appBar.subtitle = deviceName
+        }
+
+        val navBar: BottomNavigationView = findViewById(R.id.deviceNavigation)
+
+        // Enable UI remote only for specific models
+        if (stationsWithVideo.contains(devicePlatform)) {
+            navBar.menu.getItem(1).isVisible = true
         }
 
         // Color navbar
