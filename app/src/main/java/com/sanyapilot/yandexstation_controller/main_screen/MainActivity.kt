@@ -30,7 +30,6 @@ import com.sanyapilot.yandexstation_controller.api.Errors
 import com.sanyapilot.yandexstation_controller.api.FuckedQuasarClient
 import com.sanyapilot.yandexstation_controller.api.Session
 import com.sanyapilot.yandexstation_controller.api.mDNSWorker
-import com.sanyapilot.yandexstation_controller.main_screen.user_settings.UserSettingsFragment
 import kotlin.concurrent.thread
 
 const val TOKEN_INVALID = "com.sanyapilot.yandexstation_controller.tokenInvalid"
@@ -103,12 +102,6 @@ class MainActivity : AppCompatActivity() {
                             supportFragmentManager.commit {
                                 setReorderingAllowed(true)
                                 replace<DevicesFragment>(R.id.mainFragmentContainer)
-                            }
-                        }
-                        R.id.userSettingsPage -> {
-                            supportFragmentManager.commit {
-                                setReorderingAllowed(true)
-                                replace<UserSettingsFragment>(R.id.mainFragmentContainer)
                             }
                         }
                         R.id.accountPage -> {

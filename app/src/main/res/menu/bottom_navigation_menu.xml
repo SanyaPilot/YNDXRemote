@@ -7,11 +7,6 @@
         android:icon="@drawable/ic_baseline_speaker_group_24"
         android:title="@string/devices" />
     <item
-        android:id="@+id/userSettingsPage"
-        android:enabled="true"
-        android:icon="@drawable/round_settings_24"
-        android:title="@string/settings" />
-    <item
         android:id="@+id/accountPage"
         android:enabled="true"
         android:icon="@drawable/ic_baseline_account_box_24"
