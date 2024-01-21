@@ -1,6 +1,14 @@
 package com.sanyapilot.yandexstation_controller.composables
 
-/* TODO: Implement device settings
+import android.content.Context
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import com.sanyapilot.yandexstation_controller.R
+import com.sanyapilot.yandexstation_controller.api.SettingsErrors
+import com.sanyapilot.yandexstation_controller.device.settings.NetStatus
+
 @Composable
 fun NetStatusSnack(
     context: Context,
@@ -23,4 +31,3 @@ fun NetStatusSnack(
         }
     }
 }
-*/

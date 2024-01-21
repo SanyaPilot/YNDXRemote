@@ -1,29 +1,87 @@
 package com.sanyapilot.yandexstation_controller.device.settings
 
 import android.os.Bundle
+import android.support.v4.media.session.MediaControllerCompat
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedCard
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TimeInput
+import androidx.compose.material3.TimePicker
+import androidx.compose.material3.TimePickerState
+import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.sanyapilot.yandexstation_controller.R
+import com.sanyapilot.yandexstation_controller.composables.ExpandingListItem
+import com.sanyapilot.yandexstation_controller.composables.NetStatusSnack
 import com.sanyapilot.yandexstation_controller.ui.theme.AppTheme
+import kotlin.math.min
+import kotlin.math.roundToInt
 
 class SettingsFragment : Fragment() {
-    /*
     private lateinit var viewModel: SettingsViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -37,7 +95,6 @@ class SettingsFragment : Fragment() {
             )
         )[SettingsViewModel::class.java]
     }
-    */
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -49,8 +106,7 @@ class SettingsFragment : Fragment() {
             setContent {
                 AppTheme {
                     Surface {
-                        // SettingsLayout(viewModel, requireArguments().getString("devicePlatform")!!)
-                        SettingsLayout()
+                        SettingsLayout(viewModel, requireArguments().getString("devicePlatform")!!)
                     }
                 }
             }
@@ -70,7 +126,6 @@ class SettingsFragment : Fragment() {
     }
 }
 
-/* TODO: Implement device settings
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsLayout(
@@ -643,31 +698,6 @@ fun SettingsPreview() {
             SettingsLayout(viewModel(
                 factory = SettingsViewModelFactory("deaddeaddeaddeaddead", "yandexstation_2", null)
             ))
-        }
-    }
-}
-*/
-
-@Composable
-fun SettingsLayout() {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-        modifier = Modifier
-            .fillMaxHeight()
-            .fillMaxWidth()
-    ) {
-        Text(text = "¯\\_(ツ)_/¯", fontSize = 48.sp)
-        Text(text = "Здесь точно что-то будет", modifier = Modifier.padding(top = 16.dp))
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun SettingsPreview() {
-    AppTheme {
-        Surface {
-            SettingsLayout()
         }
     }
 }
