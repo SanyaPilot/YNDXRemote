@@ -8,11 +8,24 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.sanyapilot.yandexstation_controller.R
-import com.sanyapilot.yandexstation_controller.api.FuckedQuasarClient
+import com.sanyapilot.yandexstation_controller.api.ConfigUpdateResponse
+import com.sanyapilot.yandexstation_controller.api.DNDModeConfig
+import com.sanyapilot.yandexstation_controller.api.DeviceConfig
+import com.sanyapilot.yandexstation_controller.api.EqualizerBandConfig
+import com.sanyapilot.yandexstation_controller.api.EqualizerConfig
+import com.sanyapilot.yandexstation_controller.api.LEDBrightnessConfig
+import com.sanyapilot.yandexstation_controller.api.LEDConfig
+import com.sanyapilot.yandexstation_controller.api.LEDEQVisConfig
+import com.sanyapilot.yandexstation_controller.api.LEDTimeVisConfig
+import com.sanyapilot.yandexstation_controller.api.QuasarClient
+import com.sanyapilot.yandexstation_controller.api.ReqResult
+import com.sanyapilot.yandexstation_controller.api.ScreenSaverConfig
 import com.sanyapilot.yandexstation_controller.api.SettingsErrors
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import java.util.TimeZone
 import kotlin.concurrent.thread
+import kotlin.math.absoluteValue
 import kotlin.math.roundToInt
 
 data class NetStatus(
@@ -56,6 +69,9 @@ val EQ_PRESETS = listOf(
     EQPreset("low_high", "Меньше высоких", listOf(0f, 0f, 0f, 0f, -5f))
 )
 
+val EQ_FREQS = listOf(60, 230, 910, 3600, 14000)
+val EQ_WIDTHS = listOf(90, 340, 1340, 5200, 13000)
+
 const val CUSTOM_PRESET_NAME = "Свой пресет"
 
 data class DNDTime(
@@ -89,7 +105,6 @@ class SettingsViewModel(
     private val devicePlatform: String,
     private val mediaController: MediaControllerCompat?
 ) : ViewModel() {
-    private val _jingleEnabled = MutableStateFlow(false)
     private val _ssImages = MutableStateFlow(false)
     private val _netStatus = MutableStateFlow(NetStatus(true))
     private val _renameError = MutableStateFlow(false)
@@ -98,16 +113,18 @@ class SettingsViewModel(
     private val _eqValues = MutableStateFlow(listOf<EQBand>())
     private val _presetName = MutableStateFlow(CUSTOM_PRESET_NAME)
     private val _dndEnabled = MutableStateFlow(false)
-    private val _dndStartValue = MutableStateFlow(DNDTime(0, 0))
-    private val _dndStopValue = MutableStateFlow(DNDTime(0, 0))
-    private val _visPresetName = MutableStateFlow("wave")
-    private val _visRandomEnabled = MutableStateFlow(false)
-    private val _clockType = MutableStateFlow("small")
+    private val _dndStartValue = MutableStateFlow(DNDTime(23, 0))
+    private val _dndStopValue = MutableStateFlow(DNDTime(9, 0))
+    private val _visPresetName = MutableStateFlow("pads")
+    private val _visRandomEnabled = MutableStateFlow(true)
+    private val _clockType = MutableStateFlow("middle")
     private val _screenAutoBrightness = MutableStateFlow(true)
-    private val _screenBrightness = MutableStateFlow(1f)
+    private val _screenBrightness = MutableStateFlow(0.5f)
 
-    val jingleEnabled: StateFlow<Boolean>
-        get() = _jingleEnabled
+    private lateinit var deviceSmartHomeId: String
+    private lateinit var outPayload: DeviceConfig
+    private lateinit var configVersion: String
+
     val ssImages: StateFlow<Boolean>
         get() = _ssImages
     val netStatus: StateFlow<NetStatus>
@@ -142,59 +159,70 @@ class SettingsViewModel(
         updateEQValues(_rawEQValues)
 
         thread {
-            _deviceName.value = FuckedQuasarClient.getDeviceById(deviceId)!!.name
+            val device = QuasarClient.getDeviceById(deviceId)!!
+            _deviceName.value = device.name
+            deviceSmartHomeId = device.smartHomeId
+            refreshConfig()
+        }
+    }
 
-            // Activation sound
-            val jingleRes = FuckedQuasarClient.getJingleStatus(deviceId)
-            if (!jingleRes.ok) {
-                _netStatus.value = NetStatus(false, jingleRes.error)
-                return@thread
-            }
-            _jingleEnabled.value = jingleRes.data!!.enabled!!
+    private fun refreshConfig() {
+        // Fetch all current data
+        val res = QuasarClient.getDeviceConfig(deviceSmartHomeId)
+        if (!res.ok || res.data!!.quasar_config == null) {
+            _netStatus.value = NetStatus(false, res.error)
+            return
+        }
 
-            // Screensavers
-            val ssRes = FuckedQuasarClient.getSSType(deviceId)
-            if (!ssRes.ok) {
-                _netStatus.value = NetStatus(false, ssRes.error)
-                return@thread
-            }
-            _ssImages.value = ssRes.data!!.type == "image"
+        val quasarConfig = res.data.quasar_config!!
+        // Initially fill the payload
+        outPayload = quasarConfig
+        configVersion = res.data.quasar_config_version!!
 
-            // EQ
-            val eqRes = FuckedQuasarClient.getEQData(deviceId)
-            if (!eqRes.ok) {
-                _netStatus.value = NetStatus(false, eqRes.error)
-                return@thread
+        // Screensavers
+        val ssConfig = quasarConfig.screenSaverConfig
+        if (ssConfig != null) {
+            _ssImages.value = ssConfig.type == "IMAGE"
+        }
+
+        // EQ
+        val eqConfig = quasarConfig.equalizer
+        if (eqConfig != null) {
+            for (i in 0..4) {
+                _rawEQValues[i] = eqConfig.bands[i].gain
             }
-            _rawEQValues = (eqRes.data!!.data as MutableList<Float>)
             updateEQValues(_rawEQValues)
+        }
 
-            // DND
-            val dndRes = FuckedQuasarClient.getDNDData(deviceId)
-            if (!dndRes.ok) {
-                _netStatus.value = NetStatus(false, dndRes.error)
-                return@thread
-            }
-            _dndEnabled.value = dndRes.data!!.enabled!!
-            val start = dndRes.data.start!!.split(':')
-            val stop = dndRes.data.stop!!.split(':')
+        // DND
+        val dndConfig = quasarConfig.dndMode
+        if (dndConfig != null) {
+            _dndEnabled.value = dndConfig.enabled
+            val start = dndConfig.starts.slice(0..4).split(":")
+            val stop = dndConfig.ends.slice(0..4).split(":")
             _dndStartValue.value = DNDTime(start[0].toInt(), start[1].toInt())
             _dndStopValue.value = DNDTime(stop[0].toInt(), stop[1].toInt())
+        }
 
-            // Yandex.Station Max specific
-            if (devicePlatform == "yandexstation_2") {
-                val screenRes = FuckedQuasarClient.getScreenSettings(deviceId)
-                if (!screenRes.ok) {
-                    _netStatus.value = NetStatus(false, screenRes.error)
-                    return@thread
-                }
-                _visPresetName.value = screenRes.data!!.visualizer_preset!!
-                _visRandomEnabled.value = screenRes.data.visualizer_random!!
-                _clockType.value = screenRes.data.clock_type!!
-                _screenAutoBrightness.value = screenRes.data.autobrightness!!
-                _screenBrightness.value = screenRes.data.brightness!!
+        // Yandex.Station Max specific
+        if (devicePlatform == "yandexstation_2") {
+            val ledConfig = quasarConfig.led
+            if (ledConfig != null) {
+                _visPresetName.value = ledConfig.music_equalizer_visualization.style
+                _visRandomEnabled.value = ledConfig.music_equalizer_visualization.auto
+                _clockType.value = ledConfig.time_visualization.size
+                _screenAutoBrightness.value = ledConfig.brightness.auto
+                _screenBrightness.value = ledConfig.brightness.value
             }
         }
+    }
+
+    private fun sendPayload(): ReqResult<ConfigUpdateResponse> {
+        val res = QuasarClient.updateDeviceConfig(deviceSmartHomeId, outPayload, configVersion)
+        if (res.data?.version != null) {
+            configVersion = res.data.version
+        }
+        return res
     }
 
     private fun updateEQValues(data: List<Float>) {
@@ -218,20 +246,10 @@ class SettingsViewModel(
         }
     }
 
-    fun toggleJingle() {
-        thread {
-            val res = FuckedQuasarClient.setJingleStatus(deviceId, !_jingleEnabled.value)
-            if (!res.ok) {
-                _netStatus.value = NetStatus(false, res.error)
-            } else {
-                _jingleEnabled.value = !_jingleEnabled.value
-            }
-        }
-    }
-
     fun toggleSSType() {
         thread {
-            val res = FuckedQuasarClient.setSSType(deviceId, if (_ssImages.value) "video" else "image")
+            outPayload.screenSaverConfig = ScreenSaverConfig(if (_ssImages.value) "VIDEO" else "IMAGE")
+            val res = sendPayload()
             if (!res.ok) {
                 _netStatus.value = NetStatus(false, res.error)
             } else {
@@ -242,10 +260,10 @@ class SettingsViewModel(
 
     fun unlinkDevice() {
         thread {
-            val res = FuckedQuasarClient.unlinkDevice(deviceId)
+            val res = QuasarClient.unlinkDevice(deviceSmartHomeId)
             if (res.ok) {
                 // Stop service and finish activity
-                FuckedQuasarClient.fetchDevices()
+                QuasarClient.fetchDevices()
                 mediaController?.transportControls?.stop()
             } else {
                 _netStatus.value = NetStatus(false, res.error)
@@ -255,11 +273,11 @@ class SettingsViewModel(
 
     fun updateDeviceName(name: String) {
         thread {
-            val res = FuckedQuasarClient.renameDevice(deviceId, name)
+            val res = QuasarClient.renameDevice(deviceSmartHomeId, name, _deviceName.value)
             if (res.ok) {
                 _deviceName.value = name
                 _renameError.value = false
-                FuckedQuasarClient.fetchDevices()
+                QuasarClient.fetchDevices()
             } else if (res.error == SettingsErrors.INVALID_VALUE) {
                 _renameError.value = true
             } else {
@@ -268,10 +286,33 @@ class SettingsViewModel(
         }
     }
 
+    private fun genEQBandsPayload(data: List<Float> = listOf(0f, 0f, 0f, 0f, 0f)): List<EqualizerBandConfig> {
+        val res = mutableListOf<EqualizerBandConfig>()
+        for (i in 0..4) {
+            res.add(EqualizerBandConfig(
+                gain = data[i],
+                freq = EQ_FREQS[i],
+                width = EQ_WIDTHS[i]
+            ))
+        }
+        return res
+    }
     fun updateEQBand(id: Int, value: Float) {
         thread {
             _rawEQValues[id] = value
-            val res = FuckedQuasarClient.setEQData(deviceId, _rawEQValues.toList())
+            if (outPayload.equalizer == null) {
+                outPayload.equalizer = EqualizerConfig(
+                    enabled = true,
+                    smartEnabled = false,
+                    active_preset_id = "custom",
+                    bands = genEQBandsPayload(),
+                    custom_preset_bands = mutableListOf(0f, 0f, 0f, 0f, 0f)
+                )
+            }
+            outPayload.equalizer!!.bands[id].gain = value
+            outPayload.equalizer!!.custom_preset_bands[id] = value
+
+            val res = sendPayload()
             if (res.ok) {
                 updateEQValues(_rawEQValues)
             } else {
@@ -279,10 +320,16 @@ class SettingsViewModel(
             }
         }
     }
-
     fun updateAllEQ(data: List<Float>) {
         thread {
-            val res = FuckedQuasarClient.setEQData(deviceId, data)
+            outPayload.equalizer = EqualizerConfig(
+                enabled = true,
+                smartEnabled = false,
+                active_preset_id = "custom",
+                bands = genEQBandsPayload(data),
+                custom_preset_bands = data.toMutableList()
+            )
+            val res = sendPayload()
             if (res.ok) {
                 _rawEQValues = data.toMutableList()
                 updateEQValues(data)
@@ -292,9 +339,29 @@ class SettingsViewModel(
         }
     }
 
+    private fun genDNDPayload(
+        start: DNDTime = _dndStartValue.value,
+        stop: DNDTime = _dndStopValue.value
+    ): DNDModeConfig {
+        val tz = TimeZone.getDefault()
+        val suffix = (if (tz.rawOffset > 0) "+" else "-") +
+                (tz.rawOffset / (1000 * 60 * 60)).absoluteValue
+                    .toString().padStart(2, '0') + "00"
+        return DNDModeConfig(
+            enabled = _dndEnabled.value,
+            starts = start.hour.toString().padStart(2, '0') + ":" +
+                     start.minute.toString().padStart(2, '0') + ":00" + suffix,
+            ends = stop.hour.toString().padStart(2, '0') + ":" +
+                   stop.minute.toString().padStart(2, '0') + ":00" + suffix,
+        )
+    }
     fun toggleDND() {
         thread {
-            val res = FuckedQuasarClient.setDNDData(deviceId = deviceId, enable = !_dndEnabled.value)
+            if (outPayload.dndMode == null) {
+                outPayload.dndMode = genDNDPayload()
+            }
+            outPayload.dndMode!!.enabled = !outPayload.dndMode!!.enabled
+            val res = sendPayload()
             if (res.ok) {
                 _dndEnabled.value = !_dndEnabled.value
             } else {
@@ -302,33 +369,46 @@ class SettingsViewModel(
             }
         }
     }
-
     fun setDNDValues(start: TimePickerState, stop: TimePickerState) {
         thread {
-            val sStart = "${start.hour.toString().padStart(2, '0')}:" +
-                    "${start.minute.toString().padStart(2, '0')}:00"
-            val sStop = "${stop.hour.toString().padStart(2, '0')}:" +
-                    "${stop.minute.toString().padStart(2, '0')}:00"
-            val res = FuckedQuasarClient.setDNDData(
-                deviceId = deviceId,
-                enable = true,
-                start = sStart, stop = sStop
+            val startDNDTime = DNDTime(start.hour, start.minute)
+            val stopDNDTime = DNDTime(stop.hour, stop.minute)
+            outPayload.dndMode = genDNDPayload(
+                start = startDNDTime,
+                stop = stopDNDTime
             )
+            val res = sendPayload()
             if (res.ok) {
-                _dndStartValue.value = DNDTime(start.hour, start.minute)
-                _dndStopValue.value = DNDTime(stop.hour, stop.minute)
+                _dndStartValue.value = startDNDTime
+                _dndStopValue.value = stopDNDTime
             } else {
                 _netStatus.value = NetStatus(false, res.error)
             }
         }
     }
 
+    private fun genLEDConfig(): LEDConfig {
+        return LEDConfig(
+            brightness = LEDBrightnessConfig(
+                auto = _screenAutoBrightness.value,
+                value = _screenBrightness.value
+            ),
+            music_equalizer_visualization = LEDEQVisConfig(
+                auto = _visRandomEnabled.value,
+                style = _visPresetName.value
+            ),
+            time_visualization = LEDTimeVisConfig(
+                size = _clockType.value
+            )
+        )
+    }
     fun setVisPreset(name: String) {
         thread {
-            val res = FuckedQuasarClient.setVisualizerPreset(
-                deviceId = deviceId,
-                name = name
-            )
+            if (outPayload.led == null) {
+                outPayload.led = genLEDConfig()
+            }
+            outPayload.led!!.music_equalizer_visualization.style = name
+            val res = sendPayload()
             if (res.ok) {
                 _visPresetName.value = name
             } else {
@@ -338,10 +418,11 @@ class SettingsViewModel(
     }
     fun toggleVisRandom() {
         thread {
-            val res = FuckedQuasarClient.setVisualizerPreset(
-                deviceId = deviceId,
-                random = !_visRandomEnabled.value
-            )
+            if (outPayload.led == null) {
+                outPayload.led = genLEDConfig()
+            }
+            outPayload.led!!.music_equalizer_visualization.auto = !outPayload.led!!.music_equalizer_visualization.auto
+            val res = sendPayload()
             if (res.ok) {
                 _visRandomEnabled.value = !_visRandomEnabled.value
             } else {
@@ -351,10 +432,11 @@ class SettingsViewModel(
     }
     fun setClockType(type: String) {
         thread {
-            val res = FuckedQuasarClient.setClockType(
-                deviceId = deviceId,
-                type = type
-            )
+            if (outPayload.led == null) {
+                outPayload.led = genLEDConfig()
+            }
+            outPayload.led!!.time_visualization.size = type
+            val res = sendPayload()
             if (res.ok) {
                 _clockType.value = type
             } else {
@@ -364,10 +446,11 @@ class SettingsViewModel(
     }
     fun toggleAutoBrightness() {
         thread {
-            val res = FuckedQuasarClient.setAuthBrightnessState(
-                deviceId = deviceId,
-                state = !_screenAutoBrightness.value
-            )
+            if (outPayload.led == null) {
+                outPayload.led = genLEDConfig()
+            }
+            outPayload.led!!.brightness.auto = !outPayload.led!!.brightness.auto
+            val res = sendPayload()
             if (res.ok) {
                 _screenAutoBrightness.value = !_screenAutoBrightness.value
             } else {
@@ -377,11 +460,12 @@ class SettingsViewModel(
     }
     fun updateScreenBrightness(level: Float) {
         thread {
+            if (outPayload.led == null) {
+                outPayload.led = genLEDConfig()
+            }
             val roundedLevel = (level * 100).roundToInt() / 100f
-            val res = FuckedQuasarClient.setBrightnessLevel(
-                deviceId = deviceId,
-                level = roundedLevel
-            )
+            outPayload.led!!.brightness.value = roundedLevel
+            val res = sendPayload()
             if (res.ok) {
                 _screenBrightness.value = roundedLevel
             } else {

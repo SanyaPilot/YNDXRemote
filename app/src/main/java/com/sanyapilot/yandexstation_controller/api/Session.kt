@@ -41,7 +41,7 @@ enum class Errors {
 }
 
 enum class Methods {
-    GET, POST, PUT
+    GET, POST, PUT, DELETE
 }
 
 @Serializable
@@ -336,6 +336,9 @@ object Session {
     fun put(url: String, body: RequestBody?): RequestResponse {
         return doRequest(Methods.PUT, url, body)
     }
+    fun delete(url: String): RequestResponse {
+        return doRequest(Methods.DELETE, url)
+    }
     fun wsConnect(url: String, listener: WebSocketListener) {
         val request = Request.Builder()
             .url(url)
@@ -346,6 +349,8 @@ object Session {
     private fun doRequest(method: Methods, url: String, body: RequestBody? = null, retry: Int = 2): RequestResponse {
         val request = Request.Builder()
             .url(url)
+
+        Log.d(TAG, "$method $url")
 
         // All except get requires CSRF token
         if (method != Methods.GET) {
@@ -371,10 +376,11 @@ object Session {
             request.addHeader("x-csrf-token", csrf)
         }
 
-        if (method == Methods.POST) {
-            request.post(body!!)
-        } else if (method == Methods.PUT) {
-            request.put(body!!)
+        when (method) {
+            Methods.GET -> request.get()
+            Methods.POST -> request.post(body!!)
+            Methods.PUT -> request.put(body!!)
+            Methods.DELETE -> request.delete()
         }
 
         try {

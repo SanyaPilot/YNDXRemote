@@ -230,14 +230,6 @@ fun SettingsLayout(
                 .fillMaxHeight()
                 .verticalScroll(rememberScrollState())
         ) {
-            val jingleEnabled by viewModel.jingleEnabled.collectAsState()
-            ListItem(
-                leadingContent = { Icon(painter = painterResource(id = R.drawable.ic_round_volume_up_24), contentDescription = null) },
-                headlineContent = { Text(stringResource(R.string.jingleLabel)) },
-                trailingContent = { Switch(checked = jingleEnabled, onCheckedChange = { viewModel.toggleJingle() }) },
-                modifier = Modifier.clickable { viewModel.toggleJingle() }
-            )
-
             val ssImages by viewModel.ssImages.collectAsState()
             ListItem(
                 leadingContent = { Icon(painter = painterResource(id = R.drawable.round_wallpaper_24), contentDescription = null) },

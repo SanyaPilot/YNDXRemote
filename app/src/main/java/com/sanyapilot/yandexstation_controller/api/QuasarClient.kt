@@ -1,7 +1,14 @@
+@file:Suppress("PropertyName")  // Models require underscores
+
 package com.sanyapilot.yandexstation_controller.api
+import android.util.Log
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 
 @Serializable
 data class DevicesResponse(
@@ -40,18 +47,18 @@ data class QuasarInfo (
 @Serializable
 data class Speaker(
     val id: String,
+    val smartHomeId: String,
     val name: String,
     val platform: String
 )
 
-/* TODO: Implement device settings
 enum class SettingsErrors {
     UNAUTHORIZED, NOT_LINKED, INVALID_VALUE, TIMEOUT, UNKNOWN, NO_INTERNET
 }
 
 interface APIResponse {
     val status: String
-    val reason: String?
+    val code: String?
 }
 
 data class ReqResult<T>(
@@ -63,116 +70,109 @@ data class ReqResult<T>(
 @Serializable
 data class GenericResponse(
     override val status: String,
-    override val reason: String? = null
+    override val code: String? = null,
+    val message: String? = null
 ) : APIResponse
 
 @Serializable
-data class SettingsResponse(
+data class ConfigUpdateResponse(
     override val status: String,
-    override val reason: String? = null,
-    val enabled: Boolean? = null,
-    val type: String? = null
+    override val code: String? = null,
+    val message: String? = null,
+    val version: String? = null
 ) : APIResponse
 
 @Serializable
-data class BoolSettingBody(
-    val device_id: String,
-    val realtime_update: Boolean,
-    val state: Boolean
-)
-
-@Serializable
-data class TypeSettingBody(
-    val device_id: String,
-    val realtime_update: Boolean,
-    val state: String
-)
-
-@Serializable
-data class NameSettingBody(
-    val device_id: String,
-    val name: String
-)
-
-@Serializable
-data class EQSettingBody(
-    val device_id: String,
-    val data: List<Float>,
-    val realtime_update: Boolean
-)
-
-@Serializable
-data class EQSettingResponse(
+data class ConfigResponse(
     override val status: String,
-    override val reason: String? = null,
-    val data: List<Float>
+    override val code: String? = null,
+    val quasar_config: DeviceConfig? = null,
+    val quasar_config_version: String? = null
 ) : APIResponse
 
 @Serializable
-data class DNDSettingBody(
-    val device_id: String,
-    val realtime_update: Boolean,
-    val enable: Boolean,
-    val start: String? = null,
-    val stop: String? = null
+data class PostConfigBody(
+    val config: DeviceConfig,
+    val version: String
 )
 
 @Serializable
-data class DNDSettingResponse(
-    override val status: String,
-    override val reason: String? = null,
-    val enabled: Boolean? = null,
-    val start: String? = null,
-    val stop: String? = null
-) : APIResponse
-
-@Serializable
-data class ScreenSettingBody(
-    val device_id: String,
-    val realtime_update: Boolean,
-    val visualizer_random: Boolean? = null,
-    val visualizer_preset: String? = null,
-    val autobrightness: Boolean? = null,
-    val brightness: Float? = null,
-    val clock_type: String? = null
+data class RenameDeviceBody(
+    val new_name: String,
+    val old_name: String
 )
 
 @Serializable
-data class ScreenSettingResponse(
-    override val status: String,
-    override val reason: String? = null,
-    val visualizer_random: Boolean? = null,
-    val visualizer_preset: String? = null,
-    val autobrightness: Boolean? = null,
-    val brightness: Float? = null,
-    val clock_type: String? = null
-) : APIResponse
-
-@Serializable
-data class UserInfoResponse(
-    override val status: String,
-    override val reason: String? = null,
-    val name: String? = null,
-    val timezone: String? = null,
-    val spotters: Map<String, List<String>>? = null
-) : APIResponse
-
-@Serializable
-data class TimezoneBody(
-    val value: String
+data class DeviceConfig(
+    var equalizer: EqualizerConfig? = null,
+    var screenSaverConfig: ScreenSaverConfig? = null,
+    var hdmiAudio: Boolean? = null,
+    var dndMode: DNDModeConfig? = null,
+    var led: LEDConfig? = null,
+    val locale: String,
+    val location: Map<String, String> = mapOf(),
+    var name: String,
+    val beta: Boolean
 )
 
 @Serializable
-data class SpottersBody(
-    val data: Map<String, List<String>>,
-    val realtime_update: Boolean
+data class EqualizerConfig(
+    val enabled: Boolean,
+    val bands: List<EqualizerBandConfig>,
+    val custom_preset_bands: MutableList<Float>,
+    val active_preset_id: String,
+    val smartEnabled: Boolean? = null
 )
-*/
+
+@Serializable
+data class EqualizerBandConfig(
+    var gain: Float,
+    val freq: Int,
+    val width: Int
+)
+
+@Serializable
+data class ScreenSaverConfig(
+    val type: String
+)
+
+@Serializable
+data class DNDModeConfig(
+    var enabled: Boolean,
+    var starts: String,
+    var ends: String,
+    val platformSettings: Map<String, String> = mapOf()
+)
+
+@Serializable
+data class LEDConfig(
+    val brightness: LEDBrightnessConfig,
+    val music_equalizer_visualization: LEDEQVisConfig,
+    val time_visualization: LEDTimeVisConfig
+)
+
+@Serializable
+data class LEDBrightnessConfig(
+    var auto: Boolean,
+    var value: Float
+)
+
+@Serializable
+data class LEDEQVisConfig(
+    var auto: Boolean,
+    var style: String
+)
+
+@Serializable
+data class LEDTimeVisConfig(
+    var size: String
+)
 
 val QUASAR_IOT_BACKEND_URL = "https://iot.quasar.yandex.ru/m/user"
+val QUASAR_IOT_V2_BACKEND_URL = "https://iot.quasar.yandex.ru/m/v2/user"
 val QUASAR_IOT_V3_BACKEND_URL = "https://iot.quasar.yandex.ru/m/v3/user"
 
-// val JSON_MEDIA_TYPE = "application/json; charset=utf-8".toMediaType()
+val JSON_MEDIA_TYPE = "application/json; charset=utf-8".toMediaType()
 
 object QuasarClient {
     const val TAG = "QuasarClient"
@@ -187,6 +187,7 @@ object QuasarClient {
         val parsed = json.decodeFromString<DevicesResponse>(result.response.body.string())
         result.response.close()
 
+        devices.clear()
         for (house in parsed.households) {
             if (house.sharing_info != null){
                 continue
@@ -195,6 +196,7 @@ object QuasarClient {
                 if (device.type.startsWith("devices.types.smart_speaker") && device.quasar_info != null) {
                     devices.add(Speaker(
                         id = device.quasar_info.device_id,
+                        smartHomeId = device.id,
                         name = device.name,
                         platform = device.quasar_info.platform
                     ))
@@ -216,24 +218,43 @@ object QuasarClient {
         return null
     }
 
-    // TODO: Implement settings
-    /*
     private inline fun <reified T: APIResponse> doRequest(
-        type: String, url: String, body: RequestBody? = null, deviceId: String? = null
+        method: Methods, prefix: String, path: String, body: RequestBody? = null, deviceId: String? = null
     ): ReqResult<T> {
-        val res = when(type) {
-            "GET" -> {
+        val res = when(method) {
+            Methods.GET -> {
                 if (deviceId != null) {
-                    Session.get("$FQ_BACKEND_URL$url?device_id=$deviceId")
+                    Session.get("$prefix/$deviceId$path")
                 } else {
-                    Session.get("$FQ_BACKEND_URL$url")
+                    Session.get(prefix + path)
                 }
             }
-            "POST" -> {
+            Methods.POST -> {
                 if (body == null) {
                     throw IllegalArgumentException("Request body is required!")
                 }
-                Session.post(FQ_BACKEND_URL + url, body)
+                if (deviceId != null) {
+                    Session.post("$prefix/$deviceId$path", body)
+                } else {
+                    Session.post(prefix + path, body)
+                }
+            }
+            Methods.PUT -> {
+                if (body == null) {
+                    throw IllegalArgumentException("Request body is required!")
+                }
+                if (deviceId != null) {
+                    Session.put("$prefix/$deviceId$path", body)
+                } else {
+                    Session.put(prefix + path, body)
+                }
+            }
+            Methods.DELETE -> {
+                if (deviceId != null) {
+                    Session.delete("$prefix/$deviceId$path")
+                } else {
+                    Session.delete(prefix + path)
+                }
             }
 
             else -> throw IllegalArgumentException("Unsupported request type!")
@@ -255,16 +276,14 @@ object QuasarClient {
             null
         }
         res.response.close()
-        return if (code == 200 && parsed != null) {
+        return if (code == 200 && parsed != null && parsed.status == "ok") {
             ReqResult(ok = true, data = parsed)
         } else {
             ReqResult(
                 ok = false,
                 error = when (code) {
-                    400 -> when (parsed?.reason) {
-                        "not_registered" -> SettingsErrors.NOT_LINKED
-                        "invalid_name" -> SettingsErrors.INVALID_VALUE
-                        "unsupported_action" -> SettingsErrors.UNSUPPORTED_ACTION
+                    400 -> when (parsed?.code) {
+                        "DEVICE_NOT_FOUND" -> SettingsErrors.NOT_LINKED
                         else -> {
                             Log.e(TAG,"Unexpected server response!\nCode: $code\nResponse: $parsed")
                             SettingsErrors.UNKNOWN
@@ -275,123 +294,61 @@ object QuasarClient {
                         Log.e(TAG,"Unexpected server response!\nCode: $code\nResponse: $parsed")
                         SettingsErrors.UNKNOWN
                     }
-                }
+                },
+                data = parsed
             )
         }
     }
-    private inline fun <reified T: APIResponse> doGET(url: String, deviceId: String? = null): ReqResult<T> {
-        return doRequest(type = "GET", url = url, deviceId = deviceId)
+    private inline fun <reified T: APIResponse> doGET(prefix: String, path: String, deviceId: String? = null): ReqResult<T> {
+        return doRequest(Methods.GET, prefix, path, deviceId = deviceId)
     }
-    private inline fun <reified T: APIResponse> doPOST(url: String, body: RequestBody): ReqResult<T> {
-        return doRequest(type = "POST", url = url, body = body)
+    private inline fun <reified T: APIResponse> doPOST(prefix: String, path: String, deviceId: String? = null, body: RequestBody): ReqResult<T> {
+        return doRequest(Methods.POST, prefix, path, body, deviceId)
+    }
+    private inline fun <reified T: APIResponse> doPUT(prefix: String, path: String, deviceId: String? = null, body: RequestBody): ReqResult<T> {
+        return doRequest(Methods.PUT, prefix, path, body, deviceId)
+    }
+    private inline fun <reified T: APIResponse> doDELETE(prefix: String, path: String, deviceId: String? = null): ReqResult<T> {
+        return doRequest(Methods.DELETE, prefix, path, deviceId = deviceId)
     }
 
     fun unlinkDevice(deviceId: String): ReqResult<GenericResponse> {
-        val body = json.encodeToString(
-            LinkDeviceBody(device_id = deviceId, code = null)
-        ).toRequestBody(JSON_MEDIA_TYPE)
-        return doPOST(url = "/unlink_device", body = body)
+        return doDELETE(
+            prefix = "$QUASAR_IOT_BACKEND_URL/devices",
+            path = "",
+            deviceId = deviceId
+        )
     }
 
-    fun getJingleStatus(deviceId: String): ReqResult<SettingsResponse> {
-        return doGET(url = "/get_jingle_status", deviceId = deviceId)
-    }
-    fun setJingleStatus(deviceId: String, enabled: Boolean): ReqResult<GenericResponse> {
-        val body = json.encodeToString(BoolSettingBody(
-            device_id = deviceId, realtime_update = true, state = enabled
-        )).toRequestBody(JSON_MEDIA_TYPE)
-        return doPOST(url = "/update_jingle", body = body)
-    }
-
-    fun getSSType(deviceId: String): ReqResult<SettingsResponse> {
-        return doGET(url = "/get_ss_type_status", deviceId = deviceId)
-    }
-    fun setSSType(deviceId: String, type: String): ReqResult<GenericResponse> {
-        val body = json.encodeToString(TypeSettingBody(
-            device_id = deviceId, realtime_update = true, state = type
-        )).toRequestBody(JSON_MEDIA_TYPE)
-        return doPOST(url = "/update_ss_type", body = body)
+    fun renameDevice(deviceId: String, newName: String, oldName: String): ReqResult<GenericResponse> {
+        return doPUT(
+            prefix = "$QUASAR_IOT_BACKEND_URL/devices",
+            path = "/name",
+            deviceId = deviceId,
+            body = json.encodeToString(RenameDeviceBody(
+                new_name = newName,
+                old_name = oldName
+            )).toRequestBody(JSON_MEDIA_TYPE)
+        )
     }
 
-    fun renameDevice(deviceId: String, name: String): ReqResult<GenericResponse> {
-        val body = json.encodeToString(NameSettingBody(
-            device_id = deviceId, name = name
-        )).toRequestBody(JSON_MEDIA_TYPE)
-        return doPOST(url = "/rename_device", body = body)
+    fun getDeviceConfig(deviceId: String): ReqResult<ConfigResponse> {
+        return doGET(
+            prefix = "$QUASAR_IOT_V2_BACKEND_URL/devices",
+            path = "/configuration",
+            deviceId = deviceId
+        )
     }
 
-    fun getEQData(deviceId: String): ReqResult<EQSettingResponse> {
-        return doGET(url = "/get_eq_data", deviceId = deviceId)
+    fun updateDeviceConfig(deviceId: String, config: DeviceConfig, version: String): ReqResult<ConfigUpdateResponse> {
+        return doPOST(
+            prefix = "$QUASAR_IOT_V3_BACKEND_URL/devices",
+            path = "/configuration/quasar",
+            deviceId = deviceId,
+            body = json.encodeToString(PostConfigBody(
+                config = config,
+                version = version
+            )).toRequestBody(JSON_MEDIA_TYPE)
+        )
     }
-    fun setEQData(deviceId: String, data: List<Float>): ReqResult<GenericResponse> {
-        val body = json.encodeToString(EQSettingBody(
-            device_id = deviceId, realtime_update = true, data = data
-        )).toRequestBody(JSON_MEDIA_TYPE)
-        return doPOST(url = "/update_eq", body = body)
-    }
-
-    fun getDNDData(deviceId: String): ReqResult<DNDSettingResponse> {
-        return doGET(url = "/get_dnd_status", deviceId = deviceId)
-    }
-    fun setDNDData(deviceId: String, enable: Boolean, start: String? = null, stop: String? = null): ReqResult<GenericResponse> {
-        if (!enable && (start != null || stop != null)) {
-            throw IllegalArgumentException()
-        }
-        if ((start != null && stop == null) || (start == null && stop != null)) {
-            throw IllegalArgumentException()
-        }
-        val body = json.encodeToString(DNDSettingBody(
-            device_id = deviceId, realtime_update = true,
-            enable = enable, start = start, stop = stop
-        )).toRequestBody(JSON_MEDIA_TYPE)
-        return doPOST(url = "/update_dnd", body = body)
-    }
-
-    fun getScreenSettings(deviceId: String): ReqResult<ScreenSettingResponse> {
-        return doGET(url = "/get_screen_settings", deviceId = deviceId)
-    }
-    fun setVisualizerPreset(deviceId: String, name: String? = null, random : Boolean? = null): ReqResult<GenericResponse> {
-        val body = json.encodeToString(ScreenSettingBody(
-            device_id = deviceId,
-            realtime_update = true,
-            visualizer_preset = name,
-            visualizer_random = random
-        )).toRequestBody(JSON_MEDIA_TYPE)
-        return doPOST(url = "/update_screen_settings", body = body)
-    }
-    fun setClockType(deviceId: String, type: String): ReqResult<GenericResponse> {
-        val body = json.encodeToString(ScreenSettingBody(
-            device_id = deviceId, realtime_update = true, clock_type = type
-        )).toRequestBody(JSON_MEDIA_TYPE)
-        return doPOST(url = "/update_screen_settings", body = body)
-    }
-    fun setAuthBrightnessState(deviceId: String, state: Boolean): ReqResult<GenericResponse> {
-        val body = json.encodeToString(ScreenSettingBody(
-            device_id = deviceId, realtime_update = true, autobrightness = state
-        )).toRequestBody(JSON_MEDIA_TYPE)
-        return doPOST(url = "/update_screen_settings", body = body)
-    }
-    fun setBrightnessLevel(deviceId: String, level: Float) : ReqResult<GenericResponse> {
-        val body = json.encodeToString(ScreenSettingBody(
-            device_id = deviceId, realtime_update = true, brightness = level
-        )).toRequestBody(JSON_MEDIA_TYPE)
-        return doPOST(url = "/update_screen_settings", body = body)
-    }
-
-    // User
-    fun getUserInfo() : ReqResult<UserInfoResponse> {
-        return doGET(url = "/user_info")
-    }
-    fun updateTimezone(value: String) : ReqResult<GenericResponse> {
-        val body = json.encodeToString(TimezoneBody(value)).toRequestBody(JSON_MEDIA_TYPE)
-        return doPOST(url = "/update_timezone", body = body)
-    }
-
-    fun updateSpotters(data: Map<String, List<String>>) : ReqResult<GenericResponse> {
-        val body = json.encodeToString(SpottersBody(
-            data = data,
-            realtime_update = true
-        )).toRequestBody(JSON_MEDIA_TYPE)
-        return doPOST(url = "/update_spotters", body = body)
-    }*/
 }
