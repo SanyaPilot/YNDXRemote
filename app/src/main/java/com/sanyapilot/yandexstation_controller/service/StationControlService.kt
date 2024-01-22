@@ -376,7 +376,7 @@ class StationControlService : MediaBrowserServiceCompat() {
 
     private fun observer(data: StationState) {
         // Check idle
-        val idle = data.playerState == null || data.playerState.title == "" || data.playerState.showPlayer == false
+        val idle = data.playerState == null || data.playerState.title == ""
         if (idle) {
             if (wasIdle)  // Skip update
                 return
@@ -486,7 +486,7 @@ class StationControlService : MediaBrowserServiceCompat() {
         }
 
         // Remove seek bar if needs
-        if (!data.playerState.hasProgressBar || data.playerState.showPlayer == false)
+        if (!data.playerState.hasProgressBar)
             mediaMetadataBuilder.putLong(MediaMetadataCompat.METADATA_KEY_DURATION, -1L)
 
         if (url != null) {
