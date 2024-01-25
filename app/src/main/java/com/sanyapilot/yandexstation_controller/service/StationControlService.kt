@@ -24,7 +24,13 @@ import androidx.media.VolumeProviderCompat
 import androidx.media.app.NotificationCompat.MediaStyle
 import androidx.media.session.MediaButtonReceiver
 import com.sanyapilot.yandexstation_controller.R
-import com.sanyapilot.yandexstation_controller.api.*
+import com.sanyapilot.yandexstation_controller.api.GlagolClient
+import com.sanyapilot.yandexstation_controller.api.GlagolPayload
+import com.sanyapilot.yandexstation_controller.api.QuasarClient
+import com.sanyapilot.yandexstation_controller.api.Session
+import com.sanyapilot.yandexstation_controller.api.Speaker
+import com.sanyapilot.yandexstation_controller.api.StationState
+import com.sanyapilot.yandexstation_controller.api.mDNSWorker
 import com.sanyapilot.yandexstation_controller.device.DeviceActivity
 import com.sanyapilot.yandexstation_controller.main_screen.PLAYER_CHANNEL_ID
 import com.sanyapilot.yandexstation_controller.misc.stationIcons
@@ -437,7 +443,8 @@ class StationControlService : MediaBrowserServiceCompat() {
                 putExtra(DEVICE_PLATFORM, curDevicePlatform)
             }
             val sessionActivityPendingIntent = PendingIntent.getActivity(
-                this, 0, sessionActivityIntent, PendingIntent.FLAG_IMMUTABLE
+                this, 0, sessionActivityIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
             mediaSession.setSessionActivity(sessionActivityPendingIntent)
 
