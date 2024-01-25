@@ -176,9 +176,13 @@ object Session {
                 .build()
 
             client.newCall(request).execute().use { resp ->
+                if (resp.code != 200) {
+                    return LoginResponse(false, errorId = Errors.UNKNOWN)
+                }
                 val reCSRF = Regex("\"csrf_token\" value=\"([^\"]+)\"")
                 val body = resp.body.string()
-                csrf = reCSRF.find(body)!!.value.split('=')[1].removeSurrounding("\"")
+                val reRes = reCSRF.find(body) ?: return LoginResponse(false, errorId = Errors.UNKNOWN)
+                csrf = reRes.value.split('=')[1].removeSurrounding("\"")
                 Log.d(TAG, "CSRF $csrf")
             }
 
