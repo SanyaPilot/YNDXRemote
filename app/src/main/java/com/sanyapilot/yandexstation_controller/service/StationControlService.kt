@@ -57,7 +57,7 @@ class StationControlService : MediaBrowserServiceCompat() {
     private var seekTime: Int? = null
     private var hasNext = true
     private var hasPrev = true
-    private lateinit var prevAction: String
+    private var prevAction: String? = null
     private var isForeground = false
     private var waitForVolumeChange = false
     private var wasIdle = false
@@ -412,6 +412,14 @@ class StationControlService : MediaBrowserServiceCompat() {
                     glagolClient.stop()
                     mediaSession.isActive = false
                     stopForeground(Service.STOP_FOREGROUND_DETACH)
+
+                    // Reset metadata and vars
+                    mediaMetadataBuilder = MediaMetadataCompat.Builder()
+                    initialFetchingDone = false
+                    coverURL = null
+                    waitForVolumeChange = false
+                    prevWasInvalidDuration = false
+                    wasIdle = false
                 }
 
                 // Check if needs to register callback
