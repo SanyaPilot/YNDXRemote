@@ -147,8 +147,8 @@ class GlagolClient(private val speaker: Speaker) : WebSocketListener() {
     private val json = Json { ignoreUnknownKeys = true }
     private lateinit var ws: WebSocket
     private lateinit var listener: (data: StationState) -> Unit
-    private var closedListener: (() -> Unit)? = null
-    private var failureListener: (() -> Unit)? = null
+    private var closedListener: ((Speaker) -> Unit)? = null
+    private var failureListener: ((Speaker) -> Unit)? = null
 
     fun start(func: (data: StationState) -> Unit): GlagolResponse {
         localDevice = mDNSWorker.getDevice(speaker.id)
@@ -165,7 +165,7 @@ class GlagolClient(private val speaker: Speaker) : WebSocketListener() {
             Session.wsConnect("wss://${localDevice!!.host}:${localDevice!!.port}", this)
         } catch (e: Exception) {
             Log.e(TAG, "Error at connecting to the websocket!", e)
-            failureListener?.let { it() }
+            failureListener?.let { it(speaker) }
         }
 
         listener = func
@@ -192,11 +192,11 @@ class GlagolClient(private val speaker: Speaker) : WebSocketListener() {
         }
     }
 
-    fun setOnSocketClosedListener(callback: () -> Unit) {
+    fun setOnSocketClosedListener(callback: (Speaker) -> Unit) {
         closedListener = callback
     }
 
-    fun setOnFailureListener(callback: () -> Unit) {
+    fun setOnFailureListener(callback: (Speaker) -> Unit) {
         failureListener = callback
     }
 
@@ -232,12 +232,12 @@ class GlagolClient(private val speaker: Speaker) : WebSocketListener() {
     override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
         Log.e(TAG, "Failure occurred while working with a WS!")
         t.printStackTrace()
-        failureListener?.let { it() }
+        failureListener?.let { it(speaker) }
     }
 
     override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
         Log.d(TAG, "SOCKET CLOSING...")
-        closedListener?.let { it() }
+        closedListener?.let { it(speaker) }
     }
 }
 

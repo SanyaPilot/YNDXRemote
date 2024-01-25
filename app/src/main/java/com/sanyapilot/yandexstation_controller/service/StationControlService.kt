@@ -29,6 +29,7 @@ import com.sanyapilot.yandexstation_controller.device.DeviceActivity
 import com.sanyapilot.yandexstation_controller.main_screen.PLAYER_CHANNEL_ID
 import com.sanyapilot.yandexstation_controller.misc.stationIcons
 import okhttp3.Request
+import kotlin.concurrent.thread
 
 private const val MY_EMPTY_MEDIA_ROOT_ID = "empty_root_id"
 private const val PLAYER_NOTIFICATION_ID = 732
@@ -45,7 +46,8 @@ class StationControlService : MediaBrowserServiceCompat() {
     private lateinit var mediaSession: MediaSessionCompat
     private lateinit var stateBuilder: PlaybackStateCompat.Builder
     private lateinit var mediaMetadataBuilder: MediaMetadataCompat.Builder
-    private lateinit var station: YandexStationService
+    private lateinit var glagolClient: GlagolClient
+    private lateinit var speaker: Speaker
     private lateinit var notificationManager: NotificationManager
     private lateinit var volumeProvider: VolumeProviderCompat
 
@@ -71,7 +73,7 @@ class StationControlService : MediaBrowserServiceCompat() {
         // MediaSession callbacks here
         val mediaSessionCallback = object : MediaSessionCompat.Callback() {
             override fun onPlay() {
-                station.play()
+                glagolClient.send(GlagolPayload(command = "play"))
                 stateBuilder.setState(
                     PlaybackStateCompat.STATE_PLAYING,
                     mediaSession.controller.playbackState.position,
@@ -84,7 +86,7 @@ class StationControlService : MediaBrowserServiceCompat() {
             }
 
             override fun onPause() {
-                station.pause()
+                glagolClient.send(GlagolPayload(command = "stop"))
                 stateBuilder.setState(
                     PlaybackStateCompat.STATE_PAUSED,
                     mediaSession.controller.playbackState.position,
@@ -100,23 +102,25 @@ class StationControlService : MediaBrowserServiceCompat() {
 
             override fun onStop() {
                 Log.d(TAG, "mediaSession onStop callback")
-                station.endLocal()
-                stopSession()
+                glagolClient.stop()
             }
 
             override fun onSkipToNext() {
-                station.nextTrack()
+                glagolClient.send(GlagolPayload(command = "next"))
             }
 
             override fun onSkipToPrevious() {
-                station.prevTrack()
+                glagolClient.send(GlagolPayload(command = "prev"))
             }
 
             override fun onSeekTo(pos: Long) {
                 val intPos = (pos / 1000).toInt()
                 val curState = mediaSession.controller.playbackState
                 seekTime = intPos
-                station.seek(intPos)
+                glagolClient.send(GlagolPayload(
+                    command = "rewind",
+                    position = intPos
+                ))
                 stateBuilder.setState(
                     curState.state,
                     pos,
@@ -128,34 +132,85 @@ class StationControlService : MediaBrowserServiceCompat() {
             override fun onSetShuffleMode(shuffleMode: Int) {
                 Log.d(TAG, "Set shuffle!")
                 if (shuffleMode == PlaybackStateCompat.SHUFFLE_MODE_ALL)
-                    station.shuffle()
+                    sendText("играй вперемешку")
             }
 
             override fun onCommand(command: String?, extras: Bundle?, cb: ResultReceiver?) {
                 when (command) {
-                    "sendCommand" -> station.sendCommand(extras!!.getString("text")!!)
-                    "sendTTS" -> station.sendTTS(extras!!.getString("text")!!)
-                    "navUp" -> station.navUp(extras?.getInt("steps"))
-                    "navDown" -> station.navDown(extras?.getInt("steps"))
-                    "navLeft" -> station.navLeft(extras?.getInt("steps"))
-                    "navRight" -> station.navRight(extras?.getInt("steps"))
-                    "click" -> station.click()
-                    "navBack" -> station.navBack()
-                    "navHome" -> station.navHome()
-                    "playTrack" -> station.playTrack(extras!!.getString("id")!!, extras.getFloat("offset"))
-                    "playPlaylist" -> station.playPlaylist(extras!!.getString("id")!!)
-                    "playRadio" -> station.playRadio(extras!!.getString("id")!!)
-                    "playMyVibe" -> station.playMyVibe()
-                    "playFavs" -> station.playFavs()
-                    "likeTrack" -> station.likeTrack()
+                    "sendCommand" -> sendText(extras!!.getString("text")!!)
+                    "sendTTS" -> sendText("Повтори за мной ${extras!!.getString("text")!!}")
+                    "navUp" -> navigate("up", extras?.getInt("steps"))
+                    "navDown" -> navigate("down", extras?.getInt("steps"))
+                    "navLeft" -> navigate("left", extras?.getInt("steps"))
+                    "navRight" -> navigate("right", extras?.getInt("steps"))
+                    "click" -> click()
+                    "navBack" -> sendText("назад")
+                    "navHome" -> sendText("домой")
+                    "playTrack" -> {
+                        val offset = extras?.getFloat("offset")
+                        val payload = GlagolPayload(
+                            command = "playMusic",
+                            type = "track",
+                            id = extras!!.getString("id")!!
+                        )
+                        if (offset != null)
+                            payload.offset = offset
+
+                        glagolClient.send(payload)
+                    }
+                    "playPlaylist" -> {
+                        glagolClient.send(GlagolPayload(
+                            command = "playMusic",
+                            type = "playlist",
+                            id = extras!!.getString("id")!!
+                        ))
+                    }
+                    "playRadio" -> playRadio(extras!!.getString("id")!!)
+                    "playMyVibe" -> playRadio("user:onyourwave")
+                    "playFavs" -> sendText("включи мои любимые")
+                    "likeTrack" -> sendText("лайк")
                 }
             }
 
             override fun onCustomAction(action: String?, extras: Bundle?) {
                 when (action) {
-                    "likeTrack" -> station.likeTrack()
+                    "likeTrack" -> sendText("лайк")
                     "stop" -> onStop()
                 }
+            }
+
+            private fun sendText(text: String) {
+                glagolClient.send(GlagolPayload(
+                    command = "sendText",
+                    text = text
+                ))
+            }
+
+            private fun playRadio(id: String) {
+                glagolClient.send(GlagolPayload(
+                    command = "playMusic",
+                    type = "radio",
+                    id = id
+                ))
+            }
+
+            // Unreleased UI navigation through Glagol
+            private fun navigate(direction: String, steps: Int?) {
+                val payload = GlagolPayload(
+                    command = "control",
+                    action = "go_$direction"
+                )
+                if (steps != null) {
+                    payload.scrollAmount = "exact"
+                    payload.scrollExactValue = steps
+                }
+                glagolClient.send(payload)
+            }
+            private fun click() {
+                glagolClient.send(GlagolPayload(
+                    command = "control",
+                    action = "click_action"
+                ))
             }
         }
 
@@ -166,13 +221,19 @@ class StationControlService : MediaBrowserServiceCompat() {
             5
         ) {
             override fun onSetVolumeTo(volume: Int) {
-                station.setVolume(volume.toFloat())
+                glagolClient.send(GlagolPayload(
+                    command = "setVolume",
+                    volume = volume.toFloat() / 10
+                ))
                 waitForVolumeChange = true
             }
 
             override fun onAdjustVolume(direction: Int) {
                 if (direction != 0) {
-                    station.setVolume((currentVolume + direction).toFloat())
+                    glagolClient.send(GlagolPayload(
+                        command = "setVolume",
+                        volume = (currentVolume + direction).toFloat() / 10
+                    ))
                     currentVolume += direction
                     waitForVolumeChange = true
                 }
@@ -248,7 +309,7 @@ class StationControlService : MediaBrowserServiceCompat() {
             // Add an app icon and set its accent color
             // Be careful about the color
             setSmallIcon(
-                stationIcons.getOrDefault(station.speaker.platform,
+                stationIcons.getOrDefault(speaker.platform,
                     R.drawable.station_icon
                 ))
             color = ContextCompat.getColor(baseContext, R.color.md_theme_dark_primary)
@@ -312,6 +373,25 @@ class StationControlService : MediaBrowserServiceCompat() {
         stateBuilder.addCustomAction("stop", "Stop", R.drawable.round_close_24)
     }
 
+    private fun startConnection() {
+        glagolClient = GlagolClient(speaker)
+        glagolClient.setOnSocketClosedListener {
+            connCloseListener(it)
+        }
+        glagolClient.setOnFailureListener {
+            connCloseListener(it)
+        }
+        glagolClient.start { observer(it) }
+    }
+
+    private fun connCloseListener(closedSpeaker: Speaker) {
+        // If device ID is changed, then it's an expected device change, so keep session alive
+        if (closedSpeaker.id == speaker.id) {
+            // Unexpected connection failure or user decision
+            stopSession()
+        }
+    }
+
     override fun onGetRoot(
         clientPackageName: String,
         clientUid: Int,
@@ -321,26 +401,26 @@ class StationControlService : MediaBrowserServiceCompat() {
         val curDeviceName = rootHints.getString(DEVICE_NAME)
         val curDevicePlatform = rootHints.getString(DEVICE_PLATFORM)
         if (curDeviceId != deviceId && curDeviceId != null) {
-            if (deviceId != null) {
-                // Switch the device
-                Log.d(TAG, "Switching device!")
-                station.endLocal()
-                mediaSession.isActive = false
-                stopForeground(Service.STOP_FOREGROUND_DETACH)
-            }
             Log.d(TAG, "DeviceID: $curDeviceId")
-            val speaker = QuasarClient.getDeviceById(curDeviceId)
+            speaker = QuasarClient.getDeviceById(curDeviceId)
                 ?: return BrowserRoot(MY_EMPTY_MEDIA_ROOT_ID, null)
 
-            station = YandexStationService(
-                speaker = speaker,
-                client = GlagolClient(speaker),
-                listener = { observer(it) },
-                closedListener = {
-                    // Close session
-                    stopSession()
+            thread {
+                if (deviceId != null && this::glagolClient.isInitialized) {
+                    // Switch the device
+                    Log.d(TAG, "Switching device!")
+                    glagolClient.stop()
+                    mediaSession.isActive = false
+                    stopForeground(Service.STOP_FOREGROUND_DETACH)
                 }
-            )
+
+                // Check if needs to register callback
+                if (mDNSWorker.deviceExists(curDeviceId)) {
+                    startConnection()
+                } else {
+                    mDNSWorker.addListener(curDeviceId) { startConnection() }
+                }
+            }
 
             // Start MediaSession and go foreground
             val sessionActivityIntent = Intent(this, DeviceActivity::class.java).apply {
@@ -355,7 +435,7 @@ class StationControlService : MediaBrowserServiceCompat() {
 
             mediaMetadataBuilder
                 .putString(MediaMetadataCompat.METADATA_KEY_TITLE, getString(R.string.fetchingData))
-                .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, station.speaker.name)
+                .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, speaker.name)
             mediaSession.setMetadata(mediaMetadataBuilder.build())
             mediaSession.isActive = true
             updateNotification()
@@ -389,7 +469,7 @@ class StationControlService : MediaBrowserServiceCompat() {
             addCustomActions()
             mediaMetadataBuilder
                 .putString(MediaMetadataCompat.METADATA_KEY_TITLE, getString(R.string.idle))
-                .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, station.speaker.name)
+                .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, speaker.name)
             mediaSession.setPlaybackState(stateBuilder.build())
             mediaSession.setMetadata(mediaMetadataBuilder.build())
 
@@ -578,6 +658,7 @@ class StationControlService : MediaBrowserServiceCompat() {
     }
 
     private fun stopSession() {
+        Log.d(TAG, "stopSession() called!")
         stopSelf()
         mediaSession.isActive = false
         mediaSession.release()
@@ -587,7 +668,7 @@ class StationControlService : MediaBrowserServiceCompat() {
     }
 
     override fun onDestroy() {
-        Log.e(TAG, "Service is being destroyed")
+        Log.d(TAG, "Service is being destroyed")
         super.onDestroy()
     }
 }
