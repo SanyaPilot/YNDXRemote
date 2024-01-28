@@ -77,20 +77,27 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sanyapilot.yandexstation_controller.R
 import com.sanyapilot.yandexstation_controller.composables.ExpandingListItem
 import com.sanyapilot.yandexstation_controller.composables.NetStatusSnack
+import com.sanyapilot.yandexstation_controller.misc.StationConfig
+import com.sanyapilot.yandexstation_controller.misc.fallbackConfig
+import com.sanyapilot.yandexstation_controller.misc.stationConfigs
 import com.sanyapilot.yandexstation_controller.ui.theme.AppTheme
 import kotlin.math.min
 import kotlin.math.roundToInt
 
 class SettingsFragment : Fragment() {
     private lateinit var viewModel: SettingsViewModel
+    private lateinit var deviceConfig: StationConfig
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        deviceConfig = stationConfigs.getOrDefault(
+            requireArguments().getString("devicePlatform")!!, fallbackConfig
+        )
         viewModel = ViewModelProvider(
             this,
             SettingsViewModelFactory(
                 requireArguments().getString("deviceId")!!,
-                requireArguments().getString("devicePlatform")!!,
+                deviceConfig,
                 MediaControllerCompat.getMediaController(requireActivity())
             )
         )[SettingsViewModel::class.java]
@@ -106,7 +113,7 @@ class SettingsFragment : Fragment() {
             setContent {
                 AppTheme {
                     Surface {
-                        SettingsLayout(viewModel, requireArguments().getString("devicePlatform")!!)
+                        SettingsLayout(viewModel, deviceConfig)
                     }
                 }
             }
@@ -130,7 +137,7 @@ class SettingsFragment : Fragment() {
 @Composable
 fun SettingsLayout(
     viewModel: SettingsViewModel = viewModel(),
-    platform: String = "yandexstation_2"
+    config: StationConfig
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
@@ -230,18 +237,20 @@ fun SettingsLayout(
                 .fillMaxHeight()
                 .verticalScroll(rememberScrollState())
         ) {
-            val ssImages by viewModel.ssImages.collectAsState()
-            ListItem(
-                leadingContent = { Icon(painter = painterResource(id = R.drawable.round_wallpaper_24), contentDescription = null) },
-                headlineContent = { Text(stringResource(R.string.ssLabel)) },
-                supportingContent = {
-                    Text(stringResource(R.string.ssSupportText) + " " +
-                            if (ssImages) stringResource(R.string.images) else stringResource(R.string.video)
-                    )
-                },
-                trailingContent = { Switch(checked = ssImages, onCheckedChange = { viewModel.toggleSSType() }) },
-                modifier = Modifier.clickable { viewModel.toggleSSType() }
-            )
+            if (config.supportsScreenSaver) {
+                val ssImages by viewModel.ssImages.collectAsState()
+                ListItem(
+                    leadingContent = { Icon(painter = painterResource(id = R.drawable.round_wallpaper_24), contentDescription = null) },
+                    headlineContent = { Text(stringResource(R.string.ssLabel)) },
+                    supportingContent = {
+                        Text(stringResource(R.string.ssSupportText) + " " +
+                                if (ssImages) stringResource(R.string.images) else stringResource(R.string.video)
+                        )
+                    },
+                    trailingContent = { Switch(checked = ssImages, onCheckedChange = { viewModel.toggleSSType() }) },
+                    modifier = Modifier.clickable { viewModel.toggleSSType() }
+                )
+            }
 
             val dndEnabled = viewModel.dndEnabled.collectAsState()
             val dndStartTime = viewModel.dndStartValue.collectAsState()
@@ -396,8 +405,8 @@ fun SettingsLayout(
                 }
             }
 
-            // Yandex.Station Max specific
-            if (platform == "yandexstation_2") {
+            // LED screen settings
+            if (config.supportsLED) {
                 // Visualizer
                 val visOpened = rememberSaveable { mutableStateOf(false) }
                 ExpandingListItem(
@@ -518,6 +527,16 @@ fun SettingsLayout(
                         }
                     }
                 }
+            }
+            
+            if (config.supportProximityGestures) {
+                val gesturesEnabled by viewModel.proximityGestures.collectAsState()
+                ListItem(
+                    leadingContent = { Icon(painter = painterResource(id = R.drawable.round_back_hand_24), contentDescription = null) },
+                    headlineContent = { Text(stringResource(R.string.proximityGesturesLabel)) },
+                    trailingContent = { Switch(checked = gesturesEnabled, onCheckedChange = { viewModel.toggleProximityGestures() }) },
+                    modifier = Modifier.clickable { viewModel.toggleProximityGestures() }
+                )
             }
 
             ListItem(
@@ -687,9 +706,23 @@ fun BigSelectableButton(
 fun SettingsPreview() {
     AppTheme {
         Surface {
-            SettingsLayout(viewModel(
-                factory = SettingsViewModelFactory("deaddeaddeaddeaddead", "yandexstation_2", null)
-            ))
+            SettingsLayout(
+                viewModel(factory = SettingsViewModelFactory("deaddeaddeaddeaddead", stationConfigs["yandexstation_2"]!!, null)),
+                stationConfigs["yandexstation_2"]!!
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun MiniPreview() {
+    AppTheme {
+        Surface {
+            SettingsLayout(
+                viewModel(factory = SettingsViewModelFactory("deaddeaddeaddeaddead", stationConfigs["yandexmini"]!!, null)),
+                stationConfigs["yandexmini"]!!
+            )
         }
     }
 }

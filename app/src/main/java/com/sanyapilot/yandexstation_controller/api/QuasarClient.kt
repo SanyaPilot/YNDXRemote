@@ -109,6 +109,7 @@ data class DeviceConfig(
     var hdmiAudio: Boolean? = null,
     var dndMode: DNDModeConfig? = null,
     var led: LEDConfig? = null,
+    var tof: Boolean? = null,
     val locale: String,
     val location: Map<String, String> = mapOf(),
     var name: String,

@@ -15,12 +15,12 @@ import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.color.MaterialColors
-import com.sanyapilot.yandexstation_controller.device.DeviceActivity
 import com.sanyapilot.yandexstation_controller.R
 import com.sanyapilot.yandexstation_controller.api.Speaker
 import com.sanyapilot.yandexstation_controller.api.mDNSWorker
-import com.sanyapilot.yandexstation_controller.misc.stationIcons
-import com.sanyapilot.yandexstation_controller.misc.stationNames
+import com.sanyapilot.yandexstation_controller.device.DeviceActivity
+import com.sanyapilot.yandexstation_controller.misc.fallbackConfig
+import com.sanyapilot.yandexstation_controller.misc.stationConfigs
 import com.sanyapilot.yandexstation_controller.service.DEVICE_ID
 import com.sanyapilot.yandexstation_controller.service.DEVICE_NAME
 import com.sanyapilot.yandexstation_controller.service.DEVICE_PLATFORM
@@ -103,9 +103,10 @@ class DevicesRecyclerAdapter(
             val curViewHolder = viewHolder as ViewHolder
             val curDevice = dataSet[position]
             if (curDevice is Speaker) {
-                curViewHolder.image.setImageResource(stationIcons.getOrDefault(curDevice.platform, R.drawable.station_unknown))
+                val deviceConfig = stationConfigs.getOrDefault(curDevice.platform, fallbackConfig)
+                curViewHolder.image.setImageResource(deviceConfig.icon)
                 curViewHolder.name.text = curDevice.name
-                curViewHolder.type.setText(stationNames.getOrDefault(curDevice.platform, R.string.station_unknown))
+                curViewHolder.type.setText(deviceConfig.name)
 
                 curViewHolder.card.setOnClickListener {
                     val intent = Intent(it.context, DeviceActivity::class.java).apply {

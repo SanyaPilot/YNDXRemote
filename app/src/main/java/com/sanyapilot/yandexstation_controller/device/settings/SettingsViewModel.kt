@@ -21,6 +21,7 @@ import com.sanyapilot.yandexstation_controller.api.QuasarClient
 import com.sanyapilot.yandexstation_controller.api.ReqResult
 import com.sanyapilot.yandexstation_controller.api.ScreenSaverConfig
 import com.sanyapilot.yandexstation_controller.api.SettingsErrors
+import com.sanyapilot.yandexstation_controller.misc.StationConfig
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import java.util.TimeZone
@@ -102,7 +103,7 @@ val CLOCK_TYPES = listOf(
 @OptIn(ExperimentalMaterial3Api::class)
 class SettingsViewModel(
     private val deviceId: String,
-    private val devicePlatform: String,
+    private val deviceConfig: StationConfig,
     private val mediaController: MediaControllerCompat?
 ) : ViewModel() {
     private val _ssImages = MutableStateFlow(false)
@@ -120,6 +121,7 @@ class SettingsViewModel(
     private val _clockType = MutableStateFlow("middle")
     private val _screenAutoBrightness = MutableStateFlow(true)
     private val _screenBrightness = MutableStateFlow(0.5f)
+    private val _proximityGestures = MutableStateFlow(true)
 
     private lateinit var deviceSmartHomeId: String
     private lateinit var outPayload: DeviceConfig
@@ -153,6 +155,8 @@ class SettingsViewModel(
         get() = _screenAutoBrightness
     val screenBrightness: StateFlow<Float>
         get() = _screenBrightness
+    val proximityGestures: StateFlow<Boolean>
+        get() = _proximityGestures
 
     init {
         // For preview
@@ -179,10 +183,12 @@ class SettingsViewModel(
         outPayload = quasarConfig
         configVersion = res.data.quasar_config_version!!
 
-        // Screensavers
-        val ssConfig = quasarConfig.screenSaverConfig
-        if (ssConfig != null) {
-            _ssImages.value = ssConfig.type == "IMAGE"
+        // Screensavers (only for supported devices)
+        if (deviceConfig.supportsScreenSaver) {
+            val ssConfig = quasarConfig.screenSaverConfig
+            if (ssConfig != null) {
+                _ssImages.value = ssConfig.type == "IMAGE"
+            }
         }
 
         // EQ
@@ -204,8 +210,8 @@ class SettingsViewModel(
             _dndStopValue.value = DNDTime(stop[0].toInt(), stop[1].toInt())
         }
 
-        // Yandex.Station Max specific
-        if (devicePlatform == "yandexstation_2") {
+        // Specific for devices with a LED screen
+        if (deviceConfig.supportsLED) {
             val ledConfig = quasarConfig.led
             if (ledConfig != null) {
                 _visPresetName.value = ledConfig.music_equalizer_visualization.style
@@ -214,6 +220,11 @@ class SettingsViewModel(
                 _screenAutoBrightness.value = ledConfig.brightness.auto
                 _screenBrightness.value = ledConfig.brightness.value
             }
+        }
+
+        // Yandex Station Mini gen 1 proximity gestures
+        if (deviceConfig.supportProximityGestures && quasarConfig.tof != null) {
+            _proximityGestures.value = quasarConfig.tof!!
         }
     }
 
@@ -473,15 +484,31 @@ class SettingsViewModel(
             }
         }
     }
+
+    fun toggleProximityGestures() {
+        thread {
+            outPayload.tof = !_proximityGestures.value
+            val res = sendPayload()
+            if (res.ok) {
+                _proximityGestures.value = !_proximityGestures.value
+            } else {
+                _netStatus.value = NetStatus(false, res.error)
+            }
+        }
+    }
 }
 
 class SettingsViewModelFactory(
     private val deviceId: String,
-    private val devicePlatform: String,
+    private val deviceConfig: StationConfig,
     private val mediaController: MediaControllerCompat?
 ) : ViewModelProvider.Factory {
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        return SettingsViewModel(deviceId, devicePlatform, mediaController) as T
+        return SettingsViewModel(
+            deviceId,
+            deviceConfig,
+            mediaController
+        ) as T
     }
 }

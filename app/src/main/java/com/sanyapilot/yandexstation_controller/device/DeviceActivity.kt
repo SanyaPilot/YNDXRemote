@@ -8,7 +8,6 @@ import android.media.AudioManager
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.net.wifi.WifiManager
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaMetadataCompat
@@ -23,6 +22,7 @@ import android.view.animation.DecelerateInterpolator
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentContainerView
 import androidx.fragment.app.commit
@@ -31,12 +31,13 @@ import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.button.MaterialButtonToggleGroup
 import com.google.android.material.elevation.SurfaceColors
-import com.sanyapilot.yandexstation_controller.service.DEVICE_ID
-import com.sanyapilot.yandexstation_controller.service.DEVICE_NAME
 import com.sanyapilot.yandexstation_controller.R
 import com.sanyapilot.yandexstation_controller.api.mDNSWorker
 import com.sanyapilot.yandexstation_controller.device.settings.SettingsFragment
-import com.sanyapilot.yandexstation_controller.misc.stationsWithVideo
+import com.sanyapilot.yandexstation_controller.misc.fallbackConfig
+import com.sanyapilot.yandexstation_controller.misc.stationConfigs
+import com.sanyapilot.yandexstation_controller.service.DEVICE_ID
+import com.sanyapilot.yandexstation_controller.service.DEVICE_NAME
 import com.sanyapilot.yandexstation_controller.service.DEVICE_PLATFORM
 import com.sanyapilot.yandexstation_controller.service.StationControlService
 import kotlin.concurrent.thread
@@ -167,7 +168,7 @@ class DeviceActivity : AppCompatActivity() {
         val navBar: BottomNavigationView = findViewById(R.id.deviceNavigation)
 
         // Enable UI remote only for specific models
-        if (stationsWithVideo.contains(devicePlatform)) {
+        if (stationConfigs.getOrDefault(devicePlatform, fallbackConfig).supportsUI) {
             navBar.menu.getItem(1).isVisible = true
         }
 

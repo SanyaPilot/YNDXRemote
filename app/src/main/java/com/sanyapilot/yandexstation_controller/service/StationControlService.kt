@@ -33,7 +33,8 @@ import com.sanyapilot.yandexstation_controller.api.StationState
 import com.sanyapilot.yandexstation_controller.api.mDNSWorker
 import com.sanyapilot.yandexstation_controller.device.DeviceActivity
 import com.sanyapilot.yandexstation_controller.main_screen.PLAYER_CHANNEL_ID
-import com.sanyapilot.yandexstation_controller.misc.stationIcons
+import com.sanyapilot.yandexstation_controller.misc.fallbackConfig
+import com.sanyapilot.yandexstation_controller.misc.stationConfigs
 import okhttp3.Request
 import kotlin.concurrent.thread
 
@@ -314,10 +315,7 @@ class StationControlService : MediaBrowserServiceCompat() {
 
             // Add an app icon and set its accent color
             // Be careful about the color
-            setSmallIcon(
-                stationIcons.getOrDefault(speaker.platform,
-                    R.drawable.station_icon
-                ))
+            setSmallIcon(stationConfigs.getOrDefault(speaker.platform, fallbackConfig).icon)
             color = ContextCompat.getColor(baseContext, R.color.md_theme_dark_primary)
 
             // Skip prev button

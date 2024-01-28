@@ -119,10 +119,6 @@
     <string name="settings">Настройки</string>
     <string name="settingsTitle">Настройки станции</string>
     <string name="jingleLabel">Звук активации Алисы</string>
-    <string name="ssLabel">Заставка картинками</string>
-    <string name="ssSupportText">Текущий тип:</string>
-    <string name="video">видео</string>
-    <string name="images">картинки</string>
     <string name="renameLabel">Переименовать</string>
     <string name="currentName">Текущее название:</string>
     <string name="renameDialogTitle">Переименование</string>
@@ -136,12 +132,21 @@
     <string name="stopTime">Время окончания</string>
     <string name="currentTime">Текущее время:</string>
 
-    <!-- Yandex.Station Max settings -->
+    <!-- Screensaver settings -->
+    <string name="ssLabel">Заставка картинками</string>
+    <string name="ssSupportText">Текущий тип:</string>
+    <string name="video">видео</string>
+    <string name="images">картинки</string>
+
+    <!-- LED screen settings -->
     <string name="visualizationLabel">Визуализация музыки</string>
     <string name="visualizationRandom">Случайный режим</string>
     <string name="clockTypeLabel">Вид часов на экране</string>
     <string name="screenBrightnessLabel">Яркость экрана</string>
     <string name="screenAutoBrightnessLabel">Подстраивать автоматически</string>
+
+    <!-- Proximity gestures -->
+    <string name="proximityGesturesLabel">Жесты ладонью</string>
 
     <!-- User settings -->
     <string name="userSettingsTitle">Настройки аккаунта</string>
