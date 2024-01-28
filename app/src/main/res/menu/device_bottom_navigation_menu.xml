@@ -4,13 +4,18 @@
         android:id="@+id/playbackPage"
         android:enabled="true"
         android:icon="@drawable/round_library_music_24"
-        android:title="@string/playback" />
+        android:title="@string/playbackPage" />
     <item
         android:id="@+id/rcPage"
         android:enabled="true"
         android:icon="@drawable/round_control_camera_24"
-        android:title="@string/rc"
+        android:title="@string/rcPage"
         android:visible="false" />
+    <item
+        android:id="@+id/ttsPage"
+        android:enabled="true"
+        android:icon="@drawable/round_message_24"
+        android:title="@string/ttsPage" />
     <item
         android:id="@+id/settingsPage"
         android:enabled="true"

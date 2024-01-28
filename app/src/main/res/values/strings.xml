@@ -64,9 +64,9 @@
     <string name="sendCmd">Отправить</string>
     <string name="sent">Отправлено!</string>
 
-    <string name="playback">Плеер</string>
-    <string name="commands">Команды</string>
-    <string name="rc">Пульт</string>
+    <string name="playbackPage">Плеер</string>
+    <string name="rcPage">Пульт</string>
+    <string name="ttsPage">Команды</string>
 
     <string name="offlineMode">Нет соединения с колонкой!</string>
     <string name="revertToCloud">Соединение с колонкой потеряно! Возврат в облачный режим</string>

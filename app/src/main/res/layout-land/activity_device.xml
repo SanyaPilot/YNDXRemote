@@ -102,7 +102,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            app:icon="@drawable/round_control_camera_24" />
+            android:visibility="gone"
+            app:icon="@drawable/round_control_camera_24"
+            tools:visibility="visible" />
 
         <Button
             android:id="@+id/ttsButton"

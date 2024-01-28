@@ -19,6 +19,7 @@ import android.view.animation.AccelerateInterpolator
 import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
 import android.view.animation.DecelerateInterpolator
+import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.activity.viewModels
@@ -165,11 +166,14 @@ class DeviceActivity : AppCompatActivity() {
             appBar.subtitle = deviceName
         }
 
-        val navBar: BottomNavigationView = findViewById(R.id.deviceNavigation)
-
         // Enable UI remote only for specific models
         if (stationConfigs.getOrDefault(devicePlatform, fallbackConfig).supportsUI) {
-            navBar.menu.getItem(1).isVisible = true
+            val navBar: BottomNavigationView? = findViewById(R.id.deviceNavigation)
+            val remoteButton: Button? = findViewById(R.id.remoteButton)
+            // Hide TTS button and reveal RC
+            navBar?.menu?.getItem(1)?.isVisible = true
+            navBar?.menu?.getItem(2)?.isVisible = false
+            remoteButton?.visibility = View.VISIBLE
         }
 
         // Color navbar
@@ -234,6 +238,13 @@ class DeviceActivity : AppCompatActivity() {
                 }
 
                 R.id.rcPage -> {
+                    supportFragmentManager.commit {
+                        setReorderingAllowed(true)
+                        replace<DeviceOfflineFragment>(R.id.controlsContainer, "DEVICE_OFFLINE")
+                    }
+                }
+
+                R.id.ttsPage -> {
                     supportFragmentManager.commit {
                         setReorderingAllowed(true)
                         replace<DeviceOfflineFragment>(R.id.controlsContainer, "DEVICE_OFFLINE")
@@ -352,6 +363,13 @@ class DeviceActivity : AppCompatActivity() {
                     supportFragmentManager.commit {
                         setReorderingAllowed(true)
                         replace<DeviceRemoteFragment>(R.id.controlsContainer, "DEVICE_REMOTE")
+                    }
+                }
+
+                R.id.ttsPage -> {
+                    supportFragmentManager.commit {
+                        setReorderingAllowed(true)
+                        replace<DeviceTTSFragment>(R.id.controlsContainer, "DEVICE_TTS")
                     }
                 }
 
@@ -491,6 +509,7 @@ class DeviceActivity : AppCompatActivity() {
         viewModel.checkedControlsItem.value = when (id) {
             R.id.playbackPage -> R.id.playbackButton
             R.id.rcPage -> R.id.remoteButton
+            R.id.ttsPage -> R.id.ttsButton
             R.id.settingsPage -> R.id.settingsButton
             else -> R.id.playbackButton
         }
@@ -500,7 +519,7 @@ class DeviceActivity : AppCompatActivity() {
         viewModel.selectedNavItem.value = when (id) {
             R.id.playbackButton -> R.id.playbackPage
             R.id.remoteButton -> R.id.rcPage
-            R.id.ttsButton -> R.id.rcPage
+            R.id.ttsButton -> R.id.ttsPage
             R.id.settingsButton -> R.id.settingsPage
             else -> R.id.playbackPage
         }
