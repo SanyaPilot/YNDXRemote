@@ -313,6 +313,17 @@ fun SettingsLayout(
                 }
             }
 
+            // Yandex Station Mini gen 1 proximity gestures
+            if (config.supportProximityGestures) {
+                val gesturesEnabled by viewModel.proximityGestures.collectAsState()
+                ListItem(
+                    leadingContent = { Icon(painter = painterResource(id = R.drawable.round_back_hand_24), contentDescription = null) },
+                    headlineContent = { Text(stringResource(R.string.proximityGesturesLabel)) },
+                    trailingContent = { Switch(checked = gesturesEnabled, onCheckedChange = { viewModel.toggleProximityGestures() }) },
+                    modifier = Modifier.clickable { viewModel.toggleProximityGestures() }
+                )
+            }
+
             val eqOpened = rememberSaveable { mutableStateOf(false) }
             ExpandingListItem(
                 expanded = eqOpened,
@@ -528,16 +539,6 @@ fun SettingsLayout(
                     }
                 }
             }
-            
-            if (config.supportProximityGestures) {
-                val gesturesEnabled by viewModel.proximityGestures.collectAsState()
-                ListItem(
-                    leadingContent = { Icon(painter = painterResource(id = R.drawable.round_back_hand_24), contentDescription = null) },
-                    headlineContent = { Text(stringResource(R.string.proximityGesturesLabel)) },
-                    trailingContent = { Switch(checked = gesturesEnabled, onCheckedChange = { viewModel.toggleProximityGestures() }) },
-                    modifier = Modifier.clickable { viewModel.toggleProximityGestures() }
-                )
-            }
 
             ListItem(
                 leadingContent = { Icon(painter = painterResource(id = R.drawable.round_drive_file_rename_outline_24), contentDescription = null) },
@@ -722,6 +723,19 @@ fun MiniPreview() {
             SettingsLayout(
                 viewModel(factory = SettingsViewModelFactory("deaddeaddeaddeaddead", stationConfigs["yandexmini"]!!, null)),
                 stationConfigs["yandexmini"]!!
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun Gen1Preview() {
+    AppTheme {
+        Surface {
+            SettingsLayout(
+                viewModel(factory = SettingsViewModelFactory("deaddeaddeaddeaddead", stationConfigs["yandexstation"]!!, null)),
+                stationConfigs["yandexstation"]!!
             )
         }
     }
