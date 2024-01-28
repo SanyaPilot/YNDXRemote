@@ -34,7 +34,7 @@ class PlaybackInfoObservers (
                         if (curImageURL != "dummy") {
                             image.setImageBitmap(bitmap)
                         } else {
-                            image.setImageResource(R.drawable.ic_round_smart_display_24)
+                            image.setImageResource(R.drawable.round_audiotrack_24)
                         }
                         image.startAnimation(fadeIn)
                     }
@@ -45,7 +45,7 @@ class PlaybackInfoObservers (
                 image.startAnimation(fadeOut)
             }
         } else {
-            image.setImageResource(R.drawable.ic_round_pause_on_surface_24)
+            image.setImageResource(R.drawable.round_audiotrack_24)
         }
     }
 
