@@ -21,7 +21,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.FragmentContainerView
 import androidx.fragment.app.commit
 import androidx.fragment.app.replace
-import com.google.android.material.elevation.SurfaceColors
+import com.google.android.material.color.MaterialColors
 import com.google.android.material.navigation.NavigationBarView
 import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.google.android.material.snackbar.Snackbar
@@ -213,7 +213,7 @@ class MainActivity : AppCompatActivity() {
                         container.startAnimation(fadeIn)
                         bottomNavigation.visibility = View.VISIBLE
                         bottomNavigation.startAnimation(fadeIn)
-                        window.navigationBarColor = SurfaceColors.SURFACE_2.getColor(this@MainActivity)
+                        window.navigationBarColor = MaterialColors.getColor(this@MainActivity, com.google.android.material.R.attr.colorSurfaceContainer, "")
                     }
                     start()
                 }

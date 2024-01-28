@@ -31,7 +31,7 @@ import androidx.fragment.app.replace
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.button.MaterialButtonToggleGroup
-import com.google.android.material.elevation.SurfaceColors
+import com.google.android.material.color.MaterialColors
 import com.sanyapilot.yandexstation_controller.R
 import com.sanyapilot.yandexstation_controller.api.mDNSWorker
 import com.sanyapilot.yandexstation_controller.device.settings.SettingsFragment
@@ -177,7 +177,7 @@ class DeviceActivity : AppCompatActivity() {
         }
 
         // Color navbar
-        window.navigationBarColor = SurfaceColors.SURFACE_2.getColor(this)
+        window.navigationBarColor = MaterialColors.getColor(this, com.google.android.material.R.attr.colorSurfaceContainer, "")
 
         // Supply device ID and device name to the service
         val hints = Bundle()
