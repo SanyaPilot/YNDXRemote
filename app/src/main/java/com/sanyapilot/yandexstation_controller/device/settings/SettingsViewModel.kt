@@ -1,6 +1,7 @@
 package com.sanyapilot.yandexstation_controller.device.settings
 
 import android.support.v4.media.session.MediaControllerCompat
+import android.util.Log
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.TimePickerState
 import androidx.compose.runtime.MutableFloatState
@@ -127,6 +128,10 @@ class SettingsViewModel(
     private lateinit var outPayload: DeviceConfig
     private lateinit var configVersion: String
 
+    companion object {
+        const val TAG = "SettingsViewModel"
+    }
+
     val ssImages: StateFlow<Boolean>
         get() = _ssImages
     val netStatus: StateFlow<NetStatus>
@@ -228,9 +233,14 @@ class SettingsViewModel(
         }
     }
 
-    private fun sendPayload(): ReqResult<ConfigUpdateResponse> {
+    private fun sendPayload(retry: Int = 2): ReqResult<ConfigUpdateResponse> {
         val res = QuasarClient.updateDeviceConfig(deviceSmartHomeId, outPayload, configVersion)
-        if (res.data?.version != null) {
+        if (res.error == SettingsErrors.INVALID_CONFIG_VERSION && retry > 0) {
+            // Config was updated from elsewhere, sync and try again
+            Log.d(TAG, "Invalid config version! Refreshing...")
+            refreshConfig()
+            return sendPayload(retry - 1)
+        } else if (res.data?.version != null) {
             configVersion = res.data.version
         }
         return res
