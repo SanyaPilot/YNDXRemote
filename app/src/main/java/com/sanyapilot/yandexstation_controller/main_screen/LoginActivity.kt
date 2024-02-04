@@ -4,9 +4,9 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.net.Uri
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Button
+import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.TextInputLayout
 import com.sanyapilot.yandexstation_controller.R
@@ -33,7 +33,7 @@ class LoginActivity : AppCompatActivity() {
         val loginField = findViewById<TextInputLayout>(R.id.loginField).editText!!
         val passwdField = findViewById<TextInputLayout>(R.id.passwdField).editText!!
         val loginButton = findViewById<Button>(R.id.loginButton)
-        val howToCodeButton = findViewById<Button>(R.id.howToCodeButton)
+        val authFAQButton = findViewById<Button>(R.id.authFAQButton)
         val telegramButton = findViewById<Button>(R.id.telegramButton)
 
         loginButton.setOnClickListener {
@@ -52,8 +52,8 @@ class LoginActivity : AppCompatActivity() {
                     )
                     if (!res.ok) {
                         val stringID = when (res.errorId) {
-                            Errors.INVALID_ACCOUNT -> R.string.loginInvalidCode
-                            Errors.INVALID_PASSSWD -> R.string.loginInvalidPasswd
+                            Errors.INVALID_ACCOUNT -> R.string.loginInvalidAccountOrPass
+                            Errors.INVALID_PASSSWD -> R.string.loginInvalidAccountOrPass
                             Errors.NEEDS_PHONE_CHALLENGE -> R.string.loginNotSupported
                             Errors.INTERNAL_SERVER_ERROR -> R.string.serverDead
                             Errors.CONNECTION_ERROR -> R.string.errorNoInternet
@@ -82,11 +82,11 @@ class LoginActivity : AppCompatActivity() {
             }
         }
 
-        howToCodeButton.setOnClickListener {
-            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://yndxfuck.ru/remote")))
+        authFAQButton.setOnClickListener {
+            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://telegra.ph/Avtorizaciya-v-prilozhenii-YNDXRemote-02-04")))
         }
         telegramButton.setOnClickListener {
-            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://t.me/yndxfuck")))
+            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://t.me/yndxremote_updates")))
         }
     }
 }

@@ -10,8 +10,7 @@
     <string name="login">Логин</string>
     <string name="password">Пароль</string>
     <string name="loginAction">Войти</string>
-    <string name="loginInvalidUser">Неверный логин!</string>
-    <string name="loginInvalidPasswd">Неверный пароль!</string>
+    <string name="loginInvalidAccountOrPass">Неверный логин или пароль!</string>
     <string name="loginInvalidCode">Неверный код!</string>
     <string name="loginNotSupported">Вход с паролем не удался! Отключите 2FA, или включите вход по Яндекс.Ключу</string>
     <string name="loginXTokenFailed">Не удалось войти в аккаунт! Попробуйте авторизоваться заново</string>
@@ -19,8 +18,8 @@
     <string name="aboutAccount">Об аккаунте</string>
     <string name="logOut">Выйти</string>
     <string name="loginHello">Привет!</string>
-    <string name="loginDescription">Это приложение от команды YNDXFuck для управления вашей станцией.</string>
-    <string name="howToGetCode">Как получить код?</string>
+    <string name="loginDescription">Это приложение для управления вашей станцией.</string>
+    <string name="authFAQ">FAQ по входу</string>
     <string name="telegram">Telegram</string>
     <string name="authCode">Код из бота</string>
 
@@ -41,7 +40,7 @@
 
     <string name="deviceList">Список устройств</string>
     <string name="deviceOffline">Устройство не в сети!</string>
-    <string name="noDevices">Сейчас здесь нет устройств.\nПривяжите колонку в Telegram боте\nt.me/yndxfuck_bot</string>
+    <string name="noDevices">Сейчас здесь нет устройств.\nПривяжите колонку в приложении\nУмный дом с Алисой</string>
 
     <!-- Device names -->
     <string name="station">Яндекс Станция</string>

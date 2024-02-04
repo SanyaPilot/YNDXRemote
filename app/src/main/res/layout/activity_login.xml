@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/loginLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -111,19 +110,19 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
         android:text="@string/loginAction"
-        app:layout_constraintBottom_toTopOf="@+id/howToCodeButton"
+        app:layout_constraintBottom_toTopOf="@+id/authFAQButton"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
     <Button
-        android:id="@+id/howToCodeButton"
+        android:id="@+id/authFAQButton"
         style="@style/IconButtonWithTextOutline"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="24dp"
         android:layout_marginBottom="16dp"
-        android:text="@string/howToGetCode"
-        app:icon="@drawable/key_icon"
+        android:text="@string/authFAQ"
+        app:icon="@drawable/round_question_mark_24"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/telegramButton"
         app:layout_constraintHorizontal_bias="0.5"
@@ -142,6 +141,6 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toEndOf="@+id/howToCodeButton" />
+        app:layout_constraintStart_toEndOf="@+id/authFAQButton" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

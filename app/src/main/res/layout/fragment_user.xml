@@ -9,14 +9,15 @@
 
     <ImageView
         android:id="@+id/userAvatar"
-        android:layout_width="160dp"
-        android:layout_height="160dp"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         android:layout_marginTop="8dp"
-        app:layout_constraintBottom_toTopOf="@+id/withLove"
+        app:layout_constraintBottom_toTopOf="@+id/userName"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.15"
+        app:layout_constraintVertical_chainStyle="packed"
         tools:srcCompat="@tools:sample/avatars" />
 
     <TextView
@@ -28,7 +29,9 @@
         android:textSize="20sp"
         android:textStyle="bold"
         android:visibility="invisible"
+        app:layout_constraintBottom_toTopOf="@+id/userNickname"
         app:layout_constraintEnd_toEndOf="@+id/userAvatar"
+        app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="@+id/userAvatar"
         app:layout_constraintTop_toBottomOf="@+id/userAvatar" />
 
@@ -39,7 +42,9 @@
         android:layout_marginTop="4dp"
         android:text="TextView"
         android:visibility="invisible"
+        app:layout_constraintBottom_toTopOf="@+id/userInfoGuideline"
         app:layout_constraintEnd_toEndOf="@+id/userName"
+        app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="@+id/userName"
         app:layout_constraintTop_toBottomOf="@+id/userName" />
 
@@ -79,5 +84,14 @@
         app:layout_constraintBottom_toTopOf="@+id/logOutButton"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/userInfoGuideline"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintGuide_percent="0.45"
+        app:layout_constraintTop_toBottomOf="@+id/userNickname" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
