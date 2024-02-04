@@ -1,8 +1,11 @@
+@file:Suppress("PropertyName")  // Models require underscores
+
 package com.sanyapilot.yandexstation_controller.api
 
 import android.annotation.SuppressLint
 import android.util.Log
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import okhttp3.Cookie
 import okhttp3.CookieJar
@@ -86,8 +89,33 @@ data class QuasarStorageResponse (
     }
 }
 
-class YandexCookieJar: CookieJar {
+@Serializable
+data class PersistentCookie (
+    val domain: String,
+    val path: String,
+    val cookie: String
+)
+
+class YandexCookieJar(cookies: List<PersistentCookie>): CookieJar {
     private var storage = mutableListOf<Cookie>()
+
+    init {
+        // Parse cookies
+        for (c in cookies) {
+            val url = HttpUrl.Builder()
+                .scheme("https")
+                .host(c.domain)
+                .encodedPath(c.path)
+                .build()
+            val parsed = Cookie.parse(url, c.cookie)
+            if (parsed != null) {
+                storage.add(parsed)
+            } else {
+                Log.e("YandexCookieJar", "Failed to parse cookie from ${c.domain}!")
+            }
+        }
+    }
+
     override fun saveFromResponse(url: HttpUrl, cookies: List<Cookie>) {
         storage.addAll(cookies)
     }
@@ -95,8 +123,9 @@ class YandexCookieJar: CookieJar {
     override fun loadForRequest(url: HttpUrl): List<Cookie> {
         val cookiesToSend = mutableListOf<Cookie>()
         for (cookie in storage){
-            if (cookie.expiresAt < System.currentTimeMillis()) storage.remove(cookie)
-            if (cookie.matches(url)){
+            if (cookie.expiresAt < System.currentTimeMillis()) {
+                storage.remove(cookie)
+            } else if (cookie.matches(url)){
                 cookiesToSend.add(cookie)
             }
         }
@@ -115,20 +144,49 @@ class YandexCookieJar: CookieJar {
     fun clearCookies() {
         storage.clear()
     }
+    fun dumpCookies(): List<PersistentCookie> {
+        val result = mutableListOf<PersistentCookie>()
+        for (cookie in storage) {
+            if (cookie.expiresAt < System.currentTimeMillis()) {
+                storage.remove(cookie)
+                continue
+            }
+            result.add(PersistentCookie(
+                domain = cookie.domain,
+                path = cookie.path,
+                cookie = cookie.toString()
+            ))
+        }
+        return result
+    }
 }
 
 object Session {
     private const val TAG = "QSession"
-    private val cookieJar = YandexCookieJar()
-    val client = OkHttpClient.Builder()
-        .cookieJar(cookieJar)
-        .build()
+    private lateinit var cookieJar: YandexCookieJar
+    private lateinit var cookieDumpCallback: (String) -> Unit
+    private lateinit var client: OkHttpClient
     private val unsafeClient = getUnsafeOkHttpClient()
-    lateinit var trackId: String
-    lateinit var xToken: String
-    lateinit var csrf: String
+    private lateinit var trackId: String
+    private lateinit var csrf: String
+    private lateinit var _xToken: String
+    val xToken: String get() = _xToken
 
     private val json = Json { ignoreUnknownKeys = true }
+
+    fun init(token: String?, cookies: String?, dumpCallback: (String) -> Unit) {
+        token?.let { _xToken = it }
+        cookieJar = if (cookies != null) {
+            val parsed = json.decodeFromString<List<PersistentCookie>>(cookies)
+            YandexCookieJar(parsed)
+        } else {
+            YandexCookieJar(listOf())
+        }
+        client = OkHttpClient.Builder()
+            .cookieJar(cookieJar)
+            .build()
+        cookieDumpCallback = dumpCallback
+    }
 
     // https://stackoverflow.com/questions/50961123/how-to-ignore-ssl-error-in-okhttp
     private fun getUnsafeOkHttpClient(): OkHttpClient {
@@ -251,7 +309,7 @@ object Session {
         client.newCall(request).execute().use { resp ->
             val parsed = json.decodeFromString<TokenBySessionIDResponse>(resp.body.string())
             if (parsed.status == "ok") {
-                xToken = parsed.access_token!!
+                _xToken = parsed.access_token!!
             } else {
                 return LoginResponse(false, Errors.UNKNOWN)
             }
@@ -269,7 +327,7 @@ object Session {
         var request = Request.Builder()
             .url("https://mobileproxy.passport.yandex.net/1/bundle/auth/x_token/")
             .post(body)
-            .addHeader("Ya-Consumer-Authorization", "OAuth $xToken")
+            .addHeader("Ya-Consumer-Authorization", "OAuth $_xToken")
             .build()
 
         try {
@@ -294,6 +352,8 @@ object Session {
                 .build()
 
             noRedirectClient.newCall(request).execute()
+            // Save cookies for further auth
+            cookieDumpCallback(json.encodeToString(cookieJar.dumpCookies()))
             return LoginResponse(true)
         } catch (e: ConnectException) {
             Log.e(TAG, "Error performing request!\n${e.message}")
@@ -304,7 +364,7 @@ object Session {
         }
     }
     private fun refreshCookies(): LoginResponse {
-        if (!this::xToken.isInitialized) {
+        if (!this::_xToken.isInitialized) {
             throw UninitializedPropertyAccessException("xToken is required!")
         }
         // Check if cookies are fine

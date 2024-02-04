@@ -35,7 +35,6 @@ import com.sanyapilot.yandexstation_controller.device.DeviceActivity
 import com.sanyapilot.yandexstation_controller.main_screen.PLAYER_CHANNEL_ID
 import com.sanyapilot.yandexstation_controller.misc.fallbackConfig
 import com.sanyapilot.yandexstation_controller.misc.stationConfigs
-import okhttp3.Request
 import kotlin.concurrent.thread
 
 private const val MY_EMPTY_MEDIA_ROOT_ID = "empty_root_id"
@@ -598,18 +597,14 @@ class StationControlService : MediaBrowserServiceCompat() {
                         image
                     )
                 } else {
-                    val request = Request.Builder()
-                        .url(curImageURL)
-                        .build()
-
-                    Session.client.newCall(request).execute().use { resp ->
-                        if (resp.isSuccessful) {
-                            val image = BitmapFactory.decodeStream(resp.body.byteStream())
-                            mediaMetadataBuilder.putBitmap(
-                                MediaMetadataCompat.METADATA_KEY_ALBUM_ART,
-                                image
-                            )
-                        }
+                    val res = Session.get(curImageURL)
+                    if (res.ok) {
+                        val image = BitmapFactory.decodeStream(res.response!!.body.byteStream())
+                        mediaMetadataBuilder.putBitmap(
+                            MediaMetadataCompat.METADATA_KEY_ALBUM_ART,
+                            image
+                        )
+                        res.response.close()
                     }
                 }
                 coverURL = curImageURL

@@ -242,6 +242,7 @@ class MainActivity : AppCompatActivity() {
         // Logout action, starting LoginActivity
         with (sharedPrefs.edit()) {
             remove("xToken")
+            remove("cookies")
             commit()
         }
         Session.clearAllCookies()

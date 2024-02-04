@@ -14,6 +14,17 @@ MainApplication: Application() {
 
         // Load token from storage (if exists)
         val sharedPrefs = getSharedPreferences("auth", Context.MODE_PRIVATE)
-        if (sharedPrefs.contains("xToken")) Session.xToken = sharedPrefs.getString("xToken", null)!!
+        val xToken = sharedPrefs.getString("xToken", null)
+        val cookies = sharedPrefs.getString("cookies", null)
+        Session.init(
+            token = xToken,
+            cookies = cookies,
+            dumpCallback = {
+                with(sharedPrefs.edit()) {
+                    putString("cookies", it)
+                    apply()
+                }
+            }
+        )
     }
 }
