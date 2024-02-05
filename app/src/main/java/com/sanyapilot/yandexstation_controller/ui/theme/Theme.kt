@@ -1,14 +1,17 @@
 package com.sanyapilot.yandexstation_controller.ui.theme
 
+import android.content.Context
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.lightColorScheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import com.google.android.material.color.MaterialColors
 
 
 private val LightColors = lightColorScheme(
@@ -51,15 +54,24 @@ private val DarkColors = darkColorScheme(
 @Composable
 fun AppTheme(
   useDarkTheme: Boolean = isSystemInDarkTheme(),
+  context: Context? = null,
   content: @Composable () -> Unit
 ) {
     // Dynamic color is available on Android 12+
     val dynamicColor = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
-    val colors = when {
+    var colors = when {
         dynamicColor && useDarkTheme -> dynamicDarkColorScheme(LocalContext.current)
         dynamicColor && !useDarkTheme -> dynamicLightColorScheme(LocalContext.current)
         useDarkTheme -> DarkColors
         else -> LightColors
+    }
+
+    // Applies right surface color
+    // Material3 view based lib already uses it, but compose stable one not
+    // Using version 1.2.0-rc01 breaks sliders, thx Google
+    if (dynamicColor && context != null) {
+        val newSurfaceColor = MaterialColors.getColor(context, com.google.android.material.R.attr.colorSurface, "")
+        colors = colors.copy(surface = Color(newSurfaceColor), background = Color(newSurfaceColor))
     }
 
   MaterialTheme(

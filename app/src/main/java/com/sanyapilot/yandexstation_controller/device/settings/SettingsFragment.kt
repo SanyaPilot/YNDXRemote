@@ -111,7 +111,7 @@ class SettingsFragment : Fragment() {
         return ComposeView(requireContext()).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
-                AppTheme {
+                AppTheme(context = this@SettingsFragment.context) {
                     Surface {
                         SettingsLayout(viewModel, deviceConfig)
                     }
