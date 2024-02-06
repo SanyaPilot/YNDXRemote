@@ -69,7 +69,7 @@ Android приложение, позволяющее управлять ваше
 
 - Мой Telegram - [@sanyapilot](https://t.me/sanyapilot)
 
-- Ветка на 4PDA - TODO
+- [Ветка на 4PDA](https://4pda.to/forum/index.php?showtopic=1083965)
 
 ## Поддержать проект
 
