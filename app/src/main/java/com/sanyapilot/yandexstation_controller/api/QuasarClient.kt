@@ -2,7 +2,6 @@
 
 package com.sanyapilot.yandexstation_controller.api
 import android.util.Log
-import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -20,8 +19,12 @@ data class QuasarHousehold (
     val name: String,
     val rooms: List<QuasarRoom>,
     val all: List<QuasarDevice>,
-    @Contextual
-    val sharing_info: Any? = null
+    val sharing_info: QuasarHouseholdSharingInfo? = null
+)
+
+@Serializable
+data class QuasarHouseholdSharingInfo (
+    val owner_id: Int
 )
 
 @Serializable
@@ -185,8 +188,14 @@ object QuasarClient {
         if (!result.ok || result.response == null) {
             return result
         }
-        val parsed = json.decodeFromString<DevicesResponse>(result.response.body.string())
-        result.response.close()
+        val parsed: DevicesResponse
+        try {
+            parsed = json.decodeFromString(result.response.body.string())
+            result.response.close()
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to parse device list!", e)
+            return RequestResponse(ok = false, errorId = Errors.INTERNAL_SERVER_ERROR, response = null)
+        }
 
         devices.clear()
         for (house in parsed.households) {
