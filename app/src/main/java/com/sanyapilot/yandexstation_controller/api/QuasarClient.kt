@@ -56,7 +56,7 @@ data class Speaker(
 )
 
 enum class SettingsErrors {
-    UNAUTHORIZED, NOT_LINKED, INVALID_VALUE, INVALID_CONFIG_VERSION, TIMEOUT, UNKNOWN, NO_INTERNET
+    UNAUTHORIZED, NOT_LINKED, INVALID_VALUE, INVALID_CONFIG_VERSION, TIMEOUT, UNKNOWN, NO_INTERNET, PARSING_ERROR
 }
 
 interface APIResponse {
@@ -292,11 +292,16 @@ object QuasarClient {
             ReqResult(
                 ok = false,
                 error = when (code) {
-                    200 -> when (parsed?.code) {
-                        "INVALID_CONFIG_VERSION" -> SettingsErrors.INVALID_CONFIG_VERSION
-                        else -> {
-                            Log.e(TAG,"Unexpected server response!\nCode: $code\nResponse: $parsed")
-                            SettingsErrors.UNKNOWN
+                    200 -> if (parsed == null) {
+                        Log.e(TAG, "Server returned 200, but parsing failed!\nPath: $path")
+                        SettingsErrors.PARSING_ERROR
+                    } else {
+                        when (parsed.code) {
+                            "INVALID_CONFIG_VERSION" -> SettingsErrors.INVALID_CONFIG_VERSION
+                            else -> {
+                                Log.e(TAG, "Unexpected server response!\nCode: $code\nResponse: $parsed")
+                                SettingsErrors.UNKNOWN
+                            }
                         }
                     }
                     400 -> when (parsed?.code) {

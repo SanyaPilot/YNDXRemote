@@ -101,8 +101,11 @@
     <string name="deviceAlreadyLinked">Устройство уже привязано!</string>
     <string name="deviceNotLinked">Устройство не привязано!</string>
     <string name="alreadyRunningError">Колонка уже говорит код!</string>
-    <string name="unknownError">Произошла неизвестная ошибка! Свяжитесь с нами</string>
+    <string name="timeoutError">Таймаут! Проблемы с интернетом?</string>
+    <string name="parsingError">Произошла ошибка парсинга! Сообщите об этом разработчику</string>
+    <string name="unknownError">Произошла неизвестная ошибка! Сообщите об этом разработчику</string>
     <string name="invalidName">Имя может содержать только буквы, цифры, пробелы, скобки и некоторые специальные символы (.,-_[])!</string>
+    <string name="syncError">Ошибка синхронизации</string>
 
     <!-- Device unlink dialog -->
     <string name="unlinkLabel">Отвязать от аккаунта</string>

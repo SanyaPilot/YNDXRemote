@@ -75,6 +75,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sanyapilot.yandexstation_controller.R
+import com.sanyapilot.yandexstation_controller.api.SettingsErrors
 import com.sanyapilot.yandexstation_controller.composables.ExpandingListItem
 import com.sanyapilot.yandexstation_controller.composables.NetStatusSnack
 import com.sanyapilot.yandexstation_controller.misc.StationConfig
@@ -220,6 +221,24 @@ fun SettingsLayout(
             netStatus = netStatus.value,
             snackbarHostState = snackbarHostState
         )
+        if (netStatus.value.error == SettingsErrors.PARSING_ERROR) {
+            // Display message and remove all buttons
+            Column(
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight()
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.sync_problem_24),
+                    contentDescription = null,
+                    modifier = Modifier.size(180.dp)
+                )
+                Text(text = stringResource(id = R.string.syncError), fontSize = 16.sp)
+                return@Scaffold
+            }
+        }
 
         val renameError = viewModel.renameError.collectAsState()
         if (renameError.value) {
