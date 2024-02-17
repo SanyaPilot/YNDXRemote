@@ -7,8 +7,19 @@ data class StationConfig (
     val icon: Int,
     val supportsScreenSaver: Boolean = false,
     val supportsUI: Boolean = false,
-    val supportsLED: Boolean = false,
-    val supportProximityGestures: Boolean = false
+    val ledConfig: StationLEDConfig? = null,
+    val supportsProximityGestures: Boolean = false
+)
+
+data class Preset(
+    val id: String,
+    val drawableId: Int
+)
+
+data class StationLEDConfig (
+    val visPresets: List<Preset>? = null,
+    val clockTypes: List<Preset>? = null,
+    val supportsBrightnessControl: Boolean = true
 )
 
 val stationConfigs = mapOf(
@@ -23,17 +34,31 @@ val stationConfigs = mapOf(
         icon = R.drawable.station_max,
         supportsScreenSaver = true,
         supportsUI = true,
-        supportsLED = true
+        ledConfig = StationLEDConfig(
+            visPresets = listOf(
+                Preset("pads", R.drawable.vis_pads),
+                Preset("barsBottom", R.drawable.vis_bars_bottom),
+                Preset("barsCenter", R.drawable.vis_bars_center),
+                Preset("bricksSmall", R.drawable.vis_bricks),
+                Preset("flame", R.drawable.vis_wave_bottom),
+                Preset("waveCenter", R.drawable.vis_wave_center)
+            ),
+            clockTypes = listOf(
+                Preset("small", R.drawable.clock_small),
+                Preset("middle", R.drawable.clock_middle),
+                Preset("large", R.drawable.clock_large)
+            )
+        )
     ),
     "yandexmini" to StationConfig(
         name = R.string.station_mini,
         icon = R.drawable.station_mini,
-        supportProximityGestures = true
+        supportsProximityGestures = true
     ),
     "yandexmini_2" to StationConfig(
         name = R.string.station_mini2,
         icon = R.drawable.station_mini2,
-        supportsLED = true
+        ledConfig = StationLEDConfig()  // Just brightness control
     ),
     "yandexmicro" to StationConfig(
         name = R.string.station_lite,

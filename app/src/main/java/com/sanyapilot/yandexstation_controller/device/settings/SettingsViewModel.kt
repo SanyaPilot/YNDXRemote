@@ -8,7 +8,6 @@ import androidx.compose.runtime.MutableFloatState
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.sanyapilot.yandexstation_controller.R
 import com.sanyapilot.yandexstation_controller.api.ConfigUpdateResponse
 import com.sanyapilot.yandexstation_controller.api.DNDModeConfig
 import com.sanyapilot.yandexstation_controller.api.DeviceConfig
@@ -79,26 +78,6 @@ const val CUSTOM_PRESET_NAME = "Свой пресет"
 data class DNDTime(
     val hour: Int,
     val minute: Int
-)
-
-data class Preset(
-    val id: String,
-    val drawableId: Int
-)
-
-val VIS_PRESETS = listOf(
-    Preset("pads", R.drawable.vis_pads),
-    Preset("barsBottom", R.drawable.vis_bars_bottom),
-    Preset("barsCenter", R.drawable.vis_bars_center),
-    Preset("bricksSmall", R.drawable.vis_bricks),
-    Preset("flame", R.drawable.vis_wave_bottom),
-    Preset("waveCenter", R.drawable.vis_wave_center)
-)
-
-val CLOCK_TYPES = listOf(
-    Preset("small", R.drawable.clock_small),
-    Preset("middle", R.drawable.clock_middle),
-    Preset("large", R.drawable.clock_large),
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -216,19 +195,25 @@ class SettingsViewModel(
         }
 
         // Specific for devices with a LED screen
-        if (deviceConfig.supportsLED) {
+        if (deviceConfig.ledConfig != null) {
             val ledConfig = quasarConfig.led
             if (ledConfig != null) {
-                _visPresetName.value = ledConfig.music_equalizer_visualization.style
-                _visRandomEnabled.value = ledConfig.music_equalizer_visualization.auto
-                _clockType.value = ledConfig.time_visualization.size
-                _screenAutoBrightness.value = ledConfig.brightness.auto
-                _screenBrightness.value = ledConfig.brightness.value
+                if (deviceConfig.ledConfig.visPresets != null) {
+                    _visPresetName.value = ledConfig.music_equalizer_visualization.style
+                    _visRandomEnabled.value = ledConfig.music_equalizer_visualization.auto
+                }
+                if (deviceConfig.ledConfig.clockTypes != null) {
+                    _clockType.value = ledConfig.time_visualization.size
+                }
+                if (deviceConfig.ledConfig.supportsBrightnessControl) {
+                    _screenAutoBrightness.value = ledConfig.brightness.auto
+                    _screenBrightness.value = ledConfig.brightness.value
+                }
             }
         }
 
         // Yandex Station Mini gen 1 proximity gestures
-        if (deviceConfig.supportProximityGestures && quasarConfig.tof != null) {
+        if (deviceConfig.supportsProximityGestures && quasarConfig.tof != null) {
             _proximityGestures.value = quasarConfig.tof!!
         }
     }
@@ -410,17 +395,20 @@ class SettingsViewModel(
 
     private fun genLEDConfig(): LEDConfig {
         return LEDConfig(
-            brightness = LEDBrightnessConfig(
-                auto = _screenAutoBrightness.value,
-                value = _screenBrightness.value
-            ),
-            music_equalizer_visualization = LEDEQVisConfig(
-                auto = _visRandomEnabled.value,
-                style = _visPresetName.value
-            ),
-            time_visualization = LEDTimeVisConfig(
-                size = _clockType.value
-            )
+            brightness = if (deviceConfig.ledConfig!!.supportsBrightnessControl)
+                LEDBrightnessConfig(
+                    auto = _screenAutoBrightness.value,
+                    value = _screenBrightness.value
+                ) else null,
+            music_equalizer_visualization = if (deviceConfig.ledConfig.visPresets != null)
+                LEDEQVisConfig(
+                    auto = _visRandomEnabled.value,
+                    style = _visPresetName.value
+                ) else null,
+            time_visualization = if (deviceConfig.ledConfig.clockTypes != null)
+                LEDTimeVisConfig(
+                    size = _clockType.value
+                ) else null
         )
     }
     fun setVisPreset(name: String) {

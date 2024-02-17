@@ -333,7 +333,7 @@ fun SettingsLayout(
             }
 
             // Yandex Station Mini gen 1 proximity gestures
-            if (config.supportProximityGestures) {
+            if (config.supportsProximityGestures) {
                 val gesturesEnabled by viewModel.proximityGestures.collectAsState()
                 ListItem(
                     leadingContent = { Icon(painter = painterResource(id = R.drawable.round_back_hand_24), contentDescription = null) },
@@ -436,124 +436,130 @@ fun SettingsLayout(
             }
 
             // LED screen settings
-            if (config.supportsLED) {
+            if (config.ledConfig != null) {
                 // Visualizer
-                val visOpened = rememberSaveable { mutableStateOf(false) }
-                ExpandingListItem(
-                    expanded = visOpened,
-                    headlineContent = { Text(text = stringResource(id = R.string.visualizationLabel)) },
-                    leadingContent = {
-                        Icon(
-                            painter = painterResource(id = R.drawable.round_graphic_eq_24),
-                            contentDescription = null
-                        )
-                    }
-                )
-                AnimatedVisibility(
-                    visible = visOpened.value
-                ) {
-                    val visPresetName by viewModel.visPresetName.collectAsState()
-                    val visRandomEnabled by viewModel.visRandomEnabled.collectAsState()
-                    Column {
-                        ListItem(
-                            leadingContent = { Icon(painter = painterResource(id = R.drawable.round_shuffle_24), contentDescription = null) },
-                            headlineContent = { Text(stringResource(R.string.visualizationRandom)) },
-                            trailingContent = { Switch(checked = visRandomEnabled, onCheckedChange = { viewModel.toggleVisRandom() }) },
-                            modifier = Modifier.clickable { viewModel.toggleVisRandom() }
-                        )
-                        var i = 0
-                        while (i < VIS_PRESETS.size) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 4.dp, horizontal = 8.dp),
-                                horizontalArrangement = Arrangement.SpaceEvenly
-                            ) {
-                                val endIdx = min(i + 2, VIS_PRESETS.size - 1)
-                                VIS_PRESETS.slice(i..endIdx).forEach {
-                                    BigSelectableButton(
-                                        selected = it.id == visPresetName,
-                                        enabled = !visRandomEnabled,
-                                        onClick = { viewModel.setVisPreset(it.id) },
-                                        painter = painterResource(id = it.drawableId)
-                                    )
+                if (config.ledConfig.visPresets != null) {
+                    val visOpened = rememberSaveable { mutableStateOf(false) }
+                    ExpandingListItem(
+                        expanded = visOpened,
+                        headlineContent = { Text(text = stringResource(id = R.string.visualizationLabel)) },
+                        leadingContent = {
+                            Icon(
+                                painter = painterResource(id = R.drawable.round_graphic_eq_24),
+                                contentDescription = null
+                            )
+                        }
+                    )
+                    AnimatedVisibility(
+                        visible = visOpened.value
+                    ) {
+                        val visPresetName by viewModel.visPresetName.collectAsState()
+                        val visRandomEnabled by viewModel.visRandomEnabled.collectAsState()
+                        Column {
+                            ListItem(
+                                leadingContent = { Icon(painter = painterResource(id = R.drawable.round_shuffle_24), contentDescription = null) },
+                                headlineContent = { Text(stringResource(R.string.visualizationRandom)) },
+                                trailingContent = { Switch(checked = visRandomEnabled, onCheckedChange = { viewModel.toggleVisRandom() }) },
+                                modifier = Modifier.clickable { viewModel.toggleVisRandom() }
+                            )
+                            var i = 0
+                            while (i < config.ledConfig.visPresets.size) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 4.dp, horizontal = 8.dp),
+                                    horizontalArrangement = Arrangement.SpaceEvenly
+                                ) {
+                                    val endIdx = min(i + 2, config.ledConfig.visPresets.size - 1)
+                                    config.ledConfig.visPresets.slice(i..endIdx).forEach {
+                                        BigSelectableButton(
+                                            selected = it.id == visPresetName,
+                                            enabled = !visRandomEnabled,
+                                            onClick = { viewModel.setVisPreset(it.id) },
+                                            painter = painterResource(id = it.drawableId)
+                                        )
+                                    }
+                                    i += 3
                                 }
-                                i += 3
                             }
                         }
                     }
                 }
 
                 // Clock type
-                val clockOpened = rememberSaveable { mutableStateOf(false) }
-                ExpandingListItem(
-                    expanded = clockOpened,
-                    headlineContent = { Text(text = stringResource(id = R.string.clockTypeLabel)) },
-                    leadingContent = {
-                        Icon(
-                            painter = painterResource(id = R.drawable.round_access_time_24),
-                            contentDescription = null
-                        )
-                    }
-                )
-                AnimatedVisibility(visible = clockOpened.value) {
-                    val selectedClockType by viewModel.clockType.collectAsState()
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(8.dp),
-                        horizontalArrangement = Arrangement.SpaceEvenly
-                    ) {
-                        CLOCK_TYPES.forEach {
-                            BigSelectableButton(
-                                selected = it.id == selectedClockType,
-                                onClick = { viewModel.setClockType(it.id) },
-                                painter = painterResource(id = it.drawableId)
+                if (config.ledConfig.clockTypes != null) {
+                    val clockOpened = rememberSaveable { mutableStateOf(false) }
+                    ExpandingListItem(
+                        expanded = clockOpened,
+                        headlineContent = { Text(text = stringResource(id = R.string.clockTypeLabel)) },
+                        leadingContent = {
+                            Icon(
+                                painter = painterResource(id = R.drawable.round_access_time_24),
+                                contentDescription = null
                             )
+                        }
+                    )
+                    AnimatedVisibility(visible = clockOpened.value) {
+                        val selectedClockType by viewModel.clockType.collectAsState()
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(8.dp),
+                            horizontalArrangement = Arrangement.SpaceEvenly
+                        ) {
+                            config.ledConfig.clockTypes.forEach {
+                                BigSelectableButton(
+                                    selected = it.id == selectedClockType,
+                                    onClick = { viewModel.setClockType(it.id) },
+                                    painter = painterResource(id = it.drawableId)
+                                )
+                            }
                         }
                     }
                 }
 
                 // Screen brightness
-                val brightnessOpened = rememberSaveable { mutableStateOf(false) }
-                ExpandingListItem(
-                    expanded = brightnessOpened,
-                    headlineContent = { Text(text = stringResource(id = R.string.screenBrightnessLabel)) },
-                    leadingContent = {
-                        Icon(
-                            painter = painterResource(id = R.drawable.baseline_settings_brightness_24),
-                            contentDescription = null
-                        )
-                    }
-                )
-                AnimatedVisibility(visible = brightnessOpened.value) {
-                    val autoBrightness by viewModel.screenAutoBrightness.collectAsState()
-                    val brightnessLevel by viewModel.screenBrightness.collectAsState()
-                    val curSliderLevel = remember { mutableFloatStateOf(brightnessLevel) }
-                    Column {
-                        ListItem(
-                            leadingContent = { Icon(painter = painterResource(id = R.drawable.round_brightness_auto_24), contentDescription = null) },
-                            headlineContent = { Text(text = stringResource(id = R.string.screenAutoBrightnessLabel)) },
-                            trailingContent = { Switch(checked = autoBrightness, onCheckedChange = { viewModel.toggleAutoBrightness() }) },
-                            modifier = Modifier.clickable { viewModel.toggleAutoBrightness() }
-                        )
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(horizontal = 16.dp)
-                        ) {
-                            Slider(
-                                value = curSliderLevel.floatValue,
-                                enabled = !autoBrightness,
-                                onValueChange = { curSliderLevel.floatValue = it },
-                                onValueChangeFinished = { viewModel.updateScreenBrightness(curSliderLevel.floatValue) },
-                                modifier = Modifier.weight(1f)
+                if (config.ledConfig.supportsBrightnessControl) {
+                    val brightnessOpened = rememberSaveable { mutableStateOf(false) }
+                    ExpandingListItem(
+                        expanded = brightnessOpened,
+                        headlineContent = { Text(text = stringResource(id = R.string.screenBrightnessLabel)) },
+                        leadingContent = {
+                            Icon(
+                                painter = painterResource(id = R.drawable.baseline_settings_brightness_24),
+                                contentDescription = null
                             )
-                            Text(
-                                text = "${(curSliderLevel.floatValue * 100).roundToInt()}%",
-                                modifier = Modifier
-                                    .padding(start = 8.dp)
-                                    .alpha(if (autoBrightness) 0.38f else 1f)
+                        }
+                    )
+                    AnimatedVisibility(visible = brightnessOpened.value) {
+                        val autoBrightness by viewModel.screenAutoBrightness.collectAsState()
+                        val brightnessLevel by viewModel.screenBrightness.collectAsState()
+                        val curSliderLevel = remember { mutableFloatStateOf(brightnessLevel) }
+                        Column {
+                            ListItem(
+                                leadingContent = { Icon(painter = painterResource(id = R.drawable.round_brightness_auto_24), contentDescription = null) },
+                                headlineContent = { Text(text = stringResource(id = R.string.screenAutoBrightnessLabel)) },
+                                trailingContent = { Switch(checked = autoBrightness, onCheckedChange = { viewModel.toggleAutoBrightness() }) },
+                                modifier = Modifier.clickable { viewModel.toggleAutoBrightness() }
                             )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(horizontal = 16.dp)
+                            ) {
+                                Slider(
+                                    value = curSliderLevel.floatValue,
+                                    enabled = !autoBrightness,
+                                    onValueChange = { curSliderLevel.floatValue = it },
+                                    onValueChangeFinished = { viewModel.updateScreenBrightness(curSliderLevel.floatValue) },
+                                    modifier = Modifier.weight(1f)
+                                )
+                                Text(
+                                    text = "${(curSliderLevel.floatValue * 100).roundToInt()}%",
+                                    modifier = Modifier
+                                        .padding(start = 8.dp)
+                                        .alpha(if (autoBrightness) 0.38f else 1f)
+                                )
+                            }
                         }
                     }
                 }
@@ -742,6 +748,19 @@ fun MiniPreview() {
             SettingsLayout(
                 viewModel(factory = SettingsViewModelFactory("deaddeaddeaddeaddead", stationConfigs["yandexmini"]!!, null)),
                 stationConfigs["yandexmini"]!!
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun Mini2Preview() {
+    AppTheme {
+        Surface {
+            SettingsLayout(
+                viewModel(factory = SettingsViewModelFactory("deaddeaddeaddeaddead", stationConfigs["yandexmini_2"]!!, null)),
+                stationConfigs["yandexmini_2"]!!
             )
         }
     }
