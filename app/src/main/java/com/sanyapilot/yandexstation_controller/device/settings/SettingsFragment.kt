@@ -563,6 +563,17 @@ fun SettingsLayout(
                         }
                     }
                 }
+
+                // Idle animation (Station 2)
+                if (config.ledConfig.supportsIdleAnimation) {
+                    val ledIdleAnimationEnabled by viewModel.ledIdleAnimationEnabled.collectAsState()
+                    ListItem(
+                        leadingContent = { Icon(painter = painterResource(id = R.drawable.animation_24), contentDescription = null) },
+                        headlineContent = { Text(stringResource(R.string.ledIdleAnimationLabel)) },
+                        trailingContent = { Switch(checked = ledIdleAnimationEnabled, onCheckedChange = { viewModel.toggleLEDIdleAnimation() }) },
+                        modifier = Modifier.clickable { viewModel.toggleLEDIdleAnimation() }
+                    )
+                }
             }
 
             ListItem(
@@ -735,6 +746,19 @@ fun SettingsPreview() {
             SettingsLayout(
                 viewModel(factory = SettingsViewModelFactory("deaddeaddeaddeaddead", stationConfigs["yandexstation_2"]!!, null)),
                 stationConfigs["yandexstation_2"]!!
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun Gen2Preview() {
+    AppTheme {
+        Surface {
+            SettingsLayout(
+                viewModel(factory = SettingsViewModelFactory("deaddeaddeaddeaddead", stationConfigs["yandexmidi"]!!, null)),
+                stationConfigs["yandexmidi"]!!
             )
         }
     }

@@ -99,6 +99,7 @@ class SettingsViewModel(
     private val _visPresetName = MutableStateFlow("pads")
     private val _visRandomEnabled = MutableStateFlow(true)
     private val _clockType = MutableStateFlow("middle")
+    private val _ledIdleAnimationEnabled = MutableStateFlow(false)
     private val _screenAutoBrightness = MutableStateFlow(true)
     private val _screenBrightness = MutableStateFlow(0.5f)
     private val _proximityGestures = MutableStateFlow(true)
@@ -135,6 +136,8 @@ class SettingsViewModel(
         get() = _visRandomEnabled
     val clockType: StateFlow<String>
         get() = _clockType
+    val ledIdleAnimationEnabled: StateFlow<Boolean>
+        get() = _ledIdleAnimationEnabled
     val screenAutoBrightness: StateFlow<Boolean>
         get() = _screenAutoBrightness
     val screenBrightness: StateFlow<Float>
@@ -198,14 +201,14 @@ class SettingsViewModel(
         if (deviceConfig.ledConfig != null) {
             val ledConfig = quasarConfig.led
             if (ledConfig != null) {
-                if (deviceConfig.ledConfig.visPresets != null) {
+                if (deviceConfig.ledConfig.visPresets != null && ledConfig.music_equalizer_visualization != null) {
                     _visPresetName.value = ledConfig.music_equalizer_visualization.style
                     _visRandomEnabled.value = ledConfig.music_equalizer_visualization.auto
                 }
-                if (deviceConfig.ledConfig.clockTypes != null) {
+                if (deviceConfig.ledConfig.clockTypes != null && ledConfig.time_visualization != null) {
                     _clockType.value = ledConfig.time_visualization.size
                 }
-                if (deviceConfig.ledConfig.supportsBrightnessControl) {
+                if (deviceConfig.ledConfig.supportsBrightnessControl && ledConfig.brightness != null) {
                     _screenAutoBrightness.value = ledConfig.brightness.auto
                     _screenBrightness.value = ledConfig.brightness.value
                 }
@@ -408,7 +411,9 @@ class SettingsViewModel(
             time_visualization = if (deviceConfig.ledConfig.clockTypes != null)
                 LEDTimeVisConfig(
                     size = _clockType.value
-                ) else null
+                ) else null,
+            idle_animation = if (deviceConfig.ledConfig.supportsIdleAnimation)
+                _ledIdleAnimationEnabled.value else null
         )
     }
     fun setVisPreset(name: String) {
@@ -416,7 +421,7 @@ class SettingsViewModel(
             if (outPayload.led == null) {
                 outPayload.led = genLEDConfig()
             }
-            outPayload.led!!.music_equalizer_visualization.style = name
+            outPayload.led!!.music_equalizer_visualization!!.style = name
             val res = sendPayload()
             if (res.ok) {
                 _visPresetName.value = name
@@ -430,7 +435,7 @@ class SettingsViewModel(
             if (outPayload.led == null) {
                 outPayload.led = genLEDConfig()
             }
-            outPayload.led!!.music_equalizer_visualization.auto = !outPayload.led!!.music_equalizer_visualization.auto
+            outPayload.led!!.music_equalizer_visualization!!.auto = !outPayload.led!!.music_equalizer_visualization!!.auto
             val res = sendPayload()
             if (res.ok) {
                 _visRandomEnabled.value = !_visRandomEnabled.value
@@ -444,10 +449,24 @@ class SettingsViewModel(
             if (outPayload.led == null) {
                 outPayload.led = genLEDConfig()
             }
-            outPayload.led!!.time_visualization.size = type
+            outPayload.led!!.time_visualization!!.size = type
             val res = sendPayload()
             if (res.ok) {
                 _clockType.value = type
+            } else {
+                _netStatus.value = NetStatus(false, res.error)
+            }
+        }
+    }
+    fun toggleLEDIdleAnimation() {
+        thread {
+            if (outPayload.led == null) {
+                outPayload.led = genLEDConfig()
+            }
+            outPayload.led!!.idle_animation = !outPayload.led!!.idle_animation!!
+            val res = sendPayload()
+            if (res.ok) {
+                _ledIdleAnimationEnabled.value = !_ledIdleAnimationEnabled.value
             } else {
                 _netStatus.value = NetStatus(false, res.error)
             }
@@ -458,7 +477,7 @@ class SettingsViewModel(
             if (outPayload.led == null) {
                 outPayload.led = genLEDConfig()
             }
-            outPayload.led!!.brightness.auto = !outPayload.led!!.brightness.auto
+            outPayload.led!!.brightness!!.auto = !outPayload.led!!.brightness!!.auto
             val res = sendPayload()
             if (res.ok) {
                 _screenAutoBrightness.value = !_screenAutoBrightness.value
@@ -473,7 +492,7 @@ class SettingsViewModel(
                 outPayload.led = genLEDConfig()
             }
             val roundedLevel = (level * 100).roundToInt() / 100f
-            outPayload.led!!.brightness.value = roundedLevel
+            outPayload.led!!.brightness!!.value = roundedLevel
             val res = sendPayload()
             if (res.ok) {
                 _screenBrightness.value = roundedLevel

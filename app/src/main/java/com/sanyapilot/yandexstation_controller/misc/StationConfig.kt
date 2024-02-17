@@ -8,7 +8,7 @@ data class StationConfig (
     val supportsScreenSaver: Boolean = false,
     val supportsUI: Boolean = false,
     val ledConfig: StationLEDConfig? = null,
-    val supportsProximityGestures: Boolean = false
+    val supportsProximityGestures: Boolean = false  // Mini gen 1
 )
 
 data class Preset(
@@ -19,7 +19,8 @@ data class Preset(
 data class StationLEDConfig (
     val visPresets: List<Preset>? = null,
     val clockTypes: List<Preset>? = null,
-    val supportsBrightnessControl: Boolean = true
+    val supportsBrightnessControl: Boolean = true,
+    val supportsIdleAnimation: Boolean = false  // Station 2
 )
 
 val stationConfigs = mapOf(
@@ -66,7 +67,17 @@ val stationConfigs = mapOf(
     ),
     "yandexmidi" to StationConfig(
         name = R.string.station_2,
-        icon = R.drawable.station_2
+        icon = R.drawable.station_2,
+        ledConfig = StationLEDConfig(
+            // TODO: Draw fancy icons
+            visPresets = listOf(
+                Preset("blink", R.drawable.vis_pads),
+                Preset("lava_beat", R.drawable.vis_bars_bottom),
+                Preset("polar_shining", R.drawable.vis_bars_center),
+                Preset("none", R.drawable.light_off_24),
+            ),
+            supportsIdleAnimation = true
+        )
     ),
     "cucumber" to StationConfig(
         name = R.string.station_midi,

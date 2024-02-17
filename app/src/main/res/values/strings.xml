@@ -144,6 +144,7 @@
     <string name="visualizationLabel">Визуализация музыки</string>
     <string name="visualizationRandom">Случайный режим</string>
     <string name="clockTypeLabel">Вид часов на экране</string>
+    <string name="ledIdleAnimationLabel">Световая заставка при бездействии</string>
     <string name="screenBrightnessLabel">Яркость экрана</string>
     <string name="screenAutoBrightnessLabel">Подстраивать автоматически</string>
 

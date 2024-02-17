@@ -150,9 +150,10 @@ data class DNDModeConfig(
 
 @Serializable
 data class LEDConfig(
-    val brightness: LEDBrightnessConfig,
-    val music_equalizer_visualization: LEDEQVisConfig,
-    val time_visualization: LEDTimeVisConfig
+    val brightness: LEDBrightnessConfig? = null,
+    val music_equalizer_visualization: LEDEQVisConfig? = null,
+    val time_visualization: LEDTimeVisConfig? = null,
+    var idle_animation: Boolean? = null
 )
 
 @Serializable
