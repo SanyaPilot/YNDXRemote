@@ -35,9 +35,8 @@
         android:layout_marginStart="32dp"
         android:layout_marginTop="16dp"
         android:layout_marginEnd="32dp"
-        android:layout_marginBottom="8dp"
         app:cardBackgroundColor="@android:color/white"
-        app:layout_constraintBottom_toTopOf="@+id/loginQRSaveCodeButton"
+        app:layout_constraintBottom_toTopOf="@+id/loginQRLinkButton"
         app:layout_constraintDimensionRatio="1"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
@@ -54,20 +53,46 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 tools:src="@drawable/qr_code_2_24" />
+
+            <com.google.android.material.progressindicator.LinearProgressIndicator
+                android:id="@+id/loginQRBar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:indeterminate="true" />
         </FrameLayout>
     </com.google.android.material.card.MaterialCardView>
 
     <Button
-        android:id="@+id/loginQRSaveCodeButton"
-        style="@style/Widget.Material3.Button.OutlinedButton"
+        android:id="@+id/loginQRLinkButton"
+        style="@style/IconButtonWithTextOutline"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginStart="32dp"
+        android:layout_marginTop="8dp"
         android:layout_marginBottom="8dp"
-        android:text="@string/saveToGallery"
+        android:enabled="false"
+        android:text="@string/moveByLink"
+        app:icon="@drawable/link_24"
         app:layout_constraintBottom_toTopOf="@+id/loginQRConfirmButton"
+        app:layout_constraintEnd_toStartOf="@+id/loginQRSaveButton"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintHorizontal_chainStyle="spread_inside"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/materialCardView" />
+
+    <Button
+        android:id="@+id/loginQRSaveButton"
+        style="@style/IconButtonWithTextOutline"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="32dp"
+        android:enabled="false"
+        android:text="@string/saveToGallery"
+        app:icon="@drawable/save_24"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/loginQRLinkButton"
         app:layout_constraintTop_toBottomOf="@+id/materialCardView" />
 
     <Button

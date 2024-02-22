@@ -7,6 +7,7 @@ import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
@@ -15,6 +16,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageView
+import android.widget.ProgressBar
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
@@ -23,12 +25,18 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.navArgs
 import coil.ImageLoader
 import coil.decode.SvgDecoder
-import coil.load
+import coil.request.ImageRequest
 import com.google.android.material.snackbar.Snackbar
+import com.google.mlkit.vision.barcode.BarcodeScannerOptions
+import com.google.mlkit.vision.barcode.BarcodeScanning
+import com.google.mlkit.vision.barcode.common.Barcode
+import com.google.mlkit.vision.common.InputImage
 import com.sanyapilot.yandexstation_controller.R
 import com.sanyapilot.yandexstation_controller.api.Errors
 import com.sanyapilot.yandexstation_controller.api.Session
 import com.sanyapilot.yandexstation_controller.main_screen.MainActivity
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 import kotlin.concurrent.thread
 
 class LoginQRFragment : Fragment() {
@@ -62,17 +70,81 @@ class LoginQRFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         qrCodeImage = view.findViewById(R.id.loginQRCode)
+        val progressBar = view.findViewById<ProgressBar>(R.id.loginQRBar)
         val confirmButton = view.findViewById<Button>(R.id.loginQRConfirmButton)
-        val saveButton = view.findViewById<Button>(R.id.loginQRSaveCodeButton)
+        val saveButton = view.findViewById<Button>(R.id.loginQRSaveButton)
+        val linkButton = view.findViewById<Button>(R.id.loginQRLinkButton)
 
         // Load image
         val imageLoader = ImageLoader.Builder(requireContext())
             .components {
                 add(SvgDecoder.Factory())
             }
+            .crossfade(true)
             .build()
 
-        qrCodeImage.load(args.qrCodeUrl, imageLoader)
+        val imageRequest = ImageRequest.Builder(requireContext())
+            .data(args.qrCodeUrl)
+            .target(qrCodeImage)
+            .listener(
+                onSuccess = { _, _ ->
+                    // Enable save button
+                    saveButton.setOnClickListener {
+                        if (
+                            Build.VERSION.SDK_INT <= Build.VERSION_CODES.P &&
+                            ContextCompat.checkSelfPermission(
+                                requireContext(),
+                                android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+                            ) == PackageManager.PERMISSION_DENIED
+                        ) {
+                            // Request a permission
+                            requestPermissionLauncher.launch(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                        } else {
+                            writeQR()
+                        }
+                    }
+                    saveButton.isEnabled = true
+
+                    // Wait for a crossfade to finish
+                    Executors.newSingleThreadScheduledExecutor().schedule(
+                        {
+                            // Decode QR
+                            val image = InputImage.fromBitmap(prepareQRBitmap(), 0)
+                            val options = BarcodeScannerOptions.Builder()
+                                .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
+                                .build()
+                            val scanner = BarcodeScanning.getClient(options)
+                            scanner.process(image)
+                                .addOnSuccessListener { barcodes ->
+                                    if (barcodes.size < 1) {
+                                        displayQRDecodeError()
+                                        return@addOnSuccessListener
+                                    }
+                                    val qr = barcodes[0]
+                                    if (qr.valueType == Barcode.TYPE_URL && qr.url!!.url != null) {
+                                        progressBar.visibility = View.GONE
+                                        // Enable link button
+                                        linkButton.setOnClickListener {
+                                            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(qr.url!!.url)))
+                                        }
+                                        linkButton.isEnabled = true
+                                    } else {
+                                        displayQRDecodeError()
+                                    }
+                                }
+                                .addOnFailureListener {
+                                    displayQRDecodeError()
+                                }
+                        },
+                        120,
+                        TimeUnit.MILLISECONDS
+                    )
+
+                }
+            )
+            .build()
+
+        imageLoader.enqueue(imageRequest)
 
         confirmButton.setOnClickListener {
             thread {
@@ -106,21 +178,15 @@ class LoginQRFragment : Fragment() {
                 }
             }
         }
+    }
 
-        saveButton.setOnClickListener {
-            if (
-                Build.VERSION.SDK_INT <= Build.VERSION_CODES.P &&
-                ContextCompat.checkSelfPermission(
-                    requireContext(),
-                    android.Manifest.permission.WRITE_EXTERNAL_STORAGE
-                ) == PackageManager.PERMISSION_DENIED
-            ) {
-                // Request a permission
-                requestPermissionLauncher.launch(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
-            } else {
-                writeQR()
-            }
-        }
+    private fun prepareQRBitmap(): Bitmap {
+        // Prepare bitmap
+        val drawable = qrCodeImage.drawable
+        val bitmap = Bitmap.createBitmap(drawable.intrinsicWidth, drawable.intrinsicHeight, Bitmap.Config.ARGB_8888)
+        bitmap.eraseColor(Color.WHITE)
+        Canvas(bitmap).drawBitmap(drawable.toBitmap(), 0f, 0f, null)
+        return bitmap
     }
 
     private fun writeQR() {
@@ -134,11 +200,7 @@ class LoginQRFragment : Fragment() {
         if (fileURI != null) {
             resolver.openOutputStream(fileURI, "w").use {
                 if (it != null) {
-                    val drawable = qrCodeImage.drawable
-                    val bitmap = Bitmap.createBitmap(drawable.intrinsicWidth, drawable.intrinsicHeight, Bitmap.Config.ARGB_8888)
-                    bitmap.eraseColor(Color.WHITE)
-                    Canvas(bitmap).drawBitmap(drawable.toBitmap(), 0f, 0f, null)
-                    bitmap.compress(Bitmap.CompressFormat.PNG, 95, it)
+                    prepareQRBitmap().compress(Bitmap.CompressFormat.PNG, 95, it)
                     Snackbar.make(
                         requireActivity().findViewById(R.id.loginLayout), getString(R.string.QRSavedSuccessfully),
                         Snackbar.LENGTH_SHORT
@@ -146,5 +208,12 @@ class LoginQRFragment : Fragment() {
                 }
             }
         }
+    }
+
+    private fun displayQRDecodeError() {
+        Snackbar.make(
+            requireActivity().findViewById(R.id.loginLayout), getString(R.string.QRDecodeError),
+            Snackbar.LENGTH_LONG
+        ).show()
     }
 }

@@ -27,12 +27,14 @@
     <string name="loginQRCardTitle">По QR-коду</string>
     <string name="loginPasswordTitle">Введите логин и пароль (или одноразовый код):</string>
     <string name="loginQRTitle">Вот ваш QR-код!</string>
-    <string name="loginQRDescription">Отсканируйте его вторым телефоном, или сохраните в галерею и откройте в умной камере Яндекса.\nПосле входа нажмите кнопку ниже.</string>
-    <string name="saveToGallery">Сохранить в галерею</string>
+    <string name="loginQRDescription">Приложение отсканирует код само.\nПосле входа нажмите кнопку снизу.</string>
+    <string name="saveToGallery">Сохранить</string>
     <string name="QRSavedSuccessfully">QR-код сохранен!</string>
     <string name="permissionRequired">Необходимо дать разрешение!</string>
     <string name="allReady">Все готово!</string>
     <string name="loginQRNotConfirmedError">Вход не был завершен!</string>
+    <string name="QRDecodeError">Не получилось сканировать QR код! Попробуйте сами :)</string>
+    <string name="moveByLink">Перейти</string>
 
     <string name="serverDead">Упс… С сервером что-то не так!</string>
     <string name="wtf">WTF</string>

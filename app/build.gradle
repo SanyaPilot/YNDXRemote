@@ -27,6 +27,10 @@ android {
         release {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            ndk {
+                //noinspection ChromeOsAbiSupport
+                abiFilters "armeabi-v7a", "arm64-v8a"
+            }
         }
     }
     compileOptions {
@@ -109,4 +113,7 @@ dependencies {
 
     // Preferences
     implementation "androidx.preference:preference-ktx:1.2.1"
+
+    // QR code scanning
+    implementation 'com.google.mlkit:barcode-scanning:17.2.0'
 }
