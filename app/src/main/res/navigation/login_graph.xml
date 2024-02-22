@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/login_graph"
+    app:startDestination="@id/loginAskMethodFragment">
+
+    <fragment
+        android:id="@+id/loginAskMethodFragment"
+        android:name="com.sanyapilot.yandexstation_controller.login_screen.LoginAskMethodFragment"
+        android:label="fragment_login_ask_method"
+        tools:layout="@layout/fragment_login_ask_method" >
+        <action
+            android:id="@+id/loginViaPassword"
+            app:destination="@id/loginAskPasswordFragment" />
+        <action
+            android:id="@+id/loginViaQR"
+            app:destination="@id/loginQRFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/loginAskPasswordFragment"
+        android:name="com.sanyapilot.yandexstation_controller.login_screen.LoginPasswordFragment"
+        android:label="fragment_login_ask_password"
+        tools:layout="@layout/fragment_login_password" />
+    <fragment
+        android:id="@+id/loginQRFragment"
+        android:name="com.sanyapilot.yandexstation_controller.login_screen.LoginQRFragment"
+        android:label="fragment_login_qr"
+        tools:layout="@layout/fragment_login_qr" >
+        <argument android:name="qr_code_url" />
+    </fragment>
+    <argument
+        android:name="qr_code_url"
+        app:argType="string" />
+</navigation>

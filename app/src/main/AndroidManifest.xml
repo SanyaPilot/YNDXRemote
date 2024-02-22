@@ -33,7 +33,7 @@
             android:parentActivityName=".main_screen.MainActivity"
             android:launchMode="singleTop" />
         <activity
-            android:name=".main_screen.LoginActivity"
+            android:name=".login_screen.LoginActivity"
             android:exported="false"
             android:parentActivityName=".main_screen.MainActivity"
             android:screenOrientation="portrait" />

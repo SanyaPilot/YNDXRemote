@@ -30,6 +30,7 @@ import com.sanyapilot.yandexstation_controller.api.Errors
 import com.sanyapilot.yandexstation_controller.api.QuasarClient
 import com.sanyapilot.yandexstation_controller.api.Session
 import com.sanyapilot.yandexstation_controller.api.mDNSWorker
+import com.sanyapilot.yandexstation_controller.login_screen.LoginActivity
 import kotlin.concurrent.thread
 
 const val TOKEN_INVALID = "com.sanyapilot.yandexstation_controller.tokenInvalid"

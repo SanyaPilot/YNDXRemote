@@ -28,7 +28,9 @@ import javax.net.ssl.X509TrustManager
 
 data class LoginResponse(
     val ok: Boolean,
-    val errorId: Errors? = null
+    val errorId: Errors? = null,
+    val data: TrackIDResponse? = null,
+    val url: String? = null
 )
 
 data class RequestResponse(
@@ -40,7 +42,8 @@ data class RequestResponse(
 enum class Errors {
     INVALID_ACCOUNT, INVALID_PASSSWD, INVALID_TOKEN,
     NEEDS_PHONE_CHALLENGE, TIMEOUT, BAD_REQUEST,
-    INTERNAL_SERVER_ERROR, CONNECTION_ERROR, UNKNOWN
+    INTERNAL_SERVER_ERROR, CONNECTION_ERROR, UNKNOWN,
+    QR_NOT_LOGGED_IN
 }
 
 enum class Methods {
@@ -51,6 +54,7 @@ enum class Methods {
 data class TrackIDResponse (
     val status: String,
     val can_register: Boolean? = false,
+    val csrf_token: String? = null,
     val track_id: String? = null
 )
 
@@ -58,6 +62,11 @@ data class TrackIDResponse (
 data class CommitPasswordResponse (
     val status: String,
     val redirect_url: String? = null
+)
+
+@Serializable
+data class LoginQRResponse (
+    val status: String? = null
 )
 
 @Serializable
@@ -225,10 +234,9 @@ object Session {
         }
     }
 
-    fun login(username: String, password: String): LoginResponse {
+    private fun loginUsername(username: String): LoginResponse {
         try {
             // Get CSRF token
-            var csrf: String
             var request = Request.Builder()
                 .url("https://passport.yandex.ru/am?app_platform=android")
                 .build()
@@ -259,19 +267,37 @@ object Session {
                 if (parsed.can_register == true) return LoginResponse(false, Errors.INVALID_ACCOUNT)
                 trackId = parsed.track_id!!
                 Log.d(TAG, "Received track ID $trackId")
+                return LoginResponse(true, data = parsed)
             }
+        } catch (e: ConnectException) {
+            Log.e(TAG, "Error performing request!\n${e.message}")
+            return LoginResponse(false, Errors.CONNECTION_ERROR)
+        } catch (e: IOException) {
+            Log.e(TAG, "Error performing request!\n${e.message}")
+            return LoginResponse(false, Errors.TIMEOUT)
+        }
+    }
 
-            // Try to login with password
-            body.add("track_id", trackId)
-                .add("password", password)
-                .add("retpath", "https://passport.yandex.ru/am/finish?status=ok&from=Login")
+    fun loginPassword(username: String, password: String): LoginResponse {
+        val res = loginUsername(username)
+        if (!res.ok) {
+            return res
+        }
+        // Try to login with password
+        val body = FormBody.Builder()
+            .add("csrf_token", csrf)
+            .add("track_id", trackId)
+            .add("login", username)
+            .add("password", password)
+            .add("retpath", "https://passport.yandex.ru/am/finish?status=ok&from=Login")
+            .build()
 
-            val built = body.build()
-            request = Request.Builder()
-                .url("https://passport.yandex.ru/registration-validations/auth/multi_step/commit_password")
-                .post(built)
-                .build()
+        val request = Request.Builder()
+            .url("https://passport.yandex.ru/registration-validations/auth/multi_step/commit_password")
+            .post(body)
+            .build()
 
+        try {
             client.newCall(request).execute().use { resp ->
                 val parsed = json.decodeFromString<CommitPasswordResponse>(resp.body.string())
                 if (parsed.status != "ok") {
@@ -281,7 +307,6 @@ object Session {
                     return LoginResponse(false, Errors.NEEDS_PHONE_CHALLENGE)
                 }
             }
-
             // Login with cookies
             return loginCookies()
         } catch (e: ConnectException) {
@@ -292,6 +317,89 @@ object Session {
             return LoginResponse(false, Errors.TIMEOUT)
         }
     }
+
+    fun requestQRAuth(): LoginResponse {
+        try {
+            // Get CSRF token
+            var request = Request.Builder()
+                .url("https://passport.yandex.ru/am?app_platform=android")
+                .build()
+
+            client.newCall(request).execute().use { resp ->
+                if (resp.code != 200) {
+                    return LoginResponse(false, errorId = Errors.UNKNOWN)
+                }
+                val reCSRF = Regex("\"csrf_token\" value=\"([^\"]+)\"")
+                val body = resp.body.string()
+                val reRes = reCSRF.find(body) ?: return LoginResponse(false, errorId = Errors.UNKNOWN)
+                csrf = reRes.value.split('=')[1].removeSurrounding("\"")
+                Log.d(TAG, "CSRF $csrf")
+            }
+
+            // Get track ID
+            val body = FormBody.Builder()
+                .add("csrf_token", csrf)
+                .add("retpath", "https://passport.yandex.ru/profile")
+                .add("with_code", "1")
+
+            request = Request.Builder()
+                .url("https://passport.yandex.ru/registration-validations/auth/password/submit")
+                .post(body.build())
+                .build()
+
+            client.newCall(request).execute().use { resp ->
+                val parsed = json.decodeFromString<TrackIDResponse>(resp.body.string())
+                if (parsed.can_register == true) return LoginResponse(false, Errors.INVALID_ACCOUNT)
+                csrf = parsed.csrf_token!!
+                trackId = parsed.track_id!!
+                Log.d(TAG, "Received track ID $trackId")
+                return LoginResponse(
+                    true,
+                    url = "https://passport.yandex.ru/auth/magic/code/?track_id=$trackId"
+                )
+            }
+        } catch (e: ConnectException) {
+            Log.e(TAG, "Error performing request!\n${e.message}")
+            return LoginResponse(false, Errors.CONNECTION_ERROR)
+        } catch (e: IOException) {
+            Log.e(TAG, "Error performing request!\n${e.message}")
+            return LoginResponse(false, Errors.TIMEOUT)
+        }
+    }
+
+    fun loginQR(): LoginResponse {
+        val body = FormBody.Builder()
+            .add("csrf_token", csrf)
+            .add("track_id", trackId)
+            .build()
+
+        val request = Request.Builder()
+            .url("https://passport.yandex.ru/auth/new/magic/status")
+            .post(body)
+            .build()
+
+        try {
+            client.newCall(request).execute().use { resp ->
+                val parsed = json.decodeFromString<LoginQRResponse>(resp.body.string())
+                if (parsed.status == null) {
+                    // User haven't authorized yet
+                    return LoginResponse(false, Errors.QR_NOT_LOGGED_IN)
+                }
+                else if (parsed.status != "ok") {
+                    return LoginResponse(false, Errors.UNKNOWN)
+                }
+            }
+            // Login with cookies
+            return loginCookies()
+        } catch (e: ConnectException) {
+            Log.e(TAG, "Error performing request!\n${e.message}")
+            return LoginResponse(false, Errors.CONNECTION_ERROR)
+        } catch (e: IOException) {
+            Log.e(TAG, "Error performing request!\n${e.message}")
+            return LoginResponse(false, Errors.TIMEOUT)
+        }
+    }
+
     private fun loginCookies(): LoginResponse {
         // Logging in with cookies
         val cookieBody = FormBody.Builder()
