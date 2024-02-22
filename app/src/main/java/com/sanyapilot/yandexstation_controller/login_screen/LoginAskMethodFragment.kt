@@ -58,7 +58,6 @@ class LoginAskMethodFragment : Fragment() {
                     navController.navigate(LoginAskMethodFragmentDirections.loginViaQR(res.url!!))
                 }
             }
-
         }
     }
 }

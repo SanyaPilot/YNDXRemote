@@ -29,7 +29,4 @@
         tools:layout="@layout/fragment_login_qr" >
         <argument android:name="qr_code_url" />
     </fragment>
-    <argument
-        android:name="qr_code_url"
-        app:argType="string" />
 </navigation>

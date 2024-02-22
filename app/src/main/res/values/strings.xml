@@ -27,8 +27,11 @@
     <string name="loginQRCardTitle">По QR-коду</string>
     <string name="loginPasswordTitle">Введите логин и пароль (или одноразовый код):</string>
     <string name="loginQRTitle">Вот ваш QR-код!</string>
-    <string name="loginQRDescription">Отсканируйте его вторым телефоном в приложении Яндекса, или #TODO\nДалее нажмите на кнопку ниже!</string>
-    <string name="loginQRConfirm">Все готово!</string>
+    <string name="loginQRDescription">Отсканируйте его вторым телефоном, или сохраните в галерею и откройте в умной камере Яндекса.\nПосле входа нажмите кнопку ниже.</string>
+    <string name="saveToGallery">Сохранить в галерею</string>
+    <string name="QRSavedSuccessfully">QR-код сохранен!</string>
+    <string name="permissionRequired">Необходимо дать разрешение!</string>
+    <string name="allReady">Все готово!</string>
     <string name="loginQRNotConfirmedError">Вход не был завершен!</string>
 
     <string name="serverDead">Упс… С сервером что-то не так!</string>
@@ -185,6 +188,4 @@
     <string name="spotterLightControlDesc">Включи свет, выключи свет</string>
     <string name="spotterTVControlTitle">Управление телевизором</string>
     <string name="spotterTVControlDesc">Включи телевизор, выключи телевизор</string>
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

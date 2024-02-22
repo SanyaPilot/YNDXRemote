@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".login_screen.LoginQRFragment" >
+    tools:context=".login_screen.LoginQRFragment">
 
     <TextView
         android:id="@+id/loginQRDescText"
@@ -29,18 +29,21 @@
         app:layout_constraintTop_toBottomOf="@+id/loginQRDescText" />
 
     <com.google.android.material.card.MaterialCardView
+        android:id="@+id/materialCardView"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginStart="32dp"
         android:layout_marginTop="16dp"
         android:layout_marginEnd="32dp"
-        android:layout_marginBottom="16dp"
+        android:layout_marginBottom="8dp"
         app:cardBackgroundColor="@android:color/white"
-        app:layout_constraintBottom_toTopOf="@+id/loginQRConfirmButton"
+        app:layout_constraintBottom_toTopOf="@+id/loginQRSaveCodeButton"
         app:layout_constraintDimensionRatio="1"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/loginQRDescText2">
+        app:layout_constraintTop_toBottomOf="@+id/loginQRDescText2"
+        app:layout_constraintVertical_chainStyle="packed">
 
         <FrameLayout
             android:layout_width="match_parent"
@@ -55,11 +58,25 @@
     </com.google.android.material.card.MaterialCardView>
 
     <Button
+        android:id="@+id/loginQRSaveCodeButton"
+        style="@style/Widget.Material3.Button.OutlinedButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:text="@string/saveToGallery"
+        app:layout_constraintBottom_toTopOf="@+id/loginQRConfirmButton"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/materialCardView" />
+
+    <Button
         android:id="@+id/loginQRConfirmButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/loginQRConfirm"
+        android:text="@string/allReady"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

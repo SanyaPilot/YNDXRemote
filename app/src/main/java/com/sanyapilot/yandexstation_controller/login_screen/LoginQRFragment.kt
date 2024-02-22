@@ -1,13 +1,24 @@
 package com.sanyapilot.yandexstation_controller.login_screen
 
+import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color
+import android.os.Build
 import android.os.Bundle
+import android.provider.MediaStore
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageView
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.toBitmap
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.navArgs
 import coil.ImageLoader
@@ -22,6 +33,25 @@ import kotlin.concurrent.thread
 
 class LoginQRFragment : Fragment() {
     private val args: LoginQRFragmentArgs by navArgs()
+    private lateinit var qrCodeImage: ImageView
+    private lateinit var requestPermissionLauncher: ActivityResultLauncher<String>
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        requestPermissionLauncher = registerForActivityResult(
+            ActivityResultContracts.RequestPermission()
+        ) { isGranted: Boolean ->
+            if (isGranted) {
+                writeQR()
+            } else {
+                Snackbar.make(
+                    requireActivity().findViewById(R.id.loginLayout), getString(R.string.permissionRequired),
+                    Snackbar.LENGTH_SHORT
+                ).show()
+            }
+        }
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -31,8 +61,9 @@ class LoginQRFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        val qrCodeImage = view.findViewById<ImageView>(R.id.loginQRCode)
+        qrCodeImage = view.findViewById(R.id.loginQRCode)
         val confirmButton = view.findViewById<Button>(R.id.loginQRConfirmButton)
+        val saveButton = view.findViewById<Button>(R.id.loginQRSaveCodeButton)
 
         // Load image
         val imageLoader = ImageLoader.Builder(requireContext())
@@ -72,6 +103,46 @@ class LoginQRFragment : Fragment() {
                 requireActivity().runOnUiThread {
                     startActivity(Intent(requireContext(), MainActivity::class.java))
                     requireActivity().finish()
+                }
+            }
+        }
+
+        saveButton.setOnClickListener {
+            if (
+                Build.VERSION.SDK_INT <= Build.VERSION_CODES.P &&
+                ContextCompat.checkSelfPermission(
+                    requireContext(),
+                    android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+                ) == PackageManager.PERMISSION_DENIED
+            ) {
+                // Request a permission
+                requestPermissionLauncher.launch(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+            } else {
+                writeQR()
+            }
+        }
+    }
+
+    private fun writeQR() {
+        val resolver = requireActivity().applicationContext.contentResolver
+        val fileURI = resolver.insert(
+            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+            ContentValues().apply {
+                put(MediaStore.Images.Media.DISPLAY_NAME, "YNDXRemote QR.png")
+            }
+        )
+        if (fileURI != null) {
+            resolver.openOutputStream(fileURI, "w").use {
+                if (it != null) {
+                    val drawable = qrCodeImage.drawable
+                    val bitmap = Bitmap.createBitmap(drawable.intrinsicWidth, drawable.intrinsicHeight, Bitmap.Config.ARGB_8888)
+                    bitmap.eraseColor(Color.WHITE)
+                    Canvas(bitmap).drawBitmap(drawable.toBitmap(), 0f, 0f, null)
+                    bitmap.compress(Bitmap.CompressFormat.PNG, 95, it)
+                    Snackbar.make(
+                        requireActivity().findViewById(R.id.loginLayout), getString(R.string.QRSavedSuccessfully),
+                        Snackbar.LENGTH_SHORT
+                    ).show()
                 }
             }
         }
