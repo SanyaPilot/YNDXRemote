@@ -24,10 +24,10 @@
     <string name="authCode">Код из бота</string>
     <string name="loginMethodsTitle">Выберите способ входа:</string>
     <string name="loginPasswordCardTitle">По паролю или Яндекс Ключу</string>
-    <string name="loginQRCardTitle">По QR-коду</string>
+    <string name="loginQRCardTitle">По ссылке (QR-коду)</string>
     <string name="loginPasswordTitle">Введите логин и пароль (или одноразовый код):</string>
     <string name="loginQRTitle">Вот ваш QR-код!</string>
-    <string name="loginQRDescription">Приложение отсканирует код само.\nПосле входа нажмите кнопку снизу.</string>
+    <string name="loginQRDescription">Приложение отсканирует код само (кнопка \"Перейти\" под QR).\nПосле входа нажмите кнопку снизу.</string>
     <string name="saveToGallery">Сохранить</string>
     <string name="QRSavedSuccessfully">QR-код сохранен!</string>
     <string name="permissionRequired">Необходимо дать разрешение!</string>
