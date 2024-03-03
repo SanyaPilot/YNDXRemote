@@ -88,6 +88,7 @@ class SettingsViewModel(
 ) : ViewModel() {
     private val _ssImages = MutableStateFlow(false)
     private val _netStatus = MutableStateFlow(NetStatus(true))
+    private val _errorData = MutableStateFlow("")
     private val _renameError = MutableStateFlow(false)
     private val _deviceName = MutableStateFlow("")
     private var _rawEQValues = mutableListOf(0f, 0f, 0f, 0f, 0f)
@@ -116,6 +117,8 @@ class SettingsViewModel(
         get() = _ssImages
     val netStatus: StateFlow<NetStatus>
         get() = _netStatus
+    val errorData: StateFlow<String>
+        get() = _errorData
     val renameError: StateFlow<Boolean>
         get() = _renameError
     val deviceName: StateFlow<String>
@@ -161,6 +164,7 @@ class SettingsViewModel(
         // Fetch all current data
         val res = QuasarClient.getDeviceConfig(deviceSmartHomeId)
         if (!res.ok || res.data!!.quasar_config == null) {
+            res.errorData?.let { _errorData.value = it }
             _netStatus.value = NetStatus(false, res.error)
             return
         }
@@ -211,6 +215,9 @@ class SettingsViewModel(
                 if (deviceConfig.ledConfig.supportsBrightnessControl && ledConfig.brightness != null) {
                     _screenAutoBrightness.value = ledConfig.brightness.auto
                     _screenBrightness.value = ledConfig.brightness.value
+                }
+                if (deviceConfig.ledConfig.supportsIdleAnimation && ledConfig.idle_animation != null) {
+                    _ledIdleAnimationEnabled.value = ledConfig.idle_animation!!
                 }
             }
         }
@@ -319,7 +326,7 @@ class SettingsViewModel(
                 )
             }
             outPayload.equalizer!!.bands[id].gain = value
-            outPayload.equalizer!!.custom_preset_bands[id] = value
+            outPayload.equalizer!!.custom_preset_bands?.set(id, value)
 
             val res = sendPayload()
             if (res.ok) {

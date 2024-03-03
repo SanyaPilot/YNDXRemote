@@ -67,6 +67,7 @@ interface APIResponse {
 data class ReqResult<T>(
     val ok: Boolean,
     val error: SettingsErrors? = null,
+    val errorData: String? = null,
     val data: T? = null
 )
 
@@ -113,8 +114,8 @@ data class DeviceConfig(
     var dndMode: DNDModeConfig? = null,
     var led: LEDConfig? = null,
     var tof: Boolean? = null,
-    val locale: String,
-    val location: Map<String, String> = mapOf(),
+    val locale: String? = null,
+    val location: Map<String, Double> = mapOf(),
     var name: String,
     val beta: Boolean
 )
@@ -123,7 +124,7 @@ data class DeviceConfig(
 data class EqualizerConfig(
     val enabled: Boolean,
     val bands: List<EqualizerBandConfig>,
-    val custom_preset_bands: MutableList<Float>,
+    val custom_preset_bands: MutableList<Float>? = null,
     val active_preset_id: String,
     val smartEnabled: Boolean? = null
 )
@@ -280,10 +281,12 @@ object QuasarClient {
             return ReqResult(false, error = SettingsErrors.UNKNOWN)
         }
         val code = res.response.code
+        var parsingError: String? = null
         val parsed: T? = try {
             json.decodeFromString<T>(res.response.body.string())
         } catch (e: Exception) {
             Log.e(TAG, "Failed to decode JSON!\n${e.message}")
+            parsingError = e.message
             null
         }
         res.response.close()
@@ -318,6 +321,7 @@ object QuasarClient {
                         SettingsErrors.UNKNOWN
                     }
                 },
+                errorData = parsingError,
                 data = parsed
             )
         }

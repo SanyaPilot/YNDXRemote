@@ -222,6 +222,7 @@ fun SettingsLayout(
             snackbarHostState = snackbarHostState
         )
         if (netStatus.value.error == SettingsErrors.PARSING_ERROR) {
+            val errorData by viewModel.errorData.collectAsState()
             // Display message and remove all buttons
             Column(
                 verticalArrangement = Arrangement.Center,
@@ -229,6 +230,7 @@ fun SettingsLayout(
                 modifier = Modifier
                     .fillMaxWidth()
                     .fillMaxHeight()
+                    .padding(horizontal = 24.dp)
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.sync_problem_24),
@@ -236,6 +238,7 @@ fun SettingsLayout(
                     modifier = Modifier.size(180.dp)
                 )
                 Text(text = stringResource(id = R.string.syncError), fontSize = 16.sp)
+                Text(text = errorData, modifier = Modifier.padding(top=16.dp))
                 return@Scaffold
             }
         }

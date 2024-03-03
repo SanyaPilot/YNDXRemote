@@ -13,7 +13,7 @@ import okhttp3.Response
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 import org.json.JSONObject
-import java.util.*
+import java.util.UUID
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.thread
 
@@ -84,7 +84,7 @@ data class EntityInfo(
 
 @Serializable
 data class PlayerExtra(
-    val coverURI: String
+    val coverURI: String? = null
 )
 
 @Serializable
