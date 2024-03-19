@@ -24,6 +24,8 @@ Android приложение, позволяющее управлять ваше
 
 - Яндекс Станция Мини (1-е поколение) - YNDX-0004
 
+- Яндекс Станция 2 - YNDX-00051
+
 **Остальные устройства не были протестированы** и имеют только базовый набор настроек.
 
 #### Настройки, доступные всем устройствам:
@@ -45,22 +47,23 @@ Android приложение, позволяющее управлять ваше
 | Яндекс Станция Макс (YNDX-00052/00053)         | Идентично YNDX-0008, настроек ZigBee нет                                                               |
 | Яндекс Станция Мини (1-е поколение, YNDX-0004) | Жесты ладонью                                                                                          |
 | Яндекс Станция Мини 2 (YNDX-00020)             | Экспериментально включено управление экраном от YNDX-0008, необходимо тестирование                     |
+| Яндекс Станция 2 (YNDX-00051)                  | Настройки LED экрана (яркость, заставка в простое, визуализация музыки)                                |
 
 ## Скриншоты
 
-![Логин](screenshots/login_screen.png)
-![Главный экран](screenshots/main_screen.png)
-![Аккаунт](screenshots/account.png)
-![Плеер](screenshots/player.png)
-![Пульт](screenshots/remote.png)
-![TTS](screenshots/settings_1.png)
-![Нет WiFi](screenshots/settings_2.png)
-![Уведомление](screenshots/notification.png)
+| ![Логин](screenshots/login_screen.png)  | ![Главный экран](screenshots/main_screen.png) | ![Аккаунт](screenshots/account.png) |
+| --------------------------------------- | --------------------------------------------- | ----------------------------------- |
+| ![Плеер](screenshots/player.png)        | ![Пульт](screenshots/remote.png)              | ![TTS](screenshots/settings_1.png)  |
+| ![Нет WiFi](screenshots/settings_2.png) | ![Уведомление](screenshots/notification.png)  |                                     |
+
+
+
 
 ## Авторы
 
 - [**SanyaPilot**](https://github.com/SanyaPilot) - почти вся разработка)
-- [**nexussed**](https://github.com/nexussed) - иконка, тестирование
+- [**nexussed**](https://github.com/nexussed) - иконки, идеи, тестирование
+- [**tdrkDev**](https://github.com/tdrkDev) - идеи, тестирование на Станции 2
 - [**rtx4d**](https://github.com/rtx4d) - тестирование
 
 ## Контакты
