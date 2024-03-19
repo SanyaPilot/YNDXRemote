@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -66,6 +67,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
@@ -479,8 +481,18 @@ fun SettingsLayout(
                                             selected = it.id == visPresetName,
                                             enabled = !visRandomEnabled,
                                             onClick = { viewModel.setVisPreset(it.id) },
-                                            painter = painterResource(id = it.drawableId)
-                                        )
+                                            painter = painterResource(id = it.drawableId),
+                                            drawAsImage = config.ledConfig.drawIconsAsImages
+                                        ) {
+                                            if (it.textId != null) {
+                                                Text(
+                                                    stringResource(id = it.textId),
+                                                    fontWeight = if (it.id == visPresetName)
+                                                        FontWeight.Bold else FontWeight.Normal,
+                                                    modifier = Modifier.padding(top = 4.dp)
+                                                )
+                                            }
+                                        }
                                     }
                                     i += 3
                                 }
@@ -709,6 +721,7 @@ fun BigSelectableButton(
     enabled: Boolean = true,
     onClick: () -> Unit,
     painter: Painter? = null,
+    drawAsImage: Boolean = false,
     content: @Composable (() -> Unit)? = null
 ) {
     val colors =
@@ -717,26 +730,38 @@ fun BigSelectableButton(
     val elevation =
         if (selected) ButtonDefaults.filledTonalButtonElevation()
         else null
-    OutlinedButton(
-        onClick = onClick,
-        shape = RoundedCornerShape(24.dp),
-        colors = colors,
-        enabled = enabled,
-        elevation = elevation
+    Column (
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally
+        OutlinedButton(
+            onClick = onClick,
+            shape = RoundedCornerShape(24.dp),
+            colors = colors,
+            enabled = enabled,
+            elevation = elevation
         ) {
-            if (painter != null) {
-                Icon(
-                    painter = painter,
-                    contentDescription = null,
-                    modifier = Modifier.size(64.dp)
-                )
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                if (painter != null) {
+                    if (!drawAsImage) {
+                        Icon(
+                            painter = painter,
+                            contentDescription = null,
+                            modifier = Modifier.size(64.dp)
+                        )
+                    } else {
+                        Image(
+                            painter = painter,
+                            contentDescription = null,
+                            modifier = Modifier.size(64.dp)
+                        )
+                    }
+                }
             }
-            if (content != null) {
-                content()
-            }
+        }
+        if (content != null) {
+            content()
         }
     }
 }

@@ -161,6 +161,12 @@
     <string name="screenBrightnessLabel">Яркость экрана</string>
     <string name="screenAutoBrightnessLabel">Подстраивать автоматически</string>
 
+    <!-- St2 LED animations -->
+    <string name="visSt2BlinkLabel">Мерцание</string>
+    <string name="visSt2LavaLabel">Лава</string>
+    <string name="visSt2PolarLabel">Сияние</string>
+    <string name="visSt2NoneLabel">Выключено</string>
+
     <!-- Proximity gestures -->
     <string name="proximityGesturesLabel">Жесты ладонью</string>
 

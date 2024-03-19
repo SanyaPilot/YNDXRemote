@@ -13,10 +13,12 @@ data class StationConfig (
 
 data class Preset(
     val id: String,
-    val drawableId: Int
+    val drawableId: Int,
+    val textId: Int? = null
 )
 
 data class StationLEDConfig (
+    val drawIconsAsImages: Boolean = false,
     val visPresets: List<Preset>? = null,
     val clockTypes: List<Preset>? = null,
     val supportsBrightnessControl: Boolean = true,
@@ -69,12 +71,12 @@ val stationConfigs = mapOf(
         name = R.string.station_2,
         icon = R.drawable.station_2,
         ledConfig = StationLEDConfig(
-            // TODO: Draw fancy icons
+            drawIconsAsImages = true,
             visPresets = listOf(
-                Preset("blink", R.drawable.vis_pads),
-                Preset("lava_beat", R.drawable.vis_bars_bottom),
-                Preset("polar_shining", R.drawable.vis_bars_center),
-                Preset("none", R.drawable.light_off_24),
+                Preset("blink", R.drawable.st2_led_blink, R.string.visSt2BlinkLabel),
+                Preset("lava_beat", R.drawable.st2_led_lava, R.string.visSt2LavaLabel),
+                Preset("polar_shining", R.drawable.st2_led_polar, R.string.visSt2PolarLabel),
+                Preset("none", R.drawable.st2_led_off, R.string.visSt2NoneLabel),
             ),
             supportsIdleAnimation = true
         )
